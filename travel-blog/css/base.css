@@ -1,0 +1,102 @@
+/* 색상·간격·폰트 변수, 리셋, 다크 모드 */
+
+:root {
+  /* 여행 느낌: 밝은 하늘색 배경 + 바다색 포인트 */
+  --bg: #f4f8fb;
+  --surface: #ffffff;
+  --surface-soft: #e9f1f7;
+  --text: #1e2a33;
+  --text-soft: #66757f;
+  --line: #d9e2ea;
+
+  --accent: #1f8bd6;
+  --accent-soft: #dcecf8;
+  --accent-text: #ffffff;
+  --warning-bg: #fff4d6;
+  --success-bg: #e2f4e4;
+
+  --space-xs: 4px;
+  --space-s: 8px;
+  --space-m: 16px;
+  --space-l: 24px;
+  --space-xl: 40px;
+
+  --radius-s: 8px;
+  --radius-m: 14px;
+  --radius-l: 22px;
+
+  --font: "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --font-size: 16px;
+  --font-size-small: 14px;
+  --font-size-title: 26px;
+
+  --content-width: 1200px;
+}
+
+/* 시스템이 다크 모드이고, 직접 라이트로 고르지 않았을 때 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141b21;
+    --surface: #1d262e;
+    --surface-soft: #26323c;
+    --text: #e8eef2;
+    --text-soft: #9aa8b2;
+    --line: #34424d;
+
+    --accent: #5cb3ef;
+    --accent-soft: #23435a;
+    --accent-text: #0f1418;
+    --warning-bg: #4a3f22;
+    --success-bg: #24402a;
+  }
+}
+
+/* 직접 다크 모드로 바꿨을 때 */
+:root[data-theme="dark"] {
+  --bg: #141b21;
+  --surface: #1d262e;
+  --surface-soft: #26323c;
+  --text: #e8eef2;
+  --text-soft: #9aa8b2;
+  --line: #34424d;
+
+  --accent: #5cb3ef;
+  --accent-soft: #23435a;
+  --accent-text: #0f1418;
+  --warning-bg: #4a3f22;
+  --success-bg: #24402a;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--font-size);
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--accent);
+}

@@ -1,0 +1,228 @@
+/* 입력칸, 카드, 버튼, 결과 화면 */
+
+/* 입력 카드 */
+.card {
+  margin: 0 0 var(--space-m);
+  padding: var(--space-l);
+  border: none;
+  border-radius: var(--radius-l);
+  background: var(--surface);
+}
+
+.card-title {
+  float: left;
+  width: 100%;
+  margin-bottom: var(--space-m);
+  padding: 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.field {
+  clear: both;
+  margin-bottom: var(--space-m);
+}
+
+.field:last-child {
+  margin-bottom: 0;
+}
+
+.field-label {
+  display: block;
+  font-weight: bold;
+}
+
+.field-help {
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+}
+
+.field-input {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-xs);
+  padding: var(--space-s) var(--space-m);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--bg);
+  /* 16px 미만이면 아이폰에서 입력할 때 화면이 확대됩니다 */
+  font-size: var(--font-size);
+}
+
+textarea.field-input {
+  resize: vertical;
+}
+
+.field-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-s);
+}
+
+/* 버튼 */
+.primary-button,
+.secondary-button,
+.small-button,
+.text-button,
+.icon-button {
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.primary-button,
+.secondary-button {
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-s);
+  font-weight: bold;
+}
+
+.primary-button {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.secondary-button {
+  background: var(--surface-soft);
+}
+
+.small-button {
+  flex-shrink: 0;
+  padding: var(--space-xs) var(--space-s);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  font-size: var(--font-size-small);
+}
+
+.text-button {
+  padding: var(--space-s);
+  background: none;
+  color: var(--text-soft);
+  text-decoration: underline;
+}
+
+.icon-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface);
+  font-size: 20px;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 결과 */
+.result-title {
+  font-size: 20px;
+}
+
+.result-subtitle {
+  margin: var(--space-l) 0 var(--space-s);
+  font-size: var(--font-size);
+}
+
+.missing-text {
+  margin-top: var(--space-s);
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-s);
+  background: var(--warning-bg);
+  font-size: var(--font-size-small);
+}
+
+.missing-text.is-done {
+  background: var(--success-bg);
+}
+
+.title-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.title-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  margin-bottom: var(--space-xs);
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-s);
+  background: var(--surface-soft);
+}
+
+.copy-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-s);
+}
+
+.copy-help {
+  margin-top: var(--space-s);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+}
+
+/* 미리보기: 블로그에 올라갈 모양 */
+.preview {
+  margin-top: var(--space-m);
+  padding: var(--space-l);
+  border-radius: var(--radius-m);
+  background: var(--bg);
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.preview h2 {
+  margin: var(--space-l) 0 var(--space-s);
+  font-size: 20px;
+}
+
+.preview p {
+  margin: var(--space-s) 0;
+}
+
+.preview ul,
+.preview ol {
+  margin: var(--space-s) 0;
+  padding-left: var(--space-l);
+}
+
+/* 미리보기 안의 표·안내 문구는 글에 박힌 밝은 색 대신 테마 색을 씁니다 */
+.preview table th,
+.preview table td {
+  border-color: var(--line) !important;
+}
+
+.preview table th {
+  background: var(--surface-soft) !important;
+}
+
+/* 맨 위 대가성 안내 문구 */
+.preview p:first-child {
+  background: var(--surface-soft) !important;
+  color: var(--text-soft) !important;
+}
+
+/* 복사 완료 알림 */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-l);
+  transform: translateX(-50%);
+  max-width: calc(100% - 2 * var(--space-m));
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-m);
+  background: var(--text);
+  color: var(--bg);
+  font-size: var(--font-size-small);
+}

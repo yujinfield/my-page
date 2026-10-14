@@ -1,0 +1,106 @@
+/* 머리말 / 글 종류 탭 / 입력·결과 2단 배치, 반응형 */
+
+.app-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-m);
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-m) var(--space-m);
+}
+
+.app-title {
+  font-size: var(--font-size-title);
+}
+
+.app-subtitle {
+  margin-top: var(--space-xs);
+  color: var(--text-soft);
+}
+
+/* 글 종류 탭 */
+.category-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-s);
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 0 var(--space-m);
+}
+
+.category-tab {
+  padding: var(--space-m) var(--space-s);
+  border: 2px solid transparent;
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.category-tab:hover {
+  background: var(--surface-soft);
+}
+
+.category-tab[aria-selected="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* 입력(왼쪽) + 결과(오른쪽) */
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: var(--space-l);
+  align-items: start;
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--space-l) var(--space-m) var(--space-xl);
+}
+
+/* 결과는 스크롤해도 화면에 붙어 있게 */
+.result-panel {
+  position: sticky;
+  top: var(--space-m);
+  max-height: calc(100vh - var(--space-l));
+  overflow-y: auto;
+  padding: var(--space-l);
+  border-radius: var(--radius-l);
+  background: var(--surface);
+}
+
+.jump-link {
+  display: none;
+}
+
+/* 태블릿·모바일: 위아래로 쌓기 */
+@media (max-width: 860px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .result-panel {
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .jump-link {
+    display: inline-block;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    padding-top: var(--space-l);
+  }
+
+  .category-tabs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .result-panel {
+    padding: var(--space-m);
+  }
+}
