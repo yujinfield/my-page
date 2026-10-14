@@ -40,32 +40,27 @@
 
 ## 코드 구조
 
-현재 있는 파일:
-
 | 파일 | 역할 |
 | --- | --- |
 | `index.html` | 마크업 뼈대, CSS/JS 불러오기 |
 | `css/base.css` | CSS 변수(색상·간격·폰트), 리셋, 다크 모드 |
 | `css/layout.css` | 머리말 / 단계 탭 / 진행률 / 본문 배치, 반응형 |
 | `css/form.css` | 입력칸, 카드, 버튼, 결과 화면 |
+| `css/cuts.css` | 컷 편집기: 컷 카드, 도구 막대, 복사 대체 상자 |
+| `js/guide.js` | 지침 상수: 공통 프롬프트 문구, 캐릭터, 표정 세트, 배경, 템플릿 4종, 대사·컷 수 규칙 |
 | `js/fields.js` | 통합 입력폼 질문 목록(제목·설명·예시), 빈 폼, 진행률 계산 |
 | `js/form.js` | `fields.js`를 보고 입력칸을 그림 |
 | `js/classify.js` | 스토리형/정보형 자동 판단, 입력 주의사항 (순수 함수) |
 | `js/master-prompts.js` | 스토리형 V1 / 정보형 V2 마스터 프롬프트 원문 |
-| `js/prompt.js` | 마스터 프롬프트 + 입력 내용 → 요청문 (순수 함수) |
+| `js/prompt.js` | 요청문 조립, 컷별 이미지 프롬프트 조립 (순수 함수) |
+| `js/cut-plan.js` | 컷 만들기, 템플릿 변경, 입력폼 → 기본 컷 구성 (순수 함수) |
+| `js/checks.js` | 컷 최종 검토 규칙 (순수 함수, 경고 목록 반환) |
+| `js/cuts.js` | 컷 편집기 화면 (추가·삭제·순서 변경, 템플릿별 입력 칸, 프롬프트 복사) |
 | `js/store.js` | 데이터 계층. `localStorage` 읽기/쓰기는 **이 파일에서만** |
 | `js/app.js` | 진입점. 상태를 들고 각 모듈을 연결 |
 
-컷 편집기를 만들 때 추가할 파일:
-
-| 파일 | 역할 |
-| --- | --- |
-| `js/guide.js` | 지침 상수: 캐릭터, 표정 세트, 유형 A~E, 템플릿 4종, 프롬프트 기본 문구 |
-| `js/checks.js` | 최종 검토 규칙 (순수 함수, 경고 목록 반환) |
-| `js/cuts.js` | 컷 편집기 (추가·삭제·순서 변경, 템플릿별 입력 칸) |
-
 새 기능은 가능하면 기존 파일에 맞춰 넣고, 파일이 너무 커질 때만(약 300줄 이상) 분리합니다.
-`classify.js`, `prompt.js`, `checks.js`는 나중에 테스트를 붙이기 쉽도록 **DOM에 의존하지 않게** 작성합니다.
+`classify.js`, `prompt.js`, `cut-plan.js`, `checks.js`는 나중에 테스트를 붙이기 쉽도록 **DOM에 의존하지 않게** 작성합니다.
 
 ## 통합 입력폼과 유형 판단
 
@@ -77,58 +72,43 @@
 
 ## 데이터 모델
 
-현재 저장하는 것: 작성 중인 통합 입력폼 하나
+작성 중인 입력폼과 컷 목록을 하나로 저장합니다.
 
 ```js
 // localStorage 키: "kkomjwi-draft"
 {
-  version: 1,
+  version: 2,   // 1: 입력폼만 / 2: cuts 추가 (1번 데이터는 cuts: []로 채워 그대로 씀)
   form: {
     title, question, topic, startStory, feeling, result,   // PART 1 (문자열)
     points: [{ main, case, oneLine }, ...],                // PART 2 (항상 3개)
     extraInfo, keyword, commentLine,                       // PART 3 (문자열)
     ctaType: "comment",   // "comment" | "save" | "share" | "natural"
-    typeChoice: "auto"    // "auto" | "story" | "info"
+    typeChoice: "auto",   // "auto" | "story" | "info"
+    cuts: [
+      {
+        id: "c_<timestamp>_<n>",
+        template: "cover",     // "cover" | "story" | "info" | "compare"
+        message: "",           // 핵심 메시지 1개
+        texts: {},             // 템플릿별 문구 (guide.js의 TEMPLATES[].texts 키)
+        expression: "basic",   // "basic" | "surprised" | "thinking" | "proud" | "heart"
+        characters: ["kkomjwi"], // "kkomjwi" | "husband" | "friend"
+        scene: "",             // 그림 장면·소품·포즈
+        background: "white",   // "white" | "simple" | "detailed"
+        direction: ""          // 카메라 거리, 말풍선 위치 등
+      }
+    ]
   }
 }
 // 테마: localStorage 키 "kkomjwi-theme" ("light" | "dark")
 ```
 
-컷 편집기를 만들 때 쓸 예정인 프로젝트 모델:
-
-```js
-// localStorage 키: "kkomjwi-projects"
-{
-  version: 1,
-  projects: [
-    {
-      id: "p_<timestamp>",
-      kind: "toon",            // "toon" | "reels" | "topics"
-      topic: "촬영 드레스 가봉 꿀팁",
-      storyType: "B",          // "auto" | "A" | "B" | "C" | "D" | "E"
-      experience: "...",       // 사용자가 쓴 실제 경험 메모
-      facts: "...",            // 사용자가 준 실제 수치 (숫자 후킹은 여기 있는 것만)
-      characters: ["kkomjwi", "husband"], // "kkomjwi" | "husband" | "friend"
-      cta: { action: "save", keyword: "", material: "" }, // "save" | "share" | "comment"
-      cuts: [
-        {
-          template: "cover",   // "cover" | "story" | "info" | "compare"
-          message: "",         // 핵심 메시지 1개
-          texts: {},           // 템플릿별 문구 (제목, 대사, 라벨, 요약 등)
-          expression: "basic", // "basic" | "surprised" | "thinking" | "proud" | "heart"
-          direction: ""        // 포즈·소품·카메라 거리 등 연출 메모
-        }
-      ],
-      caption: "",
-      hashtags: [],
-      createdAt: 1697270400000,
-      updatedAt: 1697270400000
-    }
-  ]
-}
-```
-
 - 데이터 형식을 바꾸면 `version`을 올리고 `store.js`에 마이그레이션을 추가해 **기존 프로젝트가 사라지지 않게** 합니다.
+
+## 컷 편집기
+
+- 기본 컷 구성(`cut-plan.js`)은 입력폼 문장을 그대로 옮겨 담기만 합니다. 실제 사례가 빈 정보는 사례 컷을 만들지 않습니다.
+- 구성: 표지형 → 도입 스토리형(경험, 고민) → 핵심 ①②③마다 사례(스토리형) + 핵심(정보형) → 결과 → CTA
+- 글자만 바뀌면 입력칸은 다시 그리지 않고 프롬프트·경고만 갱신합니다 (포커스 유지). 템플릿 변경·추가·삭제·순서 변경 때만 전체를 다시 그립니다.
 
 ## 프롬프트 조립 규칙
 

@@ -2,7 +2,11 @@
 
 const DRAFT_KEY = 'kkomjwi-draft';
 const THEME_KEY = 'kkomjwi-theme';
-const DRAFT_VERSION = 1;
+// 버전 기록
+// 1: 통합 입력폼
+// 2: 컷 편집기 추가 (form.cuts). 1번 데이터는 cuts만 빈 목록으로 채워 그대로 씁니다.
+const DRAFT_VERSION = 2;
+const READABLE_VERSIONS = [1, 2];
 
 // 작성 중인 입력폼 불러오기 (없거나 읽을 수 없으면 null)
 export function loadDraft() {
@@ -10,11 +14,20 @@ export function loadDraft() {
     const raw = localStorage.getItem(DRAFT_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    if (data.version !== DRAFT_VERSION) return null;
-    return data.form;
+    if (!READABLE_VERSIONS.includes(data.version)) return null;
+    return migrate(data);
   } catch (error) {
     return null;
   }
+}
+
+// 예전 버전 데이터를 지금 형식으로 바꿉니다. (빠진 칸은 fields.js의 fillMissing이 채움)
+function migrate(data) {
+  const form = data.form || {};
+  if (data.version === 1) {
+    form.cuts = [];
+  }
+  return form;
 }
 
 export function saveDraft(form) {

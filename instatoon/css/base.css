@@ -16,6 +16,7 @@
   --accent: #d9686f;
   --accent-text: #ffffff;
   --warning-bg: #fff4d6;
+  --overlay: rgba(0, 0, 0, 0.4);
 
   --space-xs: 4px;
   --space-s: 8px;

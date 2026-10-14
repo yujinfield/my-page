@@ -3,6 +3,9 @@
 
 import { CTA_TYPES } from './fields.js';
 import { STORY_V1, STORY_V1_CLOSING, INFO_V2, INFO_V2_CLOSING } from './master-prompts.js';
+import {
+  BASE_STYLE, FIXED_RULES, TEMPLATES, CHARACTERS, EXPRESSIONS, BACKGROUNDS, findOption,
+} from './guide.js';
 
 const EMPTY_REQUIRED = '(입력 없음 — 지어내지 말고 확인 필요로 표시)';
 const EMPTY_OPTIONAL = '(입력 없음)';
@@ -100,4 +103,59 @@ export function buildPrompt(form, type) {
     '⸻',
     INFO_V2_CLOSING,
   ].join('\n\n');
+}
+
+// ---------- 컷별 이미지 생성 프롬프트 ----------
+
+function cutNumber(index) {
+  return String(index + 1).padStart(2, '0');
+}
+
+// 컷 하나 → Make에 붙여 넣을 이미지 프롬프트
+// 순서: 공통 문구 → 추가 캐릭터 → 템플릿 구성 → 컷 내용 → 고정 조건 (CLAUDE.md "프롬프트 조립 규칙")
+export function buildImagePrompt(cut, index) {
+  const template = findOption(TEMPLATES, cut.template);
+  const parts = [BASE_STYLE];
+
+  CHARACTERS.forEach((character) => {
+    if (character.prompt !== '' && cut.characters.includes(character.value)) {
+      parts.push(character.prompt);
+    }
+  });
+
+  parts.push(`Layout reference: ${template.reference}\n${template.prompt}`);
+
+  const details = [];
+  if (cut.characters.length === 0) {
+    details.push('Characters: none in this panel (text and illustration only).');
+  } else if (!cut.characters.includes('kkomjwi')) {
+    details.push('Do not draw the squirrel in this panel.');
+  } else {
+    details.push(`Squirrel expression and pose: ${findOption(EXPRESSIONS, cut.expression).prompt}.`);
+  }
+  details.push(`Background: ${findOption(BACKGROUNDS, cut.background).prompt}.`);
+  if (cut.scene.trim() !== '') details.push(`Scene, props and pose (Korean): ${cut.scene.trim()}`);
+  if (cut.direction.trim() !== '') details.push(`Direction notes (Korean): ${cut.direction.trim()}`);
+  parts.push(details.join('\n'));
+
+  // 화면에 들어갈 한글 문구: 입력한 칸만, 줄바꿈 그대로
+  const textLines = [];
+  template.texts.forEach((field) => {
+    const value = (cut.texts[field.key] || '').trim();
+    if (value !== '') textLines.push(`[${field.label}]\n${value}`);
+  });
+  if (textLines.length > 0) {
+    parts.push(`Write exactly this Korean text, keeping the line breaks (the [labels] only tell where each text goes; do not draw them):\n${textLines.join('\n\n')}`);
+  } else {
+    parts.push('No text in this panel except the \'@꼼쥐\' watermark.');
+  }
+
+  parts.push(FIXED_RULES);
+
+  return `CUT ${cutNumber(index)} | ${template.label}\n\n${parts.join('\n\n')}`;
+}
+
+// 전체 컷 프롬프트를 한 번에
+export function buildAllImagePrompts(cuts) {
+  return cuts.map((cut, index) => buildImagePrompt(cut, index)).join('\n\n━━━━━━━━━━━━━━━━━━\n\n');
 }
