@@ -152,3 +152,22 @@ select.field-input {
     flex-wrap: wrap;
   }
 }
+
+/* Claude 자동 작성 진행 상황 */
+.ai-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-s);
+  background: var(--sky);
+}
+
+.ai-status[hidden],
+.ai-unavailable[hidden],
+.button.ai-button[hidden] {
+  display: none;
+}
+
+.ai-unavailable {
+  margin-top: var(--space-s);
+}

@@ -84,6 +84,11 @@ function buildInfoInputs(form) {
   return lines.join('\n');
 }
 
+// 유형에 맞는 형식으로 사용자 입력만 정리 (사이트 안 자동 작성에서도 씀)
+export function buildUserInputs(form, type) {
+  return type === 'story' ? buildStoryInputs(form) : buildInfoInputs(form);
+}
+
 // type: 'story' | 'info'
 export function buildPrompt(form, type) {
   if (type === 'story') {

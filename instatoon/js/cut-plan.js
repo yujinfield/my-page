@@ -14,7 +14,7 @@ function makeId() {
 
 // 빈 컷 하나
 export function createCut(template = 'story') {
-  const templateInfo = findOption(TEMPLATES, template);
+  const templateInfo = TEMPLATES.find((item) => item.value === template) || findOption(TEMPLATES, 'story');
   const texts = {};
   templateInfo.texts.forEach((field) => { texts[field.key] = ''; });
 

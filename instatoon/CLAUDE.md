@@ -56,11 +56,13 @@
 | `js/cut-plan.js` | 컷 만들기, 템플릿 변경, 입력폼 → 기본 컷 구성 (순수 함수) |
 | `js/checks.js` | 컷 최종 검토 규칙 (순수 함수, 경고 목록 반환) |
 | `js/cuts.js` | 컷 편집기 화면 (추가·삭제·순서 변경, 템플릿별 입력 칸, 프롬프트 복사) |
+| `js/ai-conti.js` | Claude 콘티 요청문 만들기, Claude 답(JSON) → 컷 목록 (순수 함수) |
+| `js/ai-panel.js` | Claude 자동 작성 버튼, 진행 상황·멈추기, 캡션·검토 메모 |
 | `js/store.js` | 데이터 계층. `localStorage` 읽기/쓰기는 **이 파일에서만** |
 | `js/app.js` | 진입점. 상태를 들고 각 모듈을 연결 |
 
 새 기능은 가능하면 기존 파일에 맞춰 넣고, 파일이 너무 커질 때만(약 300줄 이상) 분리합니다.
-`classify.js`, `prompt.js`, `cut-plan.js`, `checks.js`는 나중에 테스트를 붙이기 쉽도록 **DOM에 의존하지 않게** 작성합니다.
+`classify.js`, `prompt.js`, `cut-plan.js`, `checks.js`, `ai-conti.js`는 나중에 테스트를 붙이기 쉽도록 **DOM에 의존하지 않게** 작성합니다.
 
 ## 통합 입력폼과 유형 판단
 
@@ -84,6 +86,8 @@
     extraInfo, keyword, commentLine,                       // PART 3 (문자열)
     ctaType: "comment",   // "comment" | "save" | "share" | "natural"
     typeChoice: "auto",   // "auto" | "story" | "info"
+    caption: "",          // Claude가 써 준 캡션 + 해시태그 (직접 수정 가능)
+    review: "",           // Claude가 남긴 콘티 요약·검토 사항
     cuts: [
       {
         id: "c_<timestamp>_<n>",
@@ -109,6 +113,14 @@
 - 기본 컷 구성(`cut-plan.js`)은 입력폼 문장을 그대로 옮겨 담기만 합니다. 실제 사례가 빈 정보는 사례 컷을 만들지 않습니다.
 - 구성: 표지형 → 도입 스토리형(경험, 고민) → 핵심 ①②③마다 사례(스토리형) + 핵심(정보형) → 결과 → CTA
 - 글자만 바뀌면 입력칸은 다시 그리지 않고 프롬프트·경고만 갱신합니다 (포커스 유지). 템플릿 변경·추가·삭제·순서 변경 때만 전체를 다시 그립니다.
+
+## Claude 콘티 자동 작성
+
+- 페이지 안에서 Claude를 부르는 claude.ai 아티팩트 기능(`window.claude.use('sample')`)을 씁니다. **API 키가 필요 없고**, 쓰는 사람의 claude.ai 사용량을 씁니다.
+- claude.ai 링크로 열었을 때만 동작합니다. 아티팩트로 올릴 때 `capabilities: {sample: {}}`를 꼭 선언합니다. 내 컴퓨터에서 열면 `window.claude`가 없으므로 버튼을 숨기고 안내 문구만 보여 줍니다.
+- 요청문(`ai-conti.js`) = 꼼쥐 핵심 규칙(`guide.js`의 `CONTI_RULES`) + 유형별 마스터 프롬프트 + 사용자 입력 + 컷 편집기 값 목록 + JSON 답 형식. 이미지 프롬프트는 Claude에게 받지 않고 사이트가 조립합니다.
+- 답은 `sample.json`으로 받고, `readContiAnswer`가 모르는 값을 기본값으로 바꿉니다 (`normalizeCut`). 화면에 넣을 때는 항상 `textContent`/`value`를 씁니다.
+- 버튼을 누를 때만 부르고, 자동 재시도는 하지 않습니다. 권한 거절(`not_granted` 등)이면 버튼을 숨깁니다.
 
 ## 프롬프트 조립 규칙
 

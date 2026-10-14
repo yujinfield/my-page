@@ -5,6 +5,7 @@ import { TEMPLATES, CHARACTERS, EXPRESSIONS, BACKGROUNDS, findOption } from './g
 import { createCut, changeTemplate, buildDefaultCuts } from './cut-plan.js';
 import { buildImagePrompt, buildAllImagePrompts } from './prompt.js';
 import { checkCuts } from './checks.js';
+import { initAiPanel, renderAiNotes } from './ai-panel.js';
 
 // app.js에서 넘겨받는 함수들
 let options = {
@@ -290,6 +291,7 @@ export function renderCuts() {
 
   list.replaceChildren(...cuts().map((cut, index) => renderCutCard(cut, index, cuts().length)));
   updateWarnings();
+  renderAiNotes();
 }
 
 function startFromForm() {
@@ -318,5 +320,14 @@ export function initCutEditor(newOptions) {
   document.getElementById('cut-add-bottom').addEventListener('click', addCut);
   document.getElementById('cut-copy-all').addEventListener('click', () => {
     options.copyText(buildAllImagePrompts(cuts()), `${cuts().length}컷 프롬프트를 모두 복사했어요!`);
+  });
+
+  // Claude 자동 작성: 새 컷이 들어오면 저장하고 다시 그립니다.
+  initAiPanel({
+    getForm: options.getForm,
+    getType: options.getType,
+    onChange: options.onChange,
+    copyText: options.copyText,
+    onCutsReplaced: handleStructureChange,
   });
 }

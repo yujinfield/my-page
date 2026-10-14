@@ -123,6 +123,8 @@ export function createEmptyForm() {
   form.ctaType = 'comment';  // 기본값: 댓글 키워드 유도
   form.typeChoice = 'auto';  // 'auto' | 'story' | 'info'
   form.cuts = [];            // 컷 편집기의 컷 목록
+  form.caption = '';         // Claude가 써 준 캡션 + 해시태그 (직접 고쳐도 됨)
+  form.review = '';          // Claude가 남긴 콘티 요약·검토 사항
   return form;
 }
 
