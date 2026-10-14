@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>꼼쥐툰 메이커</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/form.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="app-watermark">@꼼쥐</p>
+      <h1 class="app-title">꼼쥐툰 메이커</h1>
+      <p class="app-subtitle">한 번만 입력하면 스토리형인지 정보형인지 골라서 콘티 요청문을 만들어 드려요.</p>
+    </div>
+    <button type="button" id="theme-button" class="icon-button" aria-label="다크 모드 전환">🌙</button>
+  </header>
+
+  <nav class="steps" role="tablist" aria-label="입력 단계">
+    <button type="button" role="tab" id="tab-part1" aria-controls="step-part1" class="step-tab">1. 기본 정보</button>
+    <button type="button" role="tab" id="tab-part2" aria-controls="step-part2" class="step-tab">2. 핵심 정보</button>
+    <button type="button" role="tab" id="tab-part3" aria-controls="step-part3" class="step-tab">3. 마무리</button>
+    <button type="button" role="tab" id="tab-result" aria-controls="step-result" class="step-tab">결과</button>
+  </nav>
+
+  <div class="progress" aria-label="입력 진행률">
+    <div class="progress-bar"><span id="progress-fill" class="progress-fill"></span></div>
+    <span id="progress-text" class="progress-text">0%</span>
+  </div>
+
+  <main class="app-main">
+    <section id="step-part1" class="step-panel" role="tabpanel" aria-labelledby="tab-part1">
+      <h2 class="step-title"><span class="highlight-pink">PART 1</span> 콘텐츠 기본 정보</h2>
+      <p class="step-desc">이야기의 시작과 끝을 적어요. 비어 있는 칸이 있어도 괜찮아요.</p>
+      <div id="part1-fields"></div>
+    </section>
+
+    <section id="step-part2" class="step-panel" role="tabpanel" aria-labelledby="tab-part2" hidden>
+      <h2 class="step-title"><span class="highlight-green">PART 2</span> 핵심 정보 3개</h2>
+      <p class="step-desc">실제 사례는 스토리형 1컷, 핵심 내용과 한 줄 핵심은 정보형·비교형 1컷이 돼요.</p>
+      <div id="part2-fields"></div>
+    </section>
+
+    <section id="step-part3" class="step-panel" role="tabpanel" aria-labelledby="tab-part3" hidden>
+      <h2 class="step-title"><span class="highlight-yellow">PART 3</span> 마무리 및 CTA</h2>
+      <p class="step-desc">독자가 저장·공유·댓글을 할 이유를 정해요.</p>
+      <div id="part3-fields"></div>
+      <div class="action-row">
+        <button type="button" id="make-button" class="button button-primary">꼼쥐 콘티 요청문 만들기</button>
+        <button type="button" id="copy-from-form-button" class="button">입력 내용과 프롬프트 복사</button>
+      </div>
+    </section>
+
+    <section id="step-result" class="step-panel" role="tabpanel" aria-labelledby="tab-result" hidden>
+      <h2 class="step-title"><span class="highlight-sky">결과</span> 꼼쥐의 판단</h2>
+
+      <div class="card verdict">
+        <p class="verdict-label">이 내용은</p>
+        <p class="verdict-type"><span id="verdict-type">정보형</span>에 가까워요</p>
+        <p id="verdict-score" class="verdict-score"></p>
+        <ul id="verdict-reasons" class="verdict-reasons"></ul>
+      </div>
+
+      <fieldset class="choice-group card">
+        <legend class="field-label">어떤 마스터 프롬프트를 쓸까요?</legend>
+        <label class="choice"><input type="radio" name="typeChoice" value="auto"><span>자동 판단 따르기</span></label>
+        <label class="choice"><input type="radio" name="typeChoice" value="story"><span>스토리형 V1</span></label>
+        <label class="choice"><input type="radio" name="typeChoice" value="info"><span>정보형 V2</span></label>
+      </fieldset>
+
+      <div id="warnings-box" class="card warning-box" hidden>
+        <h3 class="card-title">확인해 주세요</h3>
+        <ul id="warnings" class="warning-list"></ul>
+      </div>
+
+      <div class="card">
+        <div class="prompt-head">
+          <h3 id="prompt-title" class="card-title">마스터 프롬프트 + 입력 내용</h3>
+          <button type="button" id="copy-button" class="button button-primary">복사</button>
+        </div>
+        <label for="prompt-output" class="visually-hidden">Claude에 붙여 넣을 요청문</label>
+        <textarea id="prompt-output" class="prompt-output" rows="16" readonly></textarea>
+        <p class="field-help">
+          claude.ai의 꼼쥐 프로젝트 대화창에 붙여 넣으면 컷별 콘티와 이미지 프롬프트를 받을 수 있어요.
+          <a href="https://claude.ai" target="_blank" rel="noopener">claude.ai 열기</a>
+        </p>
+      </div>
+    </section>
+
+    <div class="step-nav">
+      <button type="button" id="prev-button" class="button">이전</button>
+      <button type="button" id="reset-button" class="button button-quiet">처음부터</button>
+      <button type="button" id="next-button" class="button button-primary">다음</button>
+    </div>
+  </main>
+
+  <p id="toast" class="toast" role="status" aria-live="polite"></p>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
