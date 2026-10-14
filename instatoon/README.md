@@ -69,7 +69,7 @@
 | 화면 | HTML + CSS (Flexbox/Grid, CSS 변수) | 빌드 없이 바로 열림 |
 | 동작 | 순수 JavaScript (ES Modules) | 프레임워크 학습 부담 없음 |
 | 저장 | `localStorage` | 서버 없이 브라우저에 저장 |
-| 배포 | GitHub Pages | 무료, push 하면 바로 반영 |
+| 실행 | 내 컴퓨터 (`python3 -m http.server`) | 비공개 저장소라 공개 배포 없음, 무료 |
 
 ---
 
@@ -124,10 +124,22 @@ my-page/
 
 ## 🚀 실행 방법
 
+이 저장소는 **비공개(private)**입니다. 지침·마스터 프롬프트·캐릭터 이미지를 지키기 위해
+GitHub Pages로 공개 배포하지 않고 **내 컴퓨터에서 열어 씁니다.**
+
+처음 한 번 (Mac 터미널):
 ```bash
-# 저장소 루트(my-page)에서
-python3 -m http.server 8000
+cd ~/Documents
+git clone https://github.com/yujinfield/my-page.git
+```
+
+쓸 때마다:
+```bash
+cd ~/Documents/my-page
+git pull                      # 최신 변경 받아오기
+python3 -m http.server 8000   # 서버 켜기 (끌 때는 Ctrl + C)
 # 브라우저에서 http://localhost:8000/instatoon/ 열기
 ```
 
-배포 후 주소: `https://yujinfield.github.io/my-page/instatoon/`
+> `index.html`을 더블클릭해서 열면 동작하지 않습니다. (JavaScript 모듈은 서버로 열어야 함)
+> 입력한 내용은 그 브라우저에만 저장됩니다.
