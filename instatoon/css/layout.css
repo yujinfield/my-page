@@ -1,0 +1,145 @@
+/* 머리말 / 단계 탭 / 진행률 / 본문 / 아래 버튼 배치 */
+
+.app-header,
+.steps,
+.progress,
+.app-main {
+  width: 100%;
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding-left: var(--space-m);
+  padding-right: var(--space-m);
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-m);
+  padding-top: var(--space-xl);
+  padding-bottom: var(--space-l);
+}
+
+.app-watermark {
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+}
+
+.app-title {
+  font-size: var(--font-size-title);
+}
+
+.app-subtitle {
+  color: var(--text-soft);
+}
+
+/* 단계 탭 */
+.steps {
+  display: flex;
+  gap: var(--space-s);
+  overflow-x: auto;
+}
+
+.step-tab {
+  flex: 1;
+  min-width: max-content;
+  padding: var(--space-s) var(--space-m);
+  border: none;
+  border-radius: var(--radius-l);
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  cursor: pointer;
+}
+
+.step-tab[aria-selected="true"] {
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 700;
+}
+
+/* 진행률 */
+.progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  padding-top: var(--space-m);
+  padding-bottom: var(--space-m);
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: var(--radius-l);
+  background: var(--surface-soft);
+  overflow: hidden;
+}
+
+.progress-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s;
+}
+
+.progress-text {
+  min-width: 3em;
+  text-align: right;
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+}
+
+/* 본문 */
+.app-main {
+  padding-bottom: var(--space-xl);
+}
+
+.step-title {
+  margin-bottom: var(--space-s);
+  font-size: 20px;
+}
+
+.step-desc {
+  margin-bottom: var(--space-l);
+  color: var(--text-soft);
+}
+
+/* 이전 / 처음부터 / 다음 */
+.step-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-s);
+  margin-top: var(--space-l);
+}
+
+/* 알림 */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-l);
+  transform: translateX(-50%);
+  max-width: calc(100% - 2 * var(--space-m));
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-l);
+  background: var(--text);
+  color: var(--bg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.toast.is-visible {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding-top: var(--space-l);
+  }
+
+  .step-tab {
+    min-width: 0;
+    padding: var(--space-s) var(--space-xs);
+    font-size: var(--font-size-small);
+  }
+}
