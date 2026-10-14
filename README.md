@@ -40,7 +40,7 @@
 | 화면 | HTML + CSS (Flexbox/Grid, CSS 변수) | 빌드 없이 바로 열림 |
 | 동작 | 순수 JavaScript (ES Modules) | 프레임워크 학습 부담 없음 |
 | 저장 | `localStorage` (추후 IndexedDB 고려) | 서버 없이 브라우저에 저장 |
-| 마크다운 | [marked](https://marked.js.org) + [DOMPurify](https://github.com/cure53/DOMPurify) (CDN) | 렌더링 + XSS 방지 |
+| 마크다운 | 직접 구현 (정규식 기반 파서) | 외부 라이브러리 없이 렌더링 |
 | 폰트 | Pretendard 또는 Google Fonts | 한글 가독성 |
 | 배포 | GitHub Pages | 무료, push 하면 바로 반영 |
 
