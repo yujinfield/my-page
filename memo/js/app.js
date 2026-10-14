@@ -29,7 +29,7 @@ function saveNotes() {
 
 // ===== 메모 분석 =====
 
-/** 메모 content에서 제목 추출 (첫 번째 비어있지 않은 줄, # 제거) */
+/** content에서 제목 추출 (첫 번째 비어있지 않은 줄, # 제거) */
 function getTitle(content) {
   const lines = (content || '').split('\n');
   for (const line of lines) {
@@ -37,6 +37,31 @@ function getTitle(content) {
     if (t) return t;
   }
   return '제목 없음';
+}
+
+/** content에서 본문 추출 (제목 줄 다음 내용) */
+function getBody(content) {
+  const lines = (content || '').split('\n');
+  // 제목(첫 번째 비어있지 않은 줄) 위치 찾기
+  let titleIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].replace(/^#+\s*/, '').trim()) {
+      titleIdx = i;
+      break;
+    }
+  }
+  if (titleIdx === -1) return '';
+  // 제목 다음 줄부터, 맨 앞 빈 줄 제거
+  return lines.slice(titleIdx + 1).join('\n').replace(/^\n+/, '');
+}
+
+/** 제목 + 본문을 하나의 content 문자열로 합치기 */
+function joinContent(title, body) {
+  const t = title.trim();
+  if (!t && !body.trim()) return '';
+  if (!t) return body;
+  if (!body.trim()) return t;
+  return t + '\n\n' + body;
 }
 
 /** 제목 다음 줄부터 미리보기 텍스트 추출 */
@@ -53,7 +78,6 @@ function getPreview(content) {
  * - 슬래시(/)로 중첩 태그 지원: #여행/일본
  */
 function getTags(content) {
-  // 코드 블록 제거
   const noCode = (content || '').replace(/```[\s\S]*?```/g, '');
   const matches = noCode.match(/#([^\s#`~!@$%^&*()\-+=[\]{}|;':",.<>?\\]+)/g);
   if (!matches) return [];
@@ -69,10 +93,37 @@ function getAllTags() {
   return [...tagSet].sort();
 }
 
+// ===== 날짜 포맷 =====
+
+/** 타임스탬프 → 한국어 날짜/시간 문자열 */
+function formatDateKo(timestamp) {
+  if (!timestamp) return '';
+  const d = new Date(timestamp);
+  const year  = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const day   = d.getDate();
+  const hours = d.getHours();
+  const mins  = String(d.getMinutes()).padStart(2, '0');
+  const ampm  = hours < 12 ? '오전' : '오후';
+  const h     = hours % 12 || 12;
+  return `${year}년 ${month}월 ${day}일 ${ampm} ${h}:${mins}`;
+}
+
+/** 에디터 날짜/시간 영역 업데이트 */
+function updateEditorDate(note) {
+  const el = document.getElementById('editor-date');
+  if (!note) { el.textContent = ''; return; }
+
+  const created = formatDateKo(note.createdAt);
+  // 수정일이 작성일과 다를 때만 수정 시간 표시
+  const updatedPart = (note.updatedAt && note.updatedAt !== note.createdAt)
+    ? `  ·  수정 ${formatDateKo(note.updatedAt)}`
+    : '';
+  el.textContent = `작성 ${created}${updatedPart}`;
+}
+
 // ===== URL 해시 라우팅 =====
 // 형식: #tag=여행&id=n_1234567890
-// - tag 없거나 'all' → 전체 보기
-// - id → 선택된 메모
 
 /** 현재 URL 해시를 { tag, id } 객체로 파싱 */
 function parseHash() {
@@ -87,7 +138,7 @@ function parseHash() {
   return params;
 }
 
-/** URL 해시 업데이트 (페이지 이동 없이 히스토리에 남김) */
+/** URL 해시 업데이트 */
 function updateHash(tag, id) {
   const parts = [];
   if (tag && tag !== 'all') parts.push('tag=' + encodeURIComponent(tag));
@@ -102,6 +153,26 @@ function escapeHtml(text) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// ===== 서랍 메뉴 =====
+
+/** 태그 서랍 열기 */
+function openDrawer() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('open');
+}
+
+/** 태그 서랍 닫기 */
+function closeDrawer() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+/** 태그 서랍 토글 */
+function toggleDrawer() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.contains('open') ? closeDrawer() : openDrawer();
 }
 
 // ===== 렌더링 =====
@@ -193,41 +264,48 @@ function renderList() {
 
 /** 오른쪽 에디터에 선택된 메모 로드 */
 function renderEditor() {
-  const editor    = document.getElementById('editor');
-  const btnDelete = document.getElementById('btn-delete');
-  const charCount = document.getElementById('char-count');
+  const editorTitle = document.getElementById('editor-title');
+  const editorBody  = document.getElementById('editor-body');
+  const btnDelete   = document.getElementById('btn-delete');
+  const charCount   = document.getElementById('char-count');
   const { id: currentId } = parseHash();
 
   const note = notes.find(n => n.id === currentId);
 
   if (!note) {
-    editor.value       = '';
-    editor.disabled    = true;
+    editorTitle.value    = '';
+    editorTitle.disabled = true;
+    editorBody.value     = '';
+    editorBody.disabled  = true;
     btnDelete.style.display = 'none';
     charCount.textContent   = '';
+    updateEditorDate(null);
     return;
   }
 
-  // 에디터가 이미 같은 메모를 보여주고 있으면 덮어쓰지 않음 (커서 위치 보존)
-  if (editor.dataset.noteId !== note.id) {
-    editor.value          = note.content;
-    editor.dataset.noteId = note.id;
+  editorTitle.disabled = false;
+  editorBody.disabled  = false;
+  btnDelete.style.display = '';
+
+  // 같은 메모면 값 덮어쓰지 않음 (커서 위치 보존)
+  if (editorTitle.dataset.noteId !== note.id) {
+    editorTitle.value = getTitle(note.content);
+    editorBody.value  = getBody(note.content);
+    editorTitle.dataset.noteId = note.id;
+    editorBody.dataset.noteId  = note.id;
+    // 새 메모 열면 제목 입력 칸에 포커스
+    editorTitle.focus();
   }
 
-  editor.disabled         = false;
-  btnDelete.style.display = '';
-  charCount.textContent   = `${note.content.length}자`;
+  updateEditorDate(note);
+  charCount.textContent = `${note.content.length}자`;
 }
 
 /** 모바일 패널 전환용 클래스 업데이트 */
 function updateMobileClass() {
-  const { tag, id } = parseHash();
-  document.body.classList.remove('show-list', 'show-editor');
-  if (id) {
-    document.body.classList.add('show-editor');
-  } else if (tag) {
-    document.body.classList.add('show-list');
-  }
+  const { id } = parseHash();
+  document.body.classList.remove('show-editor');
+  if (id) document.body.classList.add('show-editor');
 }
 
 /** 전체 화면 다시 그리기 */
@@ -242,6 +320,7 @@ function render() {
 
 /** 새 메모 생성 */
 function createNote() {
+  closeDrawer();
   const { tag } = parseHash();
   const note = {
     id:        'n_' + Date.now(),
@@ -271,21 +350,9 @@ function deleteNote() {
 // 자동 저장 타이머
 let saveTimer = null;
 
-/** 에디터 입력 시 자동 저장 (0.5초 디바운스) */
-function onEditorInput() {
-  const editor    = document.getElementById('editor');
-  const charCount = document.getElementById('char-count');
+/** 자동 저장 예약 (0.5초 디바운스) */
+function scheduleAutoSave(note) {
   const saveStatus = document.getElementById('save-status');
-  const { id: currentId } = parseHash();
-
-  const note = notes.find(n => n.id === currentId);
-  if (!note) return;
-
-  note.content   = editor.value;
-  note.updatedAt = Date.now();
-  editor.dataset.noteId = note.id;
-
-  charCount.textContent  = `${note.content.length}자`;
   saveStatus.textContent = '저장 중…';
 
   clearTimeout(saveTimer);
@@ -293,9 +360,38 @@ function onEditorInput() {
     saveNotes();
     renderSidebar();
     renderList();
+    updateEditorDate(note);
     saveStatus.textContent = '저장됨';
     setTimeout(() => { saveStatus.textContent = ''; }, 1500);
   }, 500);
+}
+
+/** 제목 입력 처리 */
+function onTitleInput() {
+  const editorTitle = document.getElementById('editor-title');
+  const editorBody  = document.getElementById('editor-body');
+  const { id: currentId } = parseHash();
+  const note = notes.find(n => n.id === currentId);
+  if (!note) return;
+
+  note.content   = joinContent(editorTitle.value, editorBody.value);
+  note.updatedAt = Date.now();
+  scheduleAutoSave(note);
+}
+
+/** 본문 입력 처리 */
+function onBodyInput() {
+  const editorTitle = document.getElementById('editor-title');
+  const editorBody  = document.getElementById('editor-body');
+  const charCount   = document.getElementById('char-count');
+  const { id: currentId } = parseHash();
+  const note = notes.find(n => n.id === currentId);
+  if (!note) return;
+
+  note.content   = joinContent(editorTitle.value, editorBody.value);
+  note.updatedAt = Date.now();
+  charCount.textContent = `${note.content.length}자`;
+  scheduleAutoSave(note);
 }
 
 // ===== 초기화 =====
@@ -309,8 +405,25 @@ function init() {
   document.getElementById('btn-delete')
     .addEventListener('click', deleteNote);
 
-  document.getElementById('editor')
-    .addEventListener('input', onEditorInput);
+  // ☰ 메뉴 버튼: 서랍 열기/닫기
+  document.getElementById('btn-menu')
+    .addEventListener('click', toggleDrawer);
+
+  // 오버레이 클릭: 서랍 닫기
+  document.getElementById('sidebar-overlay')
+    .addEventListener('click', closeDrawer);
+
+  // 태그 클릭 시 서랍 자동 닫기
+  document.getElementById('sidebar')
+    .addEventListener('click', function (e) {
+      if (e.target.closest('#tag-list a')) closeDrawer();
+    });
+
+  document.getElementById('editor-title')
+    .addEventListener('input', onTitleInput);
+
+  document.getElementById('editor-body')
+    .addEventListener('input', onBodyInput);
 
   // URL 해시가 바뀔 때마다 화면 갱신
   window.addEventListener('hashchange', render);

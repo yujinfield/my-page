@@ -14,8 +14,9 @@
   --accent:      #dd4c4f;
   --border:      #ddd9d4;
 
-  --sidebar-w:   176px;
   --list-w:      260px;
+  --drawer-w:    240px;
+  --header-h:    50px;
 
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
           "Noto Sans KR", sans-serif;
@@ -53,8 +54,8 @@ body {
   overflow: hidden;
 }
 
-ul  { list-style: none; }
-a   { text-decoration: none; color: inherit; }
+ul     { list-style: none; }
+a      { text-decoration: none; color: inherit; }
 button { cursor: pointer; border: none; background: none; color: inherit; }
 
 /* ===== 앱 루트 ===== */
@@ -64,19 +65,34 @@ button { cursor: pointer; border: none; background: none; color: inherit; }
   height: 100vh;
 }
 
-/* ===== 헤더 ===== */
+/* ===== 헤더: ☰ · MEMO · + ===== */
 #header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  height: 50px;
+  padding: 0 12px;
+  height: var(--header-h);
   background: var(--bg-header);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  position: relative;
+  z-index: 10;
 }
 
+#btn-menu {
+  justify-self: start;
+  font-size: 18px;
+  color: var(--text-sub);
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+}
+#btn-menu:hover  { color: var(--text); background: var(--bg-hover); }
+#btn-menu:active { background: var(--bg-active); }
+
 #logo {
+  justify-self: center;
   font-size: 16px;
   font-weight: 800;
   letter-spacing: 3px;
@@ -86,6 +102,7 @@ button { cursor: pointer; border: none; background: none; color: inherit; }
 
 /* + 버튼 */
 #btn-new {
+  justify-self: end;
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -97,34 +114,51 @@ button { cursor: pointer; border: none; background: none; color: inherit; }
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
   transition: opacity 0.15s;
 }
 #btn-new:hover  { opacity: 0.8; }
 #btn-new:active { opacity: 0.65; }
 
-/* ===== 본문 3단 ===== */
-#main {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-/* ===== 사이드바 (해시태그) ===== */
+/* ===== 서랍형 사이드바 (왼쪽에서 슬라이드) ===== */
 #sidebar {
-  width: var(--sidebar-w);
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  bottom: 0;
+  width: var(--drawer-w);
   background: var(--bg-sidebar);
   border-right: 1px solid var(--border);
   overflow-y: auto;
-  flex-shrink: 0;
   padding: 10px 0;
+  z-index: 200;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  box-shadow: 4px 0 20px rgba(0,0,0,0.08);
 }
 
+#sidebar.open {
+  transform: translateX(0);
+}
+
+/* 서랍 열릴 때 뒤 어둡게 */
+#sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+#sidebar-overlay.open {
+  display: block;
+}
+
+/* ===== 태그 목록 ===== */
 #tag-list li a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 14px;
+  padding: 8px 16px;
   font-size: 13.5px;
   color: var(--text-sub);
   gap: 6px;
@@ -152,6 +186,13 @@ button { cursor: pointer; border: none; background: none; color: inherit; }
   height: 1px;
   background: var(--border);
   margin: 6px 10px;
+}
+
+/* ===== 본문 2단 (목록 | 에디터) ===== */
+#main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 
 /* ===== 메모 목록 ===== */
@@ -207,7 +248,7 @@ button { cursor: pointer; border: none; background: none; color: inherit; }
   text-align: center;
 }
 
-/* ===== 에디터 ===== */
+/* ===== 에디터 패널 ===== */
 #editor-panel {
   flex: 1;
   background: var(--bg-editor);
@@ -224,6 +265,7 @@ button { cursor: pointer; border: none; background: none; color: inherit; }
   padding: 6px 14px;
   height: 40px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 #btn-delete {
@@ -238,10 +280,38 @@ button { cursor: pointer; border: none; background: none; color: inherit; }
   background: var(--bg-hover);
 }
 
-#editor {
+/* 제목 입력 */
+#editor-title {
+  width: 100%;
+  padding: 20px 28px 8px;
+  font-family: var(--font);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  outline: none;
+  caret-color: var(--accent);
+  flex-shrink: 0;
+}
+#editor-title::placeholder { color: var(--text-muted); font-weight: 400; }
+#editor-title:disabled { opacity: 0.4; }
+
+/* 날짜/시간 표시 */
+#editor-date {
+  padding: 0 28px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  min-height: 28px; /* 메모 없을 때도 공간 유지 */
+}
+
+/* 본문 입력 */
+#editor-body {
   flex: 1;
   width: 100%;
-  padding: 24px 28px;
+  padding: 16px 28px 16px;
   font-family: var(--font);
   font-size: 16px;
   line-height: 1.8;
@@ -252,7 +322,8 @@ button { cursor: pointer; border: none; background: none; color: inherit; }
   resize: none;
   caret-color: var(--accent);
 }
-#editor::placeholder { color: var(--text-muted); }
+#editor-body::placeholder { color: var(--text-muted); }
+#editor-body:disabled { opacity: 0.4; }
 
 #status-bar {
   display: flex;
@@ -263,6 +334,7 @@ button { cursor: pointer; border: none; background: none; color: inherit; }
   color: var(--text-muted);
   border-top: 1px solid var(--border);
   height: 26px;
+  flex-shrink: 0;
 }
 
 /* ===== 스크롤바 ===== */
@@ -276,14 +348,10 @@ button { cursor: pointer; border: none; background: none; color: inherit; }
 
 /* ===== 반응형 (모바일 768px 이하) ===== */
 @media (max-width: 768px) {
-  :root {
-    --sidebar-w: 100%;
-    --list-w: 100%;
-  }
+  :root { --list-w: 100%; }
 
   #main { position: relative; }
 
-  #sidebar,
   #list-panel,
   #editor-panel {
     position: absolute;
@@ -292,17 +360,11 @@ button { cursor: pointer; border: none; background: none; color: inherit; }
     transition: transform 0.25s ease;
   }
 
-  /* 기본: 사이드바 보임 */
-  #sidebar    { transform: translateX(0); z-index: 3; }
-  #list-panel { transform: translateX(100%); z-index: 2; }
-  #editor-panel { transform: translateX(200%); z-index: 1; }
-
-  /* tag 선택 시: 목록 보임 */
-  body.show-list #sidebar     { transform: translateX(-100%); }
-  body.show-list #list-panel  { transform: translateX(0); }
+  /* 기본: 목록 보임 */
+  #list-panel   { transform: translateX(0);    z-index: 2; }
+  #editor-panel { transform: translateX(100%); z-index: 1; }
 
   /* memo 선택 시: 에디터 보임 */
-  body.show-editor #sidebar      { transform: translateX(-100%); }
   body.show-editor #list-panel   { transform: translateX(-100%); }
   body.show-editor #editor-panel { transform: translateX(0); }
 }

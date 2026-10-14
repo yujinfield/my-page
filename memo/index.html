@@ -9,21 +9,23 @@
 <body>
   <div id="app">
 
-    <!-- 상단 헤더: MEMO 제목 + + 버튼 -->
+    <!-- 상단 헤더: ☰ 메뉴 + MEMO 제목 + + 버튼 -->
     <header id="header">
+      <button id="btn-menu" aria-label="태그 메뉴 열기" title="메뉴">☰</button>
       <span id="logo">MEMO</span>
       <button id="btn-new" aria-label="새 메모 작성" title="새 메모">+</button>
     </header>
 
-    <!-- 본문: 사이드바(태그) | 목록 | 에디터 -->
+    <!-- 왼쪽 서랍 (클릭 시 슬라이드) -->
+    <div id="sidebar-overlay"></div>
+    <aside id="sidebar">
+      <ul id="tag-list"></ul>
+    </aside>
+
+    <!-- 본문: 목록 | 에디터 -->
     <div id="main">
 
-      <!-- 왼쪽: 해시태그 목록 -->
-      <aside id="sidebar">
-        <ul id="tag-list"></ul>
-      </aside>
-
-      <!-- 가운데: 메모 목록 -->
+      <!-- 왼쪽: 메모 목록 -->
       <section id="list-panel">
         <ul id="memo-list"></ul>
       </section>
@@ -33,10 +35,24 @@
         <div id="editor-actions">
           <button id="btn-delete" aria-label="메모 삭제" title="삭제">🗑</button>
         </div>
+
+        <!-- 제목 입력 -->
+        <input
+          type="text"
+          id="editor-title"
+          placeholder="제목"
+          autocomplete="off"
+        />
+
+        <!-- 날짜/시간 표시 -->
+        <div id="editor-date"></div>
+
+        <!-- 본문 입력 -->
         <textarea
-          id="editor"
-          placeholder="+ 버튼으로 새 메모를 만들거나&#10;왼쪽 목록에서 메모를 선택하세요."
+          id="editor-body"
+          placeholder="내용을 입력하세요..."
         ></textarea>
+
         <div id="status-bar">
           <span id="char-count"></span>
           <span id="save-status"></span>
