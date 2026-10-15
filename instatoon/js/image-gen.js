@@ -27,8 +27,8 @@ export const IMAGE_QUALITIES = [
   { value: 'high', label: '높음 (비쌈, 느림)' },
 ];
 
+// API 키는 설정에 넣지 않습니다. (key-panel.js가 잠금·해제해서 따로 넘겨줌)
 export const DEFAULT_IMAGE_SETTINGS = {
-  apiKey: '',
   model: 'gpt-image-2',
   customModel: '',
   size: '1024x1280',
@@ -40,9 +40,7 @@ export const DEFAULT_IMAGE_SETTINGS = {
 export function normalizeImageSettings(saved) {
   const settings = { ...DEFAULT_IMAGE_SETTINGS };
   if (!saved) return settings;
-  ['apiKey', 'customModel'].forEach((key) => {
-    if (typeof saved[key] === 'string') settings[key] = saved[key].trim();
-  });
+  if (typeof saved.customModel === 'string') settings.customModel = saved.customModel.trim();
   if (IMAGE_MODELS.some((item) => item.value === saved.model)) settings.model = saved.model;
   if (IMAGE_SIZES.some((item) => item.value === saved.size)) settings.size = saved.size;
   if (IMAGE_QUALITIES.some((item) => item.value === saved.quality)) settings.quality = saved.quality;
@@ -77,8 +75,8 @@ function explainError(status, detail) {
 
 // 컷 하나 그리기 → 'data:image/png;base64,...' 주소
 // references가 있으면 /edits(참고 이미지 포함), 없으면 /generations 로 보냅니다.
-export async function generateImage({ settings, prompt, references = [], signal }) {
-  const headers = { Authorization: `Bearer ${settings.apiKey}` };
+export async function generateImage({ apiKey, settings, prompt, references = [], signal }) {
+  const headers = { Authorization: `Bearer ${apiKey}` };
   const common = {
     model: modelName(settings),
     prompt,

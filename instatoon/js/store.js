@@ -64,10 +64,11 @@ export function saveTheme(theme) {
   }
 }
 
-// ---------- 그림 생성 설정 (GPT API 키 포함) ----------
-// API 키는 이 브라우저에만 저장되고, 저장소(GitHub)에는 절대 올라가지 않습니다.
+// ---------- 그림 생성 설정 ----------
+// 모델·크기 같은 설정만 저장합니다. API 키는 여기 넣지 않아요 (아래 암호문 저장 참고).
 
 const IMAGE_SETTINGS_KEY = 'kkomjwi-image-settings';
+const LOCKED_KEY_KEY = 'kkomjwi-image-key-locked';
 
 export function loadImageSettings() {
   try {
@@ -83,5 +84,34 @@ export function saveImageSettings(settings) {
     localStorage.setItem(IMAGE_SETTINGS_KEY, JSON.stringify(settings));
   } catch (error) {
     // 저장이 막혀 있어도 이번 화면에서는 쓸 수 있게 둡니다.
+  }
+}
+
+// ---------- 잠근(암호화한) API 키 ----------
+// 암호문만 저장합니다. 원래 키·잠금 비밀번호는 저장하지 않아요. (key-vault.js)
+
+export function loadLockedKey() {
+  try {
+    const raw = localStorage.getItem(LOCKED_KEY_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+export function saveLockedKey(record) {
+  try {
+    localStorage.setItem(LOCKED_KEY_KEY, JSON.stringify(record));
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+export function clearLockedKey() {
+  try {
+    localStorage.removeItem(LOCKED_KEY_KEY);
+  } catch (error) {
+    // 무시
   }
 }
