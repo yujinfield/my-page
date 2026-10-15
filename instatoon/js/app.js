@@ -7,6 +7,9 @@ import { renderForm } from './form.js';
 import { initCutEditor, renderCuts } from './cuts.js';
 import { initMaterialPanel, renderMaterialPanel, resetMaterialPanel } from './material-panel.js';
 import { initSettingsDialog } from './settings-dialog.js';
+import { initHistoryPanel } from './history-panel.js';
+import { addLog } from './history.js';
+import { normalizeCut } from './cut-plan.js';
 import { loadDraft, saveDraft, clearDraft, loadTheme, saveTheme } from './store.js';
 
 const STEPS = ['part1', 'part2', 'part3', 'result', 'cuts'];
@@ -137,12 +140,26 @@ async function copyText(text, message = '복사했어요!') {
 }
 
 function copyPrompt() {
-  copyText(buildPrompt(form, getFinalType()), '복사했어요! claude.ai 꼼쥐 프로젝트에 붙여 넣으세요.');
+  const type = getFinalType();
+  copyText(buildPrompt(form, type), '복사했어요! claude.ai 꼼쥐 프로젝트에 붙여 넣으세요.');
+  addLog('요청문 복사', `${PROMPT_NAMES[type]}${form.title ? ` · ${form.title}` : ''}`);
+}
+
+// 📜 기록에서 고른 시점의 콘티로 되돌리기
+function restoreSnapshot(snapshot) {
+  form.cuts = snapshot.cuts.map((cut) => normalizeCut(cut));
+  form.caption = typeof snapshot.caption === 'string' ? snapshot.caption : '';
+  form.review = typeof snapshot.review === 'string' ? snapshot.review : '';
+  saveDraft(form);
+  showStep('cuts');
 }
 
 // ---------- 처음부터 ----------
 function resetForm() {
-  if (!confirm('입력한 내용을 모두 지울까요?')) return;
+  if (!confirm('입력한 내용을 모두 지울까요? (지금 콘티는 📜 기록에서 되돌릴 수 있어요)')) return;
+  if (form.cuts.length > 0) {
+    addLog('처음부터 (지우기 전 콘티)', `${form.cuts.length}컷`, { cuts: form.cuts, caption: form.caption, review: form.review });
+  }
   clearDraft();
   form = createEmptyForm();
   renderForm(form, handleChange);
@@ -171,6 +188,7 @@ function toggleTheme() {
 function init() {
   applyTheme(loadTheme());
   initSettingsDialog();
+  initHistoryPanel({ onRestore: restoreSnapshot });
   initCutEditor({
     getForm: () => form,
     getType: getFinalType,

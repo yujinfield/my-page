@@ -305,3 +305,62 @@ select.field-input {
 body.modal-open {
   overflow: hidden;
 }
+
+/* 📋 Claude 답 붙여넣기 */
+.paste-box summary {
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.paste-box[open] summary {
+  margin-bottom: var(--space-s);
+}
+
+.paste-box .field-input {
+  background: var(--surface);
+}
+
+.paste-actions {
+  margin-top: var(--space-s);
+}
+
+/* 📜 작업 기록 */
+.history-actions {
+  margin: var(--space-s) 0 var(--space-m);
+}
+
+#history-empty[hidden] {
+  display: none;
+}
+
+.history-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-s);
+  padding: var(--space-s) 0;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--font-size-small);
+}
+
+.history-time {
+  flex-shrink: 0;
+  min-width: 6.5em;
+  color: var(--text-soft);
+}
+
+.history-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.history-item .button-small {
+  background: var(--surface-soft);
+}

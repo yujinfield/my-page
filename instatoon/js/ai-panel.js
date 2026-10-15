@@ -2,6 +2,7 @@
 // claude.ai 링크로 열었을 때만 쓸 수 있어요. 사용하는 사람의 claude.ai 사용량을 쓰고, API 키는 필요 없어요.
 
 import { buildContiRequest, readContiAnswer } from './ai-conti.js';
+import { addLog, makeSnapshot } from './history.js';
 
 // app.js·cuts.js에서 넘겨받는 함수들
 let options = {
@@ -87,6 +88,7 @@ async function writeContiWithClaude() {
     form.caption = result.caption;
     form.review = result.review;
     options.onCutsReplaced();
+    addLog('Claude 자동 작성', `${result.cuts.length}컷`, makeSnapshot(form));
     setAiStatus(`${result.cuts.length}컷 콘티가 들어왔어요! 노란 경고가 있는 컷부터 확인해 주세요.`, false);
   } catch (error) {
     const code = error && error.code;
