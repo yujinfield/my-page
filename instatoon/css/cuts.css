@@ -173,10 +173,6 @@ select.field-input {
 }
 
 /* 그림 생성 (GPT) */
-.image-settings-details {
-  margin-bottom: var(--space-s);
-}
-
 .key-row {
   display: flex;
   gap: var(--space-s);
@@ -238,4 +234,74 @@ select.field-input {
 #key-locked[hidden],
 #key-active[hidden] {
   display: none;
+}
+
+/* 그림 생성 카드의 키 상태 한 줄 */
+.key-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-s);
+  margin-bottom: var(--space-s);
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+}
+
+.key-summary {
+  font-size: var(--font-size-small);
+}
+
+/* ⚙️ 설정 창 */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: var(--space-l) var(--space-m);
+  overflow-y: auto;
+  background: var(--overlay);
+}
+
+.modal[hidden] {
+  display: none;
+}
+
+.modal-inner {
+  width: 100%;
+  max-width: 560px;
+  padding: var(--space-l);
+  border-radius: var(--radius-l);
+  background: var(--bg);
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-m);
+}
+
+.modal-head .card-title {
+  margin-bottom: 0;
+}
+
+.settings-section-title {
+  margin-bottom: var(--space-m);
+  font-size: 16px;
+}
+
+.modal-inner .field-input {
+  background: var(--surface);
+}
+
+.modal-inner .key-section .button-small:not(.button-primary):not(.button-quiet) {
+  background: var(--surface-soft);
+}
+
+/* 창이 열려 있을 때 뒤 화면이 같이 스크롤되지 않게 */
+body.modal-open {
+  overflow: hidden;
 }

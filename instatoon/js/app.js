@@ -6,6 +6,7 @@ import { buildPrompt } from './prompt.js';
 import { renderForm } from './form.js';
 import { initCutEditor, renderCuts } from './cuts.js';
 import { initMaterialPanel, renderMaterialPanel, resetMaterialPanel } from './material-panel.js';
+import { initSettingsDialog } from './settings-dialog.js';
 import { loadDraft, saveDraft, clearDraft, loadTheme, saveTheme } from './store.js';
 
 const STEPS = ['part1', 'part2', 'part3', 'result', 'cuts'];
@@ -169,6 +170,7 @@ function toggleTheme() {
 // ---------- 시작 ----------
 function init() {
   applyTheme(loadTheme());
+  initSettingsDialog();
   initCutEditor({
     getForm: () => form,
     getType: getFinalType,

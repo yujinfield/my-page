@@ -63,6 +63,7 @@
 | `js/image-gen.js` | GPT 이미지 API 호출(참고 이미지 있으면 /edits, 없으면 /generations), 모델·크기·품질 목록과 기본값 |
 | `js/image-panel.js` | 그림 생성 설정 카드, 컷별 그림 만들기·전체 만들기·내려받기 |
 | `js/key-vault.js` | API 키 암호화·복호화 (Web Crypto: PBKDF2 → AES-GCM), 화면용 가리기 |
+| `js/settings-dialog.js` | 오른쪽 위 ⚙️ 설정 창: 열기·닫기, Esc, 바깥 클릭, Tab이 창 안에서만 돌기, 닫으면 연 버튼으로 포커스 복귀 |
 | `js/key-panel.js` | API 키 화면 (새 키 / 잠김 / 사용 중), 30분 자동 잠금, 예전 평문 키 정리 |
 | `js/store.js` | 데이터 계층. `localStorage` 읽기/쓰기는 **이 파일에서만** |
 | `js/app.js` | 진입점. 상태를 들고 각 모듈을 연결 |
@@ -142,6 +143,7 @@
 
 - **API 키는 절대 코드·저장소에 넣지 않습니다.** 채팅으로 키를 받지 않습니다.
 - **API 키를 평문으로 저장하지 않습니다.** 사용자가 정한 잠금 비밀번호로 암호화한 암호문만 localStorage(`kkomjwi-image-key-locked`)에 둡니다. 풀린 키는 메모리에만 있고, 새로고침·30분 미사용이면 사라집니다. 화면에는 `maskKey()`로 일부만 보여 줍니다.
+- API 키와 그림 설정 화면은 오른쪽 위 ⚙️ 설정 창(`settings-dialog.js`) 안에 있습니다. 오래된 Safari 지원을 위해 `<dialog>` 대신 직접 만든 창을 씁니다.
 - 설정(`kkomjwi-image-settings`)에는 모델·크기 등만 둡니다. 예전 버전이 넣어 둔 `apiKey`는 `key-panel.js`가 지웁니다.
 - `index.html`의 CSP(`script-src 'self'`, `connect-src 'self' https://api.openai.com`)를 유지합니다. 외부 스크립트·인라인 스크립트를 추가하지 않고, 새 외부 연결이 필요하면 CSP에 그 주소만 더합니다. claude.ai 아티팩트로 다시 올릴 때는 CSP 때문에 기능이 막히지 않는지 먼저 확인합니다.
 - 브라우저만으로는 키를 완벽히 숨길 수 없습니다(키가 풀린 동안 페이지 코드는 키를 씀). 사용자에게 OpenAI 사용 한도·이미지 전용 키를 권합니다.
