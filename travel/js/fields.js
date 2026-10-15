@@ -1,7 +1,16 @@
 // 공통 정보 폼의 질문 목록, 빈 폼, 진행률
-// 질문을 바꾸려면 이 파일만 고칩니다.
+// 공통 질문은 이 파일에, 카테고리별 질문은 fields-<카테고리>.js에 있습니다.
 
-// type: 'text' | 'textarea' | 'date' | 'select'
+import { ESIM_GROUPS } from './fields-esim.js';
+import { STAY_GROUPS } from './fields-stay.js';
+import { TOUR_GROUPS } from './fields-tour.js';
+import { PACKAGE_GROUPS } from './fields-package.js';
+import { PASS_GROUPS } from './fields-pass.js';
+
+// type: 'text' | 'textarea' | 'date' | 'select' | 'checks'(여러 개 고르기)
+// options: select·checks의 선택지. { value, label } 또는 글자 그대로 저장할 문자열
+// placeholder (select): 있으면 맨 위에 빈 선택지를 두고, 기본값은 '' (아직 안 고름)
+// note (묶음): 카드 위쪽에 보여 줄 유의할 점
 // volatile: true → 🔄 작성일 기준으로 다시 확인해야 하는 정보
 // required: true → 글 품질에 꼭 필요한 정보
 export const COMMON_GROUPS = [
@@ -189,8 +198,21 @@ export const COMMON_GROUPS = [
   },
 ];
 
-// 모든 공통 필드를 한 줄로 펼친 목록
-export const COMMON_FIELDS = COMMON_GROUPS.flatMap((group) => group.fields);
+// 카테고리별 상세 질문
+export const DETAIL_GROUPS = {
+  esim: ESIM_GROUPS,
+  stay: STAY_GROUPS,
+  tour: TOUR_GROUPS,
+  package: PACKAGE_GROUPS,
+  pass: PASS_GROUPS,
+};
+
+// 묶음 목록 → 필드 목록
+function flatten(groups) {
+  return groups.flatMap((group) => group.fields);
+}
+
+export const COMMON_FIELDS = flatten(COMMON_GROUPS);
 
 // 오늘 날짜 (YYYY-MM-DD, 내 컴퓨터 시간 기준)
 export function today() {
@@ -200,22 +222,42 @@ export function today() {
   return `${now.getFullYear()}-${month}-${day}`;
 }
 
-function createEmptyCommon() {
-  const common = {};
-  COMMON_FIELDS.forEach((field) => {
-    common[field.key] = field.type === 'select' ? field.options[0].value : '';
+// 필드 하나의 빈 값
+function emptyValue(field) {
+  if (field.type === 'checks') return [];
+  if (field.type === 'select' && !field.placeholder) {
+    const first = field.options[0];
+    return typeof first === 'string' ? first : first.value;
+  }
+  return '';
+}
+
+function createEmptyValues(groups) {
+  const values = {};
+  flatten(groups).forEach((field) => {
+    values[field.key] = emptyValue(field);
   });
-  common.checkedDate = today();
-  return common;
+  return values;
+}
+
+function createEmptyDetails() {
+  const details = {};
+  Object.keys(DETAIL_GROUPS).forEach((category) => {
+    details[category] = createEmptyValues(DETAIL_GROUPS[category]);
+  });
+  details.package.packageType = ''; // 1단계에서 고름
+  return details;
 }
 
 export function createEmptyDraft() {
   const now = Date.now();
+  const common = createEmptyValues(COMMON_GROUPS);
+  common.checkedDate = today();
   return {
     id: `t_${now}`,
     category: '',
-    common: createEmptyCommon(),
-    details: { esim: {}, stay: {}, tour: {}, package: {}, pass: {} },
+    common,
+    details: createEmptyDetails(),
     createdAt: now,
     updatedAt: now,
   };
@@ -227,18 +269,29 @@ export function fillMissing(saved) {
   if (!saved) return draft;
 
   const common = { ...draft.common, ...(saved.common || {}) };
-  const details = { ...draft.details, ...(saved.details || {}) };
+  const savedDetails = saved.details || {};
+  const details = {};
+  Object.keys(draft.details).forEach((category) => {
+    details[category] = { ...draft.details[category], ...(savedDetails[category] || {}) };
+  });
   return { ...draft, ...saved, common, details };
 }
 
-// 진행률(%): 글 종류 선택 + 공통 필드 중 채운 칸 비율
-// 기본값이 있는 선택 칸(select)은 세지 않습니다.
+function hasValue(value) {
+  if (Array.isArray(value)) return value.length > 0;
+  return String(value).trim() !== '';
+}
+
+// 진행률(%): 글 종류 선택 + 공통 필드 + 고른 카테고리의 상세 필드 중 채운 칸 비율
 export function getProgress(draft) {
-  const countable = COMMON_FIELDS.filter((field) => field.type !== 'select');
-  const total = countable.length + 1;
+  const detailFields = draft.category ? flatten(DETAIL_GROUPS[draft.category]) : [];
+  const total = 1 + COMMON_FIELDS.length + detailFields.length;
   let filled = draft.category ? 1 : 0;
-  countable.forEach((field) => {
-    if (String(draft.common[field.key]).trim() !== '') filled += 1;
+  COMMON_FIELDS.forEach((field) => {
+    if (hasValue(draft.common[field.key])) filled += 1;
+  });
+  detailFields.forEach((field) => {
+    if (hasValue(draft.details[draft.category][field.key])) filled += 1;
   });
   return Math.round((filled / total) * 100);
 }

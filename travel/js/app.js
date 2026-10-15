@@ -62,7 +62,7 @@ function showStep(step) {
   });
 
   if (step === 'detail') {
-    renderDetailStep(draft);
+    renderDetailStep(draft, handleChange);
   }
   updateStepButtons();
   window.scrollTo(0, 0);

@@ -80,14 +80,52 @@ select.field-input {
   min-width: 0;
 }
 
-.field-group legend {
+.field-group > legend {
   float: left;
   width: 100%;
   padding: 0;
 }
 
-.field-group legend + * {
+.field-group > legend + * {
   clear: both;
+}
+
+/* 카드 안 유의할 점 한 줄 */
+.group-note {
+  margin-bottom: var(--space-m);
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-m);
+  background: var(--warning-bg);
+  font-size: var(--font-size-small);
+}
+
+/* 체크박스 묶음 */
+.choice-group {
+  min-width: 0;
+  padding: 0;
+  border: none;
+}
+
+.choice-group legend {
+  padding: 0;
+}
+
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 44px;
+  margin: 0 var(--space-s) var(--space-s) 0;
+  padding: var(--space-xs) var(--space-m);
+  border-radius: var(--radius-l);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.choice input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
 }
 
 /* 고른 글 종류 설명 */
@@ -127,10 +165,6 @@ select.field-input {
 
 .warning-list li + li {
   margin-top: var(--space-s);
-}
-
-.notice {
-  color: var(--text-soft);
 }
 
 /* 버튼 */
