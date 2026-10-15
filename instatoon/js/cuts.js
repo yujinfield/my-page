@@ -6,6 +6,7 @@ import { createCut, changeTemplate, buildDefaultCuts } from './cut-plan.js';
 import { buildImagePrompt, buildAllImagePrompts } from './prompt.js';
 import { checkCuts } from './checks.js';
 import { initAiPanel, renderAiNotes } from './ai-panel.js';
+import { initImagePanel, renderCutImagePart } from './image-panel.js';
 
 // app.js에서 넘겨받는 함수들
 let options = {
@@ -276,6 +277,7 @@ function renderCutCard(cut, index, total) {
     renderTemplatePart(cut, index),
     renderDirectionPart(cut, index),
     renderPromptPart(cut, index),
+    renderCutImagePart(cut, index),
   );
   return card;
 }
@@ -330,4 +332,7 @@ export function initCutEditor(newOptions) {
     copyText: options.copyText,
     onCutsReplaced: handleStructureChange,
   });
+
+  // GPT 그림 생성 설정과 버튼
+  initImagePanel({ getForm: options.getForm });
 }

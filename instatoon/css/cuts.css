@@ -171,3 +171,52 @@ select.field-input {
 .ai-unavailable {
   margin-top: var(--space-s);
 }
+
+/* 그림 생성 (GPT) */
+.image-settings-details {
+  margin-bottom: var(--space-s);
+}
+
+.key-row {
+  display: flex;
+  gap: var(--space-s);
+}
+
+.key-row .field-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.key-row .button {
+  background: var(--surface-soft);
+}
+
+.image-actions {
+  margin-top: var(--space-s);
+}
+
+#image-custom-model-field[hidden],
+#image-stop[hidden],
+.cut-image-box[hidden] {
+  display: none;
+}
+
+.cut-image-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-s);
+  margin-top: var(--space-s);
+}
+
+.cut-image-preview {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  border-radius: var(--radius-m);
+  background: var(--surface);
+}
+
+.cut-image-box .button {
+  text-decoration: none;
+}

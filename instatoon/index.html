@@ -148,6 +148,49 @@
         </div>
       </div>
 
+      <div id="image-settings" class="card">
+        <h3 class="card-title">🎨 그림 생성 (GPT)</h3>
+        <p id="image-help" class="field-help"></p>
+        <details id="image-settings-details" class="cut-direction image-settings-details">
+          <summary>설정 (API 키·모델·크기)</summary>
+          <div class="field field-compact">
+            <label for="image-api-key" class="field-label">OpenAI API 키</label>
+            <div class="key-row">
+              <input type="password" id="image-api-key" class="field-input" autocomplete="off" spellcheck="false" placeholder="sk-로 시작하는 키">
+              <button type="button" id="image-key-clear" class="button button-small" aria-label="API 키 지우기">지우기</button>
+            </div>
+            <p class="field-help">키는 이 브라우저에만 저장돼요. GitHub에는 올라가지 않아요. 다른 사람과 같이 쓰는 컴퓨터라면 다 쓰고 지워 주세요.</p>
+          </div>
+          <div class="field-row">
+            <div class="field field-compact">
+              <label for="image-model" class="field-label">모델</label>
+              <select id="image-model" class="field-input"></select>
+            </div>
+            <div class="field field-compact">
+              <label for="image-size" class="field-label">크기</label>
+              <select id="image-size" class="field-input"></select>
+            </div>
+          </div>
+          <div id="image-custom-model-field" class="field field-compact" hidden>
+            <label for="image-custom-model" class="field-label">모델 이름 직접 입력</label>
+            <input type="text" id="image-custom-model" class="field-input" autocomplete="off" spellcheck="false" placeholder="예) gpt-image-2">
+          </div>
+          <div class="field field-compact">
+            <label for="image-quality" class="field-label">품질</label>
+            <select id="image-quality" class="field-input"></select>
+          </div>
+          <label class="choice">
+            <input type="checkbox" id="image-use-refs">
+            <span>꼼쥐 턴어라운드·템플릿 레퍼런스 이미지 함께 보내기 (꼼쥐 외형 유지)</span>
+          </label>
+        </details>
+        <div class="action-row image-actions">
+          <button type="button" id="image-all" class="button button-primary image-button">🎨 전체 컷 그림 만들기</button>
+          <button type="button" id="image-stop" class="button" hidden>멈추기</button>
+        </div>
+        <p id="image-status" class="field-help material-status" role="status" aria-live="polite"></p>
+      </div>
+
       <div id="ai-notes" class="card" hidden>
         <h3 class="card-title">Claude 메모</h3>
         <div class="field field-compact">
