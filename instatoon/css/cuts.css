@@ -1,0 +1,173 @@
+/* 컷 편집기: 컷 카드, 도구 막대, 복사 대체 상자 */
+
+.cut-toolbar {
+  margin-bottom: var(--space-l);
+}
+
+.cut-summary {
+  margin-bottom: var(--space-s);
+  color: var(--text-soft);
+}
+
+.cut-card {
+  margin-bottom: var(--space-l);
+  padding: var(--space-m);
+  border-radius: var(--radius-l);
+  background: var(--surface-soft);
+}
+
+.cut-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-s);
+  margin-bottom: var(--space-m);
+}
+
+.cut-title {
+  font-size: 18px;
+}
+
+.cut-badge {
+  padding: 2px var(--space-s);
+  border-radius: var(--radius-s);
+  background: var(--yellow);
+  font-size: var(--font-size-small);
+  font-weight: 400;
+}
+
+.cut-tools {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.cut-section {
+  margin-bottom: var(--space-m);
+}
+
+.cut-section:last-child {
+  margin-bottom: 0;
+}
+
+/* 접었다 펴는 "그림 연출" */
+.cut-direction {
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+}
+
+.cut-direction summary {
+  padding: var(--space-xs) 0;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cut-direction[open] summary {
+  margin-bottom: var(--space-s);
+}
+
+.cut-direction .field-input {
+  background: var(--surface-soft);
+}
+
+.cut-direction .choice {
+  background: var(--surface-soft);
+}
+
+/* 컷별 경고 */
+.cut-warning-list {
+  margin: 0 0 var(--space-m);
+  padding: var(--space-s) var(--space-m) var(--space-s) var(--space-xl);
+  border-radius: var(--radius-m);
+  background: var(--warning-bg);
+  font-size: var(--font-size-small);
+}
+
+.cut-warning-list[hidden] {
+  display: none;
+}
+
+/* 컷 안의 입력칸은 조금 촘촘하게 */
+.field-compact {
+  margin-bottom: var(--space-m);
+}
+
+.field-compact .field-label {
+  margin-bottom: var(--space-xs);
+  font-size: var(--font-size-small);
+}
+
+select.field-input {
+  cursor: pointer;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-s);
+}
+
+.button-small {
+  padding: var(--space-xs) var(--space-m);
+  background: var(--surface);
+}
+
+.button-small.button-primary {
+  background: var(--accent);
+}
+
+.prompt-output-small {
+  font-size: var(--font-size);
+}
+
+/* 자동 복사가 막혔을 때 띄우는 상자 */
+.copy-fallback {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-m);
+  background: var(--overlay);
+}
+
+.copy-fallback[hidden] {
+  display: none;
+}
+
+.copy-fallback-inner {
+  width: 100%;
+  max-width: var(--content-width);
+  padding: var(--space-l);
+  border-radius: var(--radius-l);
+  background: var(--bg);
+}
+
+@media (max-width: 768px) {
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+
+  .cut-head {
+    flex-wrap: wrap;
+  }
+}
+
+/* Claude 자동 작성 진행 상황 */
+.ai-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-s);
+  background: var(--sky);
+}
+
+.ai-status[hidden],
+.ai-unavailable[hidden],
+.button.ai-button[hidden] {
+  display: none;
+}
+
+.ai-unavailable {
+  margin-top: var(--space-s);
+}

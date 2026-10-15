@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/form.css">
+  <link rel="stylesheet" href="css/cuts.css">
 </head>
 <body>
   <header class="app-header">
@@ -23,6 +24,7 @@
     <button type="button" role="tab" id="tab-part2" aria-controls="step-part2" class="step-tab">2. 핵심 정보</button>
     <button type="button" role="tab" id="tab-part3" aria-controls="step-part3" class="step-tab">3. 마무리</button>
     <button type="button" role="tab" id="tab-result" aria-controls="step-result" class="step-tab">결과</button>
+    <button type="button" role="tab" id="tab-cuts" aria-controls="step-cuts" class="step-tab">컷 편집</button>
   </nav>
 
   <div class="progress" aria-label="입력 진행률">
@@ -87,6 +89,67 @@
           <a href="https://claude.ai" target="_blank" rel="noopener">claude.ai 열기</a>
         </p>
       </div>
+
+      <div class="card">
+        <h3 class="card-title">직접 컷을 짜고 싶다면</h3>
+        <p class="field-help">입력 내용으로 기본 컷 구성을 만들고, 컷마다 이미지 생성 프롬프트를 바로 뽑을 수 있어요.</p>
+        <button type="button" id="go-cuts-button" class="button">컷 편집기로 가기</button>
+      </div>
+    </section>
+
+    <section id="step-cuts" class="step-panel" role="tabpanel" aria-labelledby="tab-cuts" hidden>
+      <h2 class="step-title"><span class="highlight-pink">컷 편집</span> 컷별 콘티와 이미지 프롬프트</h2>
+      <p class="step-desc">Claude에게 콘티를 맡기거나 직접 컷을 짜면, 컷마다 이미지 생성 프롬프트가 바로 만들어져요.</p>
+
+      <div id="cut-empty" class="card">
+        <p class="field-help">아직 컷이 없어요. Claude에게 콘티를 맡기거나, 입력한 문장을 그대로 옮긴 기본 구성으로 시작하세요. (어느 쪽이든 입력하지 않은 경험은 지어내지 않아요)</p>
+        <div class="action-row">
+          <button type="button" id="ai-start" class="button button-primary ai-button" hidden>✨ Claude로 콘티 자동 작성</button>
+          <button type="button" id="cut-start" class="button">입력 내용으로 기본 구성 만들기</button>
+        </div>
+        <p id="ai-unavailable" class="field-help ai-unavailable" hidden>
+          ✨ Claude 자동 작성은 claude.ai 링크로 열었을 때만 쓸 수 있어요.
+        </p>
+      </div>
+
+      <div id="ai-status-box" class="card ai-status" hidden>
+        <p id="ai-status-text" class="ai-status-text" role="status" aria-live="polite"></p>
+        <button type="button" id="ai-stop" class="button button-small" hidden>멈추기</button>
+      </div>
+
+      <div id="cut-toolbar" class="cut-toolbar" hidden>
+        <p id="cut-summary" class="cut-summary" aria-live="polite"></p>
+        <div class="action-row">
+          <button type="button" id="cut-copy-all" class="button button-primary">전체 프롬프트 복사</button>
+          <button type="button" id="cut-add" class="button">컷 추가</button>
+          <button type="button" id="ai-rebuild" class="button ai-button" hidden>✨ Claude로 다시 작성</button>
+          <button type="button" id="cut-rebuild" class="button button-quiet">기본 구성 다시 만들기</button>
+        </div>
+      </div>
+
+      <div id="ai-notes" class="card" hidden>
+        <h3 class="card-title">Claude 메모</h3>
+        <div class="field field-compact">
+          <label for="ai-review" class="field-label">콘티 요약·검토 사항</label>
+          <textarea id="ai-review" class="field-input" rows="4"></textarea>
+        </div>
+        <div class="field field-compact">
+          <div class="prompt-head">
+            <label for="ai-caption" class="field-label">캡션 + 해시태그</label>
+            <button type="button" id="ai-caption-copy" class="button button-primary button-small" aria-label="캡션 복사">복사</button>
+          </div>
+          <textarea id="ai-caption" class="field-input" rows="5"></textarea>
+        </div>
+      </div>
+
+      <div id="cut-warnings-box" class="card warning-box" hidden>
+        <h3 class="card-title">전체 검토</h3>
+        <ul id="cut-warnings" class="warning-list"></ul>
+      </div>
+
+      <div id="cut-list"></div>
+
+      <button type="button" id="cut-add-bottom" class="button">+ 컷 추가</button>
     </section>
 
     <div class="step-nav">
@@ -95,6 +158,16 @@
       <button type="button" id="next-button" class="button button-primary">다음</button>
     </div>
   </main>
+
+  <div id="copy-fallback" class="copy-fallback" role="dialog" aria-labelledby="copy-fallback-title" hidden>
+    <div class="copy-fallback-inner">
+      <h2 id="copy-fallback-title" class="card-title">직접 복사해 주세요</h2>
+      <p class="field-help">자동 복사가 막혀 있어요. 아래 글을 전체 선택(⌘A 또는 Ctrl+A)해서 복사하세요.</p>
+      <label for="copy-fallback-text" class="visually-hidden">복사할 글</label>
+      <textarea id="copy-fallback-text" class="prompt-output" rows="12" readonly></textarea>
+      <button type="button" id="copy-fallback-close" class="button">닫기</button>
+    </div>
+  </div>
 
   <p id="toast" class="toast" role="status" aria-live="polite"></p>
 

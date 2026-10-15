@@ -1,6 +1,8 @@
 // 통합 입력폼의 질문 목록
 // 스토리형 V1과 정보형 V2에 공통으로 필요한 질문을 하나로 합쳤습니다.
 
+import { normalizeCut } from './cut-plan.js';
+
 // 핵심 정보(이유)는 항상 3개
 export const POINT_COUNT = 3;
 
@@ -120,6 +122,9 @@ export function createEmptyForm() {
 
   form.ctaType = 'comment';  // 기본값: 댓글 키워드 유도
   form.typeChoice = 'auto';  // 'auto' | 'story' | 'info'
+  form.cuts = [];            // 컷 편집기의 컷 목록
+  form.caption = '';         // Claude가 써 준 캡션 + 해시태그 (직접 고쳐도 됨)
+  form.review = '';          // Claude가 남긴 콘티 요약·검토 사항
   return form;
 }
 
@@ -129,7 +134,7 @@ export function fillMissing(saved) {
   if (!saved) return form;
 
   Object.keys(form).forEach((key) => {
-    if (key !== 'points' && typeof saved[key] === 'string') {
+    if (typeof form[key] === 'string' && typeof saved[key] === 'string') {
       form[key] = saved[key];
     }
   });
@@ -143,6 +148,10 @@ export function fillMissing(saved) {
         }
       });
     });
+  }
+
+  if (Array.isArray(saved.cuts)) {
+    form.cuts = saved.cuts.map((cut) => normalizeCut(cut));
   }
   return form;
 }
