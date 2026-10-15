@@ -220,3 +220,22 @@ select.field-input {
 .cut-image-box .button {
   text-decoration: none;
 }
+
+/* API 키 관리 */
+.key-section {
+  margin-bottom: var(--space-m);
+}
+
+.key-section .button-small:not(.button-primary):not(.button-quiet) {
+  background: var(--surface-soft);
+}
+
+.key-active-text {
+  font-weight: 700;
+}
+
+#key-new[hidden],
+#key-locked[hidden],
+#key-active[hidden] {
+  display: none;
+}

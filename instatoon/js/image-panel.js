@@ -8,6 +8,7 @@ import {
   loadReference, generateImage,
 } from './image-gen.js';
 import { loadImageSettings, saveImageSettings } from './store.js';
+import { initKeyPanel, getApiKey, promptForKey } from './key-panel.js';
 
 const TURNAROUND_FILE = '꼼쥐_턴어라운드.png';
 
@@ -64,7 +65,6 @@ function saveSettings() {
 }
 
 function setupSettings() {
-  element('image-api-key').value = settings.apiKey;
   fillSelect('image-model', IMAGE_MODELS, settings.model);
   element('image-custom-model').value = settings.customModel;
   fillSelect('image-size', IMAGE_SIZES, settings.size);
@@ -72,16 +72,6 @@ function setupSettings() {
   element('image-use-refs').checked = settings.useReferences;
   element('image-custom-model-field').hidden = settings.model !== 'custom';
 
-  element('image-api-key').addEventListener('input', (event) => {
-    settings.apiKey = event.target.value.trim();
-    saveSettings();
-  });
-  element('image-key-clear').addEventListener('click', () => {
-    settings.apiKey = '';
-    element('image-api-key').value = '';
-    saveSettings();
-    setStatus('API 키를 이 브라우저에서 지웠어요.');
-  });
   element('image-model').addEventListener('change', (event) => {
     settings.model = event.target.value;
     saveSettings();
@@ -107,10 +97,9 @@ function setupSettings() {
 // 그림을 만들 준비가 됐는지 확인 (안 됐으면 안내하고 false)
 function ready() {
   if (inClaudeArtifact()) return false;
-  if (settings.apiKey === '') {
+  if (getApiKey() === '') {
     element('image-settings-details').open = true;
-    element('image-api-key').focus();
-    setStatus('먼저 OpenAI API 키를 넣어 주세요.');
+    setStatus(promptForKey());
     return false;
   }
   if (modelName(settings) === '') {
@@ -153,6 +142,7 @@ async function drawCut(index, signal) {
   setCutStatus(cut, '그리는 중… 보통 30초~1분 걸려요.');
   try {
     const url = await generateImage({
+      apiKey: getApiKey(),
       settings,
       prompt: buildImagePrompt(cut, index),
       references: await referencesFor(cut),
@@ -245,6 +235,7 @@ export function renderCutImagePart(cut, index) {
 
 export function initImagePanel(newOptions) {
   options = newOptions;
+  initKeyPanel(); // 예전 평문 키 정리가 설정 저장보다 먼저 일어나야 해요
   setupSettings();
 
   element('image-help').textContent = inClaudeArtifact()

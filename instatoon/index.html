@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 보안: 이 사이트의 스크립트만 실행하고, 외부 연결은 OpenAI 이미지 API만 허용 -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://api.openai.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
   <title>꼼쥐툰 메이커</title>
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
@@ -153,13 +156,48 @@
         <p id="image-help" class="field-help"></p>
         <details id="image-settings-details" class="cut-direction image-settings-details">
           <summary>설정 (API 키·모델·크기)</summary>
-          <div class="field field-compact">
-            <label for="image-api-key" class="field-label">OpenAI API 키</label>
-            <div class="key-row">
-              <input type="password" id="image-api-key" class="field-input" autocomplete="off" spellcheck="false" placeholder="sk-로 시작하는 키">
-              <button type="button" id="image-key-clear" class="button button-small" aria-label="API 키 지우기">지우기</button>
+          <div class="key-section">
+            <p class="field-label">OpenAI API 키</p>
+
+            <div id="key-new" hidden>
+              <div class="field field-compact">
+                <label for="key-input" class="field-label">API 키</label>
+                <input type="password" id="key-input" class="field-input" autocomplete="off" spellcheck="false" placeholder="sk-로 시작하는 키">
+              </div>
+              <div class="field field-compact">
+                <label for="key-pass" class="field-label">잠금 비밀번호 (4자 이상, 이 기기에서 키를 열 때 씀)</label>
+                <input type="password" id="key-pass" class="field-input" autocomplete="new-password">
+              </div>
+              <div class="action-row">
+                <button type="button" id="key-save" class="button button-primary button-small">🔒 잠가서 이 기기에 저장</button>
+                <button type="button" id="key-once" class="button button-small">이번만 쓰기 (저장 안 함)</button>
+              </div>
             </div>
-            <p class="field-help">키는 이 브라우저에만 저장돼요. GitHub에는 올라가지 않아요. 다른 사람과 같이 쓰는 컴퓨터라면 다 쓰고 지워 주세요.</p>
+
+            <div id="key-locked" hidden>
+              <p class="field-help">🔒 이 기기에 저장된 키가 잠겨 있어요.</p>
+              <label for="key-unlock-pass" class="field-label">잠금 비밀번호</label>
+              <div class="key-row">
+                <input type="password" id="key-unlock-pass" class="field-input" autocomplete="current-password">
+                <button type="button" id="key-unlock" class="button button-primary button-small">열기</button>
+              </div>
+              <button type="button" id="key-delete-locked" class="button button-quiet button-small">저장된 키 지우기 (비밀번호를 잊었을 때)</button>
+            </div>
+
+            <div id="key-active" hidden>
+              <p id="key-active-text" class="key-active-text"></p>
+              <p id="key-active-note" class="field-help"></p>
+              <div class="action-row">
+                <button type="button" id="key-lock" class="button button-small">잠그기</button>
+                <button type="button" id="key-delete" class="button button-quiet button-small">저장된 키 지우기</button>
+              </div>
+            </div>
+
+            <p id="key-status" class="field-help material-status" role="status" aria-live="polite"></p>
+            <p class="field-help">
+              키는 잠금 비밀번호로 암호화해서 이 기기에만 저장해요. 원래 키와 비밀번호는 어디에도 저장하지 않고, GitHub에도 올라가지 않아요.
+              더 안전하게 쓰려면 OpenAI에서 <strong>사용 한도</strong>를 정하고, 이미지 기능만 허용한 <strong>전용 키</strong>를 만들어 쓰세요.
+            </p>
           </div>
           <div class="field-row">
             <div class="field field-compact">
