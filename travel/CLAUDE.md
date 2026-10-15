@@ -126,8 +126,8 @@
       esim: {}, stay: {}, tour: {}, package: {}, pass: {}
     },
     verified: {},         // { "<category>.<key>": true } 작성일 기준 확인 체크
-    createdAt: 1760486400000,
-    updatedAt: 1760486400000
+    createdAt: 1792022400000,
+    updatedAt: 1792022400000
   }
 }
 // 테마: localStorage 키 "travel-theme" ("light" | "dark")
