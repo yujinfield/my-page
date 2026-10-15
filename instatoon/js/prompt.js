@@ -1,7 +1,7 @@
 // 입력폼 + 마스터 프롬프트 → Claude에 붙여 넣을 요청문
 // DOM을 쓰지 않는 순수 함수만 둡니다.
 
-import { CTA_TYPES } from './fields.js';
+import { CTA_TYPES, MATERIAL_TYPES } from './fields.js';
 import { STORY_V1, STORY_V1_CLOSING, INFO_V2, INFO_V2_CLOSING } from './master-prompts.js';
 import {
   BASE_STYLE, FIXED_RULES, TEMPLATES, CHARACTERS, EXPRESSIONS, BACKGROUNDS, findOption,
@@ -23,6 +23,12 @@ function show(text, required = true) {
 function ctaLabel(value) {
   const found = CTA_TYPES.find((cta) => cta.value === value);
   return found ? found.label : '';
+}
+
+function materialLine(form) {
+  const type = MATERIAL_TYPES.find((item) => item.value === form.materialType);
+  if (!type || type.value === 'none') return '없음';
+  return form.notionUrl ? `${type.label} (노션에 준비 완료)` : `${type.label} (준비 예정)`;
 }
 
 // 스토리형 V1의 "7. 사용자 입력" 형식
@@ -49,6 +55,7 @@ function buildStoryInputs(form) {
   lines.push(`CTA 방식: ${ctaLabel(form.ctaType)}`);
   lines.push(`댓글 유도 키워드(선택): ${show(form.keyword, false)}`);
   lines.push(`댓글로 제공할 추가 정보(선택): ${show(form.extraInfo, false)}`);
+  lines.push(`댓글로 보낼 자료: ${materialLine(form)}`);
 
   return lines.join('\n');
 }
@@ -77,6 +84,7 @@ function buildInfoInputs(form) {
 
   lines.push('[PART 3. 마무리 및 CTA]');
   lines.push(`1. 댓글로 제공할 추가 정보: ${show(form.extraInfo, false)}`);
+  lines.push(`   댓글로 보낼 자료: ${materialLine(form)}`);
   lines.push(`2. 댓글 유도 키워드: ${show(form.keyword, false)}`);
   lines.push(`3. CTA 방식: ${ctaLabel(form.ctaType)}`);
   lines.push(`(참고) 댓글 유도 문구: ${show(form.commentLine, false)}`);

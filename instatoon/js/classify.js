@@ -104,7 +104,8 @@ export function checkForm(form) {
     warnings.push(`실제 사례가 빈 핵심 정보가 ${emptyCases}개 있어요. 해당 컷은 "확인 필요"로 표시돼요.`);
   }
 
-  if (form.ctaType === 'comment' && (form.keyword.trim() === '' || form.extraInfo.trim() === '')) {
+  const hasMaterial = form.extraInfo.trim() !== '' || form.notionUrl !== '';
+  if (form.ctaType === 'comment' && (form.keyword.trim() === '' || !hasMaterial)) {
     warnings.push('댓글 키워드 유도를 골랐지만 키워드나 보낼 자료가 비어 있어요. 보낼 자료가 없다면 다른 CTA를 골라 주세요.');
   }
 

@@ -49,6 +49,27 @@
       <h2 class="step-title"><span class="highlight-yellow">PART 3</span> 마무리 및 CTA</h2>
       <p class="step-desc">독자가 저장·공유·댓글을 할 이유를 정해요.</p>
       <div id="part3-fields"></div>
+
+      <div id="material-panel" class="card" hidden>
+        <h3 class="card-title">📝 노션 자료</h3>
+        <p id="material-help" class="field-help"></p>
+        <div class="action-row">
+          <button type="button" id="material-draft-button" class="button button-primary" hidden>✨ Claude에게 자료 초안 쓰기</button>
+          <button type="button" id="material-copy-request" class="button">노션 요청문 복사</button>
+        </div>
+        <p id="material-status" class="field-help material-status" role="status" aria-live="polite"></p>
+        <div id="material-draft-box" class="field field-compact" hidden>
+          <label for="material-draft" class="field-label">자료 초안 (첫 줄은 노션 페이지 제목)</label>
+          <textarea id="material-draft" class="field-input" rows="12"></textarea>
+          <div class="action-row material-actions">
+            <button type="button" id="material-save-button" class="button button-primary" hidden>노션에 저장</button>
+          </div>
+        </div>
+        <p id="material-link-row" class="field-help" hidden>
+          노션 페이지: <a id="material-link" href="#" target="_blank" rel="noopener">열기</a>
+        </p>
+      </div>
+
       <div class="action-row">
         <button type="button" id="make-button" class="button button-primary">꼼쥐 콘티 요청문 만들기</button>
         <button type="button" id="copy-from-form-button" class="button">입력 내용과 프롬프트 복사</button>

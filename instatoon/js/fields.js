@@ -80,13 +80,6 @@ export const POINT_FIELDS = [
 // PART 3. 마무리 및 CTA
 export const CTA_FIELDS = [
   {
-    key: 'extraInfo',
-    label: '댓글로 제공할 추가 정보',
-    help: '실제로 보낼 자료가 있을 때만 적어요.',
-    placeholder: '예) 제가 실제 사용한 붙이는 네일 제품 정보',
-    multiline: true,
-  },
-  {
     key: 'keyword',
     label: '댓글 유도 키워드',
     help: '짧은 한 단어가 좋아요.',
@@ -100,6 +93,23 @@ export const CTA_FIELDS = [
     placeholder: '예) 여러분은 촬영 네일 어떻게 하셨어요?',
     multiline: false,
   },
+  {
+    key: 'extraInfo',
+    label: '댓글로 제공할 추가 정보',
+    help: '자료에 넣을 실제 정보를 적어요. 자료 종류를 고르면 Claude가 이 내용으로 노션 자료를 정리해 줘요.',
+    placeholder: '예) 제가 실제 사용한 붙이는 네일 제품 정보, 붙이는 순서, 촬영 전날 체크한 것',
+    multiline: true,
+  },
+];
+
+// 댓글로 보낼 자료 종류 (지침 8번: 체크리스트, 비용표 등)
+export const MATERIAL_TYPES = [
+  { value: 'none', label: '자료 없음' },
+  { value: 'checklist', label: '체크리스트' },
+  { value: 'cost', label: '비용 정리' },
+  { value: 'list', label: '제품·장소 목록' },
+  { value: 'timeline', label: '일정·타임라인' },
+  { value: 'other', label: '기타' },
 ];
 
 export const CTA_TYPES = [
@@ -125,6 +135,9 @@ export function createEmptyForm() {
   form.cuts = [];            // 컷 편집기의 컷 목록
   form.caption = '';         // Claude가 써 준 캡션 + 해시태그 (직접 고쳐도 됨)
   form.review = '';          // Claude가 남긴 콘티 요약·검토 사항
+  form.materialType = 'none'; // 댓글로 보낼 자료 종류
+  form.materialDraft = '';   // Claude가 쓴 자료 초안 (노션에 올리기 전에 고칠 수 있음)
+  form.notionUrl = '';       // 노션에 만든 자료 페이지 주소
   return form;
 }
 
@@ -148,6 +161,10 @@ export function fillMissing(saved) {
         }
       });
     });
+  }
+
+  if (!MATERIAL_TYPES.some((type) => type.value === form.materialType)) {
+    form.materialType = 'none';
   }
 
   if (Array.isArray(saved.cuts)) {
