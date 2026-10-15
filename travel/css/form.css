@@ -1,0 +1,164 @@
+/* 입력칸, 카드, 버튼, 안내 상자 */
+
+.field {
+  margin-bottom: var(--space-l);
+}
+
+.field:last-child {
+  margin-bottom: 0;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-weight: 700;
+}
+
+.field-help {
+  margin-bottom: var(--space-s);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+}
+
+.field-input {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-s) var(--space-m);
+  border: 2px solid transparent;
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  font-size: var(--font-size); /* 16px 이상: 아이폰 자동 확대 방지 */
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+textarea.field-input {
+  resize: vertical;
+}
+
+select.field-input {
+  cursor: pointer;
+}
+
+/* 필수 / 작성일 기준 확인 표시 */
+.badge {
+  display: inline-block;
+  padding: 0 var(--space-s);
+  border-radius: var(--radius-l);
+  background: var(--badge-bg);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  font-weight: 400;
+}
+
+.badge-volatile {
+  background: var(--warning-bg);
+  color: var(--text);
+}
+
+/* 카드 */
+.card {
+  margin: 0 0 var(--space-l);
+  padding: var(--space-m);
+  border: none;
+  border-radius: var(--radius-l);
+  background: var(--surface-soft);
+}
+
+.card-title {
+  margin-bottom: var(--space-m);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* fieldset의 legend를 카드 제목처럼 보이게 */
+.field-group {
+  min-width: 0;
+}
+
+.field-group legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+}
+
+.field-group legend + * {
+  clear: both;
+}
+
+/* 고른 글 종류 설명 */
+.preview {
+  background: var(--sky);
+}
+
+.preview-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.preview-summary {
+  margin-bottom: var(--space-m);
+  color: var(--text-soft);
+}
+
+.preview-label {
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+}
+
+.preview-question {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* 유의할 점 */
+.warning-box {
+  background: var(--warning-bg);
+}
+
+.warning-list {
+  margin: 0;
+  padding-left: var(--space-l);
+}
+
+.warning-list li + li {
+  margin-top: var(--space-s);
+}
+
+.notice {
+  color: var(--text-soft);
+}
+
+/* 버튼 */
+.button {
+  min-height: 44px;
+  padding: var(--space-s) var(--space-l);
+  border: none;
+  border-radius: var(--radius-l);
+  background: var(--surface-soft);
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.button[hidden] {
+  display: none;
+}
+
+.button-primary {
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 700;
+}
+
+.button-quiet {
+  background: transparent;
+  color: var(--text-soft);
+}

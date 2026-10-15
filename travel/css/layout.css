@@ -1,0 +1,140 @@
+/* 머리말 / 단계 탭 / 진행률 / 본문 / 아래 버튼 배치 */
+
+.app-header,
+.steps,
+.progress,
+.app-main {
+  width: 100%;
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding-left: var(--space-m);
+  padding-right: var(--space-m);
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-m);
+  padding-top: var(--space-xl);
+  padding-bottom: var(--space-l);
+}
+
+.app-title {
+  font-size: var(--font-size-title);
+}
+
+.app-subtitle {
+  color: var(--text-soft);
+}
+
+.icon-button {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  cursor: pointer;
+}
+
+/* 단계 탭 */
+.steps {
+  display: flex;
+  gap: var(--space-s);
+}
+
+.step-tab {
+  flex: 1;
+  padding: var(--space-s) var(--space-m);
+  border: none;
+  border-radius: var(--radius-l);
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  cursor: pointer;
+}
+
+.step-tab[aria-selected="true"] {
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 700;
+}
+
+.step-tab:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* 진행률 */
+.progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  padding-top: var(--space-m);
+  padding-bottom: var(--space-m);
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: var(--radius-l);
+  background: var(--surface-soft);
+  overflow: hidden;
+}
+
+.progress-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s;
+}
+
+.progress-text {
+  min-width: 3em;
+  text-align: right;
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+}
+
+/* 본문 */
+.app-main {
+  padding-bottom: var(--space-xl);
+}
+
+.step-title {
+  margin-bottom: var(--space-s);
+  font-size: 20px;
+}
+
+.step-desc {
+  margin-bottom: var(--space-l);
+  color: var(--text-soft);
+}
+
+/* 이전 / 처음부터 / 다음 */
+.step-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-s);
+  margin-top: var(--space-l);
+}
+
+.save-status {
+  margin-top: var(--space-s);
+  min-height: 1.6em;
+  text-align: right;
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding-top: var(--space-l);
+  }
+
+  .step-tab {
+    padding: var(--space-s) var(--space-xs);
+    font-size: var(--font-size-small);
+  }
+}

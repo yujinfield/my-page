@@ -53,12 +53,12 @@
 | --- | --- |
 | `index.html` | 마크업 뼈대, CSS/JS 불러오기 |
 | `css/base.css` | CSS 변수(색상·간격·폰트), 리셋, 다크 모드 |
-| `css/layout.css` | 머리말 / 단계 탭(공통 → 카테고리 → 상세 → 검토·초안) / 본문 배치, 반응형 |
+| `css/layout.css` | 머리말 / 단계 탭(글 종류 → 공통 → 상세 → 검토·초안) / 본문 배치, 반응형 |
 | `css/form.css` | 입력칸, 카드, 표 입력(이용 기록·플랫폼 비교), 🔄 확인 체크, 경고 상자 |
-| `css/result.css` | 검토 결과, 글 초안 미리보기, 복사 버튼 |
-| `js/categories.js` | 카테고리 5종 상수: 이름, 핵심 질문, 유의할 점, 금지 표현, 기본 CTA, 글 구조(소제목 순서) |
+| `css/result.css` | 검토 결과, 글 초안 미리보기, 복사 버튼 (6단계에서 추가) |
+| `js/categories.js` | 카테고리 5종 상수: 이름, 핵심 질문, 유의할 점, 기본 CTA, 패키지 유형 (금지 표현·글 구조는 이후 단계에서 추가) |
 | `js/fields.js` | 공통 폼 + 카테고리별 폼 질문 목록(라벨·설명·예시·입력 방식·`volatile`·`required`), 빈 폼, 진행률 |
-| `js/form.js` | `fields.js`를 보고 입력칸을 그림 |
+| `js/form.js` | 글 종류 목록 상자, `fields.js`를 보고 공통 입력칸, 상세 단계 안내를 그림 |
 | `js/calc.js` | 교통패스 본전 계산, 패키지·숙소 실제 총액 계산 (순수 함수) |
 | `js/checks.js` | 자동 검토: 단정 표현, 빠진 필수 정보, 확인 안 된 변동 정보, 제휴 표시 (순수 함수, 경고 목록 반환) |
 | `js/writer.js` | 입력 → 마크다운 글 초안 (순수 함수) |
@@ -72,6 +72,8 @@
 
 ## 입력 폼
 
+- 첫 단계는 **글 종류 선택**입니다. `<select>` 목록 상자이고, 선택지는 `categories.js`의 `CATEGORIES`로 채웁니다. 고르기 전에는 다음 단계 탭·버튼을 막습니다.
+- 공통 질문은 `COMMON_GROUPS`(글 방향 / 여행 정보 / 실제 경험 / 제휴 정보 / 추천·비추천 / 자료와 작성일)로 묶어 카드별로 보여 줍니다.
 - 질문을 바꾸려면 `fields.js`만 고칩니다. 폼 화면(`form.js`)은 목록을 보고 그리기만 합니다.
 - 필드 정의 예:
 
@@ -79,15 +81,16 @@
 {
   key: "dailyLimit",
   label: "일일 제공량 이후 속도",
-  hint: "‘무제한’이라도 하루 몇 GB 뒤 느려지는지 꼭 적어 주세요.",
+  help: "‘무제한’이라도 하루 몇 GB 뒤 느려지는지 꼭 적어 주세요.",
   example: "하루 2GB 이후 384kbps",
-  type: "text",        // "text" | "textarea" | "number" | "date" | "select" | "checks" | "list" | "table"
+  type: "text",        // 지금: "text" | "textarea" | "date" | "select" / 이후: "number" | "checks" | "table"
   volatile: true,      // 🔄 작성일 기준 확인이 필요한 정보
   required: true       // 비어 있으면 검토 경고
 }
 ```
 
-- `volatile: true` 필드 옆에는 "작성일 기준 다시 확인했어요" 체크를 붙입니다.
+- 여러 개를 받는 칸(서브 키워드, 제휴 링크, 추천 대상 등)은 `textarea`에 **한 줄에 하나씩** 받고, 문자열로 저장합니다. 글을 만들 때 줄 단위로 나눕니다.
+- `volatile: true` 필드에는 지금 "🔄 작성일 기준 확인" 표시만 붙어 있습니다. 3단계에서 "작성일 기준 다시 확인했어요" 체크를 붙입니다.
 - 카테고리의 "특히 유의할 점"은 폼 위쪽 안내 상자로 보여 줍니다 (`categories.js`에서 가져옴).
 - 여행 패키지는 첫 질문에서 유형(항공+호텔 / 자유여행 패키지 / 세미패키지 / 패키지여행)을 먼저 고릅니다.
 - 카테고리를 바꿔도 공통 정보는 지우지 않습니다. 상세 폼 값은 카테고리별로 따로 보관합니다.
@@ -108,24 +111,26 @@
   version: 1,
   draft: {
     id: "t_<timestamp>",
-    category: "esim",     // "esim" | "stay" | "tour" | "package" | "pass"
-    checkedDate: "2026-10-15",   // 작성일(확인일), 글 맨 위 "기준" 문구에 사용
-    common: {
+    category: "",         // "" (아직 안 고름) | "esim" | "stay" | "tour" | "package" | "pass"
+    common: {             // 모든 값은 문자열 (fields.js의 key 그대로)
       purpose: "search",  // "search" | "conversion" | "review" | "compare"
-      mainKeyword: "", subKeywords: [],
-      destination: "", travelDate: "", people: "", travelStyle: "",
-      usedMyself: true, experience: "",
-      paidPrice: "", usedDate: "",
-      affiliateLinks: [], discountCode: "",
+      mainKeyword: "", subKeywords: "",          // 서브 키워드는 한 줄에 하나
       readerQuestion: "",
-      recommendFor: [], notRecommendFor: [],
-      media: [],          // [{ label, kind: "official" | "real" }]
-      cta: "price"        // "price" | "discount" | "book" | "comment"
+      cta: "price",       // "price" | "discount" | "book" | "comment"
+      destination: "", travelDate: "", people: "", travelStyle: "",
+      usedMyself: "yes",  // "yes" | "no"
+      experience: "", paidPrice: "", usedDate: "",
+      affiliateLinks: "", discountCode: "",      // 링크는 한 줄에 하나
+      recommendFor: "", notRecommendFor: "",     // 한 줄에 하나
+      media: "",          // 한 줄에 하나, (공식)/(실제) 표시
+      checkedDate: "2026-10-15"  // 작성일(확인일), 기본값 오늘. 글 맨 위 "기준" 문구에 사용
     },
     details: {            // 카테고리별 상세 폼 값 (fields.js의 key 그대로)
-      esim: {}, stay: {}, tour: {}, package: {}, pass: {}
+      esim: {}, stay: {}, tour: {},
+      package: { packageType: "" },  // "air-hotel" | "free" | "semi" | "full"
+      pass: {}
     },
-    verified: {},         // { "<category>.<key>": true } 작성일 기준 확인 체크
+    // verified: {}       // 3단계에서 추가 예정: { "<category>.<key>": true } 작성일 기준 확인 체크
     createdAt: 1792022400000,
     updatedAt: 1792022400000
   }
@@ -150,7 +155,7 @@
 - 색상·간격은 `base.css`의 CSS 변수로만 지정하고, 하드코딩하지 않습니다.
 - 다크 모드: `@media (prefers-color-scheme: dark)` + `[data-theme="dark"]`로 수동 전환 지원.
 - 본문 폰트 크기는 16px 이상 (아이폰 Safari 입력 시 자동 확대 방지).
-- 모바일(약 768px 이하)에서는 한 번에 한 단계만 보이고, 이전/다음 버튼으로 이동합니다.
+- 모든 화면 폭에서 한 번에 한 단계만 보이고, 단계 탭이나 이전/다음 버튼으로 이동합니다.
 - 버튼에는 `aria-label`, 입력칸에는 `<label>`, 키보드로도 모든 기능을 쓸 수 있게 합니다.
 
 ## 보안
@@ -167,6 +172,8 @@ python3 -m http.server 8000   # 저장소 루트에서 → http://localhost:8000
 
 자동 테스트는 아직 없습니다. 변경 후에는 다음을 직접 확인합니다.
 
+- [ ] 글 종류를 고르기 전에는 다음 단계로 못 가고, 고르면 핵심 질문이 보이는가
+- [ ] 여행 패키지를 고르면 패키지 유형 목록 상자가 나타나는가
 - [ ] 폼 입력 → 새로고침해도 남아 있는가
 - [ ] 카테고리를 바꾸면 상세 폼이 바뀌고, 공통 정보는 그대로인가
 - [ ] 🔄 항목을 확인 체크하지 않으면 초안에 `[작성일 기준 확인 필요]`가 붙는가
