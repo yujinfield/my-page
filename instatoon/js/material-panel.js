@@ -1,6 +1,6 @@
 // PART 3 "노션 자료" 패널
 // 1) Claude가 자료 초안을 씀 → 2) 사용자가 고침 → 3) 노션에 비공개 페이지로 저장
-// claude.ai 링크로 열었을 때만 자동으로 되고, 내 컴퓨터에서는 요청문을 복사해 Claude에게 부탁합니다.
+// claude.ai 링크로 열었을 때만 자동으로 되고, 공용 링크·내 컴퓨터에서는 요청문을 복사해 Claude에게 부탁합니다.
 
 import {
   NOTION_SERVER, NOTION_CREATE_TOOL, buildMaterialRequest, buildMaterialChatRequest,

@@ -1,7 +1,7 @@
 // GPT 이미지 API로 컷 그림 만들기
 // 화면(DOM)은 건드리지 않습니다. 버튼·결과 표시는 image-panel.js에서 합니다.
 //
-// 내 컴퓨터(localhost)에서 열었을 때만 동작합니다.
+// 공용 링크(github.io)나 내 컴퓨터(localhost)에서 열었을 때만 동작합니다.
 // claude.ai 링크로 연 페이지는 외부 인터넷 접속이 막혀 있어서 OpenAI에 요청할 수 없어요.
 
 const OPENAI_URL = 'https://api.openai.com/v1/images';
@@ -104,7 +104,7 @@ export async function generateImage({ settings, prompt, references = [], signal 
     }
   } catch (error) {
     if (error && error.name === 'AbortError') throw new Error('멈췄어요.');
-    throw new Error('OpenAI에 연결하지 못했어요. 인터넷 연결을 확인하거나, 내 컴퓨터(localhost)에서 열었는지 확인해 주세요.');
+    throw new Error('OpenAI에 연결하지 못했어요. 인터넷 연결을 확인하거나, 공용 링크·내 컴퓨터에서 열었는지 확인해 주세요.');
   }
 
   const data = await response.json().catch(() => null);

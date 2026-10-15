@@ -248,7 +248,7 @@ export function initImagePanel(newOptions) {
   setupSettings();
 
   element('image-help').textContent = inClaudeArtifact()
-    ? '그림 생성은 내 컴퓨터(localhost)에서 열었을 때만 돼요. claude.ai 링크는 외부 인터넷이 막혀 있어서 OpenAI에 연결할 수 없어요.'
+    ? '그림 생성은 공용 링크(yujinfield.github.io)나 내 컴퓨터에서 열었을 때만 돼요. claude.ai 링크는 외부 인터넷이 막혀 있어서 OpenAI에 연결할 수 없어요.'
     : '컷마다 이미지 생성 프롬프트로 GPT가 그림을 그려요. 그림마다 OpenAI 비용이 들어요.';
 
   element('image-all').addEventListener('click', drawAll);
