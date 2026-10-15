@@ -115,3 +115,27 @@ export function clearLockedKey() {
     // 무시
   }
 }
+
+// ---------- 작업 기록 ----------
+// 무엇을 언제 했는지와, 콘티가 바뀔 때의 컷 스냅샷을 남깁니다. API 키는 절대 넣지 않아요.
+
+const HISTORY_KEY = 'kkomjwi-history';
+
+export function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+export function saveHistory(list) {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    return true;
+  } catch (error) {
+    return false; // 저장 공간이 꽉 찼을 때
+  }
+}

@@ -6,6 +6,8 @@ import {
   NOTION_SERVER, NOTION_CREATE_TOOL, buildMaterialRequest, buildMaterialChatRequest,
   readMaterialAnswer, draftToText, textToDraft, buildNotionPageInput, findNotionUrl,
 } from './notion-material.js';
+import { addLog } from './history.js';
+import { MATERIAL_TYPES } from './fields.js';
 
 // app.js에서 넘겨받는 함수들
 let options = {
@@ -92,6 +94,8 @@ async function writeDraft() {
       return;
     }
     form.materialDraft = draftToText(draft.title, draft.content);
+    const typeName = (MATERIAL_TYPES.find((type) => type.value === form.materialType) || {}).label || '자료';
+    addLog('노션 자료 초안', `${typeName} · ${draft.title}`);
     element('material-draft').value = form.materialDraft;
     options.onChange();
     setStatus('초안이 나왔어요! "(검증 필요)" 표시를 확인하고 고친 뒤 노션에 저장하세요.');
@@ -119,6 +123,7 @@ async function saveToNotion() {
     const result = await mcp.callTool(NOTION_SERVER, NOTION_CREATE_TOOL, buildNotionPageInput(title, content));
     const url = findNotionUrl(result.payload !== undefined ? result.payload : result.content);
     form.notionUrl = url;
+    addLog('노션 저장', `${title || '@꼼쥐 댓글 자료'}${url ? ` · ${url}` : ''}`);
     options.onChange();
     setStatus(url
       ? '노션에 비공개 페이지로 저장했어요! 공유할 때는 노션에서 공유 설정을 바꿔 주세요.'

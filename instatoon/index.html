@@ -20,6 +20,7 @@
       <p class="app-subtitle">한 번만 입력하면 스토리형인지 정보형인지 골라서 콘티 요청문을 만들어 드려요.</p>
     </div>
     <div class="header-actions">
+      <button type="button" id="history-button" class="icon-button" aria-label="작업 기록 보기" aria-haspopup="dialog" aria-controls="history-dialog">📜</button>
       <button type="button" id="settings-button" class="icon-button" aria-label="설정 열기 (API 키·그림 설정)" aria-haspopup="dialog" aria-controls="settings-dialog">⚙️</button>
       <button type="button" id="theme-button" class="icon-button" aria-label="다크 모드 전환">🌙</button>
     </div>
@@ -113,6 +114,7 @@
         <textarea id="prompt-output" class="prompt-output" rows="16" readonly></textarea>
         <p class="field-help">
           claude.ai의 꼼쥐 프로젝트 대화창에 붙여 넣으면 컷별 콘티와 이미지 프롬프트를 받을 수 있어요.
+          받은 답은 <strong>컷 편집 → 📋 Claude 답 붙여넣기</strong>에 통째로 넣으면 컷이 채워져요.
           <a href="https://claude.ai" target="_blank" rel="noopener">claude.ai 열기</a>
         </p>
       </div>
@@ -127,6 +129,17 @@
     <section id="step-cuts" class="step-panel" role="tabpanel" aria-labelledby="tab-cuts" hidden>
       <h2 class="step-title"><span class="highlight-pink">컷 편집</span> 컷별 콘티와 이미지 프롬프트</h2>
       <p class="step-desc">Claude에게 콘티를 맡기거나 직접 컷을 짜면, 컷마다 이미지 생성 프롬프트가 바로 만들어져요.</p>
+
+      <details id="paste-box" class="card paste-box">
+        <summary>📋 Claude 답 붙여넣기 (claude.ai에서 받은 콘티)</summary>
+        <p class="field-help">결과 탭에서 복사한 요청문을 claude.ai 꼼쥐 프로젝트에 보내고, 받은 답을 <strong>통째로</strong> 붙여 넣으세요. 답의 맨 끝 JSON으로 컷 수·대본·연출·캡션을 채워요.</p>
+        <label for="paste-input" class="visually-hidden">Claude 답</label>
+        <textarea id="paste-input" class="field-input" rows="8" placeholder="Claude의 답 전체를 여기에 붙여 넣기"></textarea>
+        <div class="action-row paste-actions">
+          <button type="button" id="paste-apply" class="button button-primary">컷 편집기에 넣기</button>
+        </div>
+        <p id="paste-status" class="field-help material-status" role="status" aria-live="polite"></p>
+      </details>
 
       <div id="cut-empty" class="card">
         <p class="field-help">아직 컷이 없어요. Claude에게 콘티를 맡기거나, 입력한 문장을 그대로 옮긴 기본 구성으로 시작하세요. (어느 쪽이든 입력하지 않은 경험은 지어내지 않아요)</p>
@@ -200,11 +213,27 @@
     </div>
   </main>
 
+  <div id="history-dialog" class="modal" role="dialog" aria-modal="true" aria-labelledby="history-title" hidden>
+    <div class="modal-inner">
+      <div class="modal-head">
+        <h2 id="history-title" class="card-title">📜 작업 기록</h2>
+        <button type="button" class="icon-button modal-close" aria-label="기록 닫기">✕</button>
+      </div>
+      <p class="field-help">이 브라우저에 최근 100개까지 남아요. 콘티가 바뀐 기록은 그 시점으로 되돌릴 수 있어요(최근 10개). API 키는 기록하지 않아요.</p>
+      <div class="action-row history-actions">
+        <button type="button" id="history-download" class="button button-small">기록 내려받기 (.json)</button>
+        <button type="button" id="history-clear" class="button button-quiet button-small">기록 지우기</button>
+      </div>
+      <p id="history-empty" class="field-help">아직 기록이 없어요.</p>
+      <ol id="history-list" class="history-list"></ol>
+    </div>
+  </div>
+
   <div id="settings-dialog" class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
     <div class="modal-inner">
       <div class="modal-head">
         <h2 id="settings-title" class="card-title">⚙️ 설정</h2>
-        <button type="button" id="settings-close" class="icon-button" aria-label="설정 닫기">✕</button>
+        <button type="button" id="settings-close" class="icon-button modal-close" aria-label="설정 닫기">✕</button>
       </div>
       <h3 class="settings-section-title">🎨 그림 생성 (GPT)</h3>
         <div class="key-section">

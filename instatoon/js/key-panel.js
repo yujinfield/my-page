@@ -11,6 +11,7 @@ import { canEncrypt, lockKey, unlockKey, maskKey } from './key-vault.js';
 import {
   loadLockedKey, saveLockedKey, clearLockedKey, loadImageSettings, saveImageSettings,
 } from './store.js';
+import { addLog } from './history.js';
 
 const AUTO_LOCK_MS = 30 * 60 * 1000; // 30분 동안 안 쓰면 자동으로 잠금
 const MIN_PASSPHRASE = 4;
@@ -111,6 +112,7 @@ async function saveLocked() {
   }
   clearInputs();
   useKey(apiKey);
+  addLog('API 키', '잠가서 저장');
   setStatus('키를 잠가서 이 기기에 저장했어요. 다음부터는 잠금 비밀번호만 넣으면 돼요.');
 }
 
@@ -119,6 +121,7 @@ function useOnce() {
   if (apiKey === '') return;
   clearInputs();
   useKey(apiKey);
+  addLog('API 키', '이번만 쓰기 (저장 안 함)');
   setStatus('이번 창에서만 키를 써요. 저장하지 않았어요.');
 }
 
@@ -138,6 +141,7 @@ async function unlock() {
   }
   clearInputs();
   useKey(apiKey);
+  addLog('API 키', '잠금 해제');
   setStatus('키를 열었어요.');
 }
 
@@ -150,6 +154,7 @@ function lockNow() {
 function deleteKey() {
   if (!confirm('이 기기에 저장된 API 키를 지울까요?')) return;
   clearLockedKey();
+  addLog('API 키', '저장된 키 지움');
   forgetActiveKey();
   clearInputs();
   render();

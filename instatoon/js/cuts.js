@@ -7,6 +7,9 @@ import { buildImagePrompt, buildAllImagePrompts } from './prompt.js';
 import { checkCuts } from './checks.js';
 import { initAiPanel, renderAiNotes } from './ai-panel.js';
 import { initImagePanel, renderCutImagePart } from './image-panel.js';
+import { initPastePanel } from './paste-panel.js';
+import { describeAnalysis } from './conti-import.js';
+import { addLog, makeSnapshot } from './history.js';
 
 // app.js에서 넘겨받는 함수들
 let options = {
@@ -111,7 +114,7 @@ function updateWarnings() {
 
   const problemCount = new Set(warnings.filter((w) => w.cutIndex !== null).map((w) => w.cutIndex)).size;
   document.getElementById('cut-summary').textContent =
-    `${cuts().length}컷 · 확인할 컷 ${problemCount}개`;
+    `${describeAnalysis(cuts())} · 확인할 컷 ${problemCount}개`;
   document.getElementById('cut-warnings-box').hidden = globalItems.length === 0;
 
   cuts().forEach((cut, index) => {
@@ -303,6 +306,7 @@ function startFromForm() {
   }
   setCuts(buildDefaultCuts(options.getForm(), options.getType()));
   handleStructureChange();
+  addLog('기본 구성 만들기', describeAnalysis(cuts()), makeSnapshot(options.getForm()));
 }
 
 function addCut() {
@@ -335,4 +339,7 @@ export function initCutEditor(newOptions) {
 
   // GPT 그림 생성 설정과 버튼
   initImagePanel({ getForm: options.getForm });
+
+  // claude.ai에서 받은 답 붙여넣기
+  initPastePanel({ getForm: options.getForm, onCutsReplaced: handleStructureChange });
 }

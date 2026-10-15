@@ -10,6 +10,7 @@ import {
 import { loadImageSettings, saveImageSettings } from './store.js';
 import { initKeyPanel, getApiKey, promptForKey } from './key-panel.js';
 import { openSettings } from './settings-dialog.js';
+import { addLog } from './history.js';
 
 const TURNAROUND_FILE = '꼼쥐_턴어라운드.png';
 
@@ -153,9 +154,11 @@ async function drawCut(index, signal) {
     images.set(cut.id, url);
     setCutStatus(cut, '');
     showCutImage(cut, index);
+    addLog('그림 생성', `${cutLabel(index)} · ${modelName(settings)} · ${settings.size}`);
     return true;
   } catch (error) {
     setCutStatus(cut, error.message);
+    if (!signal.aborted) addLog('그림 생성 실패', `${cutLabel(index)} · ${error.message}`);
     return false;
   }
 }
