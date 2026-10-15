@@ -1,7 +1,7 @@
 // 입력폼 화면 그리기
 // 질문 목록(fields.js)을 보고 입력칸을 만듭니다.
 
-import { BASIC_FIELDS, POINT_FIELDS, CTA_FIELDS, CTA_TYPES } from './fields.js';
+import { BASIC_FIELDS, POINT_FIELDS, CTA_FIELDS, CTA_TYPES, MATERIAL_TYPES } from './fields.js';
 
 const CIRCLES = ['①', '②', '③'];
 
@@ -75,38 +75,49 @@ function renderPoints(form, onChange) {
   });
 }
 
-function renderCta(form, onChange) {
-  const container = document.getElementById('part3-fields');
-  container.replaceChildren();
-
-  // CTA 방식 선택 (라디오 버튼)
+// 라디오 버튼 묶음: 고르면 onSelect(value)
+function createRadioGroup(legendText, name, options, currentValue, onSelect) {
   const fieldset = document.createElement('fieldset');
   fieldset.className = 'choice-group';
   const legend = document.createElement('legend');
   legend.className = 'field-label';
-  legend.textContent = 'CTA 방식';
+  legend.textContent = legendText;
   fieldset.append(legend);
 
-  CTA_TYPES.forEach((cta) => {
+  options.forEach((option) => {
     const label = document.createElement('label');
     label.className = 'choice';
     const radio = document.createElement('input');
     radio.type = 'radio';
-    radio.name = 'ctaType';
-    radio.value = cta.value;
-    radio.checked = form.ctaType === cta.value;
-    radio.addEventListener('change', () => {
-      form.ctaType = cta.value;
-      onChange();
-    });
+    radio.name = name;
+    radio.value = option.value;
+    radio.checked = currentValue === option.value;
+    radio.addEventListener('change', () => onSelect(option.value));
     const text = document.createElement('span');
-    text.textContent = cta.label;
+    text.textContent = option.label;
     label.append(radio, text);
     fieldset.append(label);
   });
-  container.append(fieldset);
+  return fieldset;
+}
+
+function renderCta(form, onChange) {
+  const container = document.getElementById('part3-fields');
+  container.replaceChildren();
+
+  container.append(createRadioGroup('CTA 방식', 'ctaType', CTA_TYPES, form.ctaType, (value) => {
+    form.ctaType = value;
+    onChange();
+  }));
 
   CTA_FIELDS.forEach((field) => {
+    // 추가 정보 칸 바로 위에 자료 종류 선택
+    if (field.key === 'extraInfo') {
+      container.append(createRadioGroup('댓글로 보낼 자료 종류', 'materialType', MATERIAL_TYPES, form.materialType, (value) => {
+        form.materialType = value;
+        onChange();
+      }));
+    }
     const element = createField(field, `field-${field.key}`, form[field.key], (value) => {
       form[field.key] = value;
       onChange();

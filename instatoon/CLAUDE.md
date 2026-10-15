@@ -7,7 +7,7 @@
 인스타그램 **@꼼쥐** 계정의 인스타툰·릴스 기획을 돕는 웹사이트입니다.
 입력한 주제·경험을 [꼼쥐 프로젝트 지침](./guidelines.md)에 맞춰 컷 구성표, 콘티, 이미지 생성 프롬프트, 캡션 텍스트로 만들어 줍니다.
 서버·빌드 없이 정적 파일만으로 동작합니다.
-저장소는 **비공개**이고 GitHub Pages로 배포하지 않습니다. 사용자는 내 컴퓨터에서 `python3 -m http.server`로 열어 씁니다.
+저장소는 **공개**이고 GitHub Pages(`https://yujinfield.github.io/my-page/instatoon/`)로 배포합니다. 지침·프롬프트·이미지가 공개된다는 점을 염두에 둡니다.
 지침·프롬프트를 외부에 공개하는 기능(공개 배포, 외부 서비스로 전송 등)은 사용자 확인 없이 추가하지 않습니다. 기능과 로드맵은 `README.md`를 기준으로 합니다.
 
 - 이 앱의 코드는 모두 `instatoon/` 폴더 안에 둡니다.
@@ -58,11 +58,15 @@
 | `js/cuts.js` | 컷 편집기 화면 (추가·삭제·순서 변경, 템플릿별 입력 칸, 프롬프트 복사) |
 | `js/ai-conti.js` | Claude 콘티 요청문 만들기, Claude 답(JSON) → 컷 목록 (순수 함수) |
 | `js/ai-panel.js` | Claude 자동 작성 버튼, 진행 상황·멈추기, 캡션·검토 메모 |
+| `js/notion-material.js` | 댓글 자료 요청문, 노션 페이지 입력 만들기, 응답에서 페이지 주소 찾기 (순수 함수) |
+| `js/material-panel.js` | PART 3 노션 자료 패널 (초안 쓰기 → 고치기 → 노션에 저장, 요청문 복사) |
+| `js/image-gen.js` | GPT 이미지 API 호출(참고 이미지 있으면 /edits, 없으면 /generations), 모델·크기·품질 목록과 기본값 |
+| `js/image-panel.js` | 그림 생성 설정 카드(API 키 등), 컷별 그림 만들기·전체 만들기·내려받기 |
 | `js/store.js` | 데이터 계층. `localStorage` 읽기/쓰기는 **이 파일에서만** |
 | `js/app.js` | 진입점. 상태를 들고 각 모듈을 연결 |
 
 새 기능은 가능하면 기존 파일에 맞춰 넣고, 파일이 너무 커질 때만(약 300줄 이상) 분리합니다.
-`classify.js`, `prompt.js`, `cut-plan.js`, `checks.js`, `ai-conti.js`는 나중에 테스트를 붙이기 쉽도록 **DOM에 의존하지 않게** 작성합니다.
+`classify.js`, `prompt.js`, `cut-plan.js`, `checks.js`, `ai-conti.js`, `notion-material.js`는 나중에 테스트를 붙이기 쉽도록 **DOM에 의존하지 않게** 작성합니다.
 
 ## 통합 입력폼과 유형 판단
 
@@ -88,6 +92,9 @@
     typeChoice: "auto",   // "auto" | "story" | "info"
     caption: "",          // Claude가 써 준 캡션 + 해시태그 (직접 수정 가능)
     review: "",           // Claude가 남긴 콘티 요약·검토 사항
+    materialType: "none", // 댓글 자료 종류: "none" | "checklist" | "cost" | "list" | "timeline" | "other"
+    materialDraft: "",    // 자료 초안 (첫 줄: 노션 페이지 제목, 나머지: 본문)
+    notionUrl: "",        // 노션에 만든 자료 페이지 주소
     cuts: [
       {
         id: "c_<timestamp>_<n>",
@@ -117,10 +124,24 @@
 ## Claude 콘티 자동 작성
 
 - 페이지 안에서 Claude를 부르는 claude.ai 아티팩트 기능(`window.claude.use('sample')`)을 씁니다. **API 키가 필요 없고**, 쓰는 사람의 claude.ai 사용량을 씁니다.
-- claude.ai 링크로 열었을 때만 동작합니다. 아티팩트로 올릴 때 `capabilities: {sample: {}}`를 꼭 선언합니다. 내 컴퓨터에서 열면 `window.claude`가 없으므로 버튼을 숨기고 안내 문구만 보여 줍니다.
+- claude.ai 링크로 열었을 때만 동작합니다. 아티팩트로 올릴 때 `capabilities: {sample: {}}`를 꼭 선언합니다. 공용 링크(github.io)나 내 컴퓨터에서 열면 `window.claude`가 없으므로 버튼을 숨기고 안내 문구만 보여 줍니다.
 - 요청문(`ai-conti.js`) = 꼼쥐 핵심 규칙(`guide.js`의 `CONTI_RULES`) + 유형별 마스터 프롬프트 + 사용자 입력 + 컷 편집기 값 목록 + JSON 답 형식. 이미지 프롬프트는 Claude에게 받지 않고 사이트가 조립합니다.
 - 답은 `sample.json`으로 받고, `readContiAnswer`가 모르는 값을 기본값으로 바꿉니다 (`normalizeCut`). 화면에 넣을 때는 항상 `textContent`/`value`를 씁니다.
 - 버튼을 누를 때만 부르고, 자동 재시도는 하지 않습니다. 권한 거절(`not_granted` 등)이면 버튼을 숨깁니다.
+
+## 댓글 자료 → 노션
+
+- 아티팩트의 `mcp` 기능으로 사용자의 claude.ai **Notion 커넥터**(`notion-create-pages`)를 부릅니다. 아티팩트로 올릴 때 `capabilities: {sample: {}, mcp: {servers: [{server: "Notion", tools: ["notion-create-pages"]}]}}`를 선언합니다.
+- 페이지는 항상 `creation_mode: "draft"`(비공개)로 만듭니다. 공유 범위는 사용자가 노션에서 직접 정합니다.
+- 노션 저장은 쓰기 작업이라 버튼을 누를 때 한 번만 부르고, 자동 재시도하지 않습니다. 응답이 없으면(`server_unavailable` 등) 이미 만들어졌을 수 있으니 노션을 먼저 확인하라고 안내합니다.
+- 초안은 반드시 사용자가 보고 고친 뒤 저장합니다 (Claude 초안 → 글상자 → "노션에 저장").
+
+## 그림 생성 (GPT)
+
+- **API 키는 절대 코드·저장소에 넣지 않습니다.** 사용자가 화면에서 입력하고 `store.js`가 그 브라우저의 localStorage(`kkomjwi-image-settings`)에만 저장합니다. 채팅으로 키를 받지 않습니다.
+- OpenAI는 브라우저에서 바로 부릅니다(서버 없음). claude.ai 아티팩트 안에서는 외부 인터넷이 막혀 있으므로 버튼을 끄고 "공용 링크나 내 컴퓨터에서 열기" 안내를 보여 줍니다.
+- 모델 이름·크기는 바뀔 수 있어서 고정하지 않고 선택지 + "직접 입력"으로 둡니다. OpenAI가 거절하면 그 오류 메시지를 그대로 보여 줍니다.
+- 그림은 비용이 드므로 버튼을 누를 때만, 전체 생성은 시작 전에 확인하고 한 장씩 차례로 만듭니다. 만든 그림은 메모리에만 두고 내려받기로 저장합니다.
 
 ## 프롬프트 조립 규칙
 

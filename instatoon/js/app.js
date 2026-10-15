@@ -5,6 +5,7 @@ import { classifyForm, checkForm } from './classify.js';
 import { buildPrompt } from './prompt.js';
 import { renderForm } from './form.js';
 import { initCutEditor, renderCuts } from './cuts.js';
+import { initMaterialPanel, renderMaterialPanel, resetMaterialPanel } from './material-panel.js';
 import { loadDraft, saveDraft, clearDraft, loadTheme, saveTheme } from './store.js';
 
 const STEPS = ['part1', 'part2', 'part3', 'result', 'cuts'];
@@ -25,6 +26,7 @@ const toast = document.getElementById('toast');
 function handleChange() {
   saveDraft(form);
   updateProgress();
+  renderMaterialPanel();
   if (currentStep === 'result') {
     updateResult();
   }
@@ -143,6 +145,7 @@ function resetForm() {
   clearDraft();
   form = createEmptyForm();
   renderForm(form, handleChange);
+  resetMaterialPanel();
   setTypeChoiceRadios();
   updateProgress();
   showStep('part1');
@@ -173,6 +176,11 @@ function init() {
     copyText,
   });
   renderForm(form, handleChange);
+  initMaterialPanel({
+    getForm: () => form,
+    onChange: () => saveDraft(form),
+    copyText,
+  });
   setTypeChoiceRadios();
   updateProgress();
   showStep('part1');

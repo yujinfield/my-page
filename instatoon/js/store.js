@@ -63,3 +63,25 @@ export function saveTheme(theme) {
     // 무시
   }
 }
+
+// ---------- 그림 생성 설정 (GPT API 키 포함) ----------
+// API 키는 이 브라우저에만 저장되고, 저장소(GitHub)에는 절대 올라가지 않습니다.
+
+const IMAGE_SETTINGS_KEY = 'kkomjwi-image-settings';
+
+export function loadImageSettings() {
+  try {
+    const raw = localStorage.getItem(IMAGE_SETTINGS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+export function saveImageSettings(settings) {
+  try {
+    localStorage.setItem(IMAGE_SETTINGS_KEY, JSON.stringify(settings));
+  } catch (error) {
+    // 저장이 막혀 있어도 이번 화면에서는 쓸 수 있게 둡니다.
+  }
+}

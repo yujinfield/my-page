@@ -197,3 +197,26 @@ textarea.field-input {
   line-height: 1.5;
   resize: vertical;
 }
+
+/* PART 3 노션 자료 */
+#material-copy-request {
+  background: var(--surface);
+}
+
+.material-status {
+  margin-top: var(--space-s);
+}
+
+.material-status:empty {
+  display: none;
+}
+
+.material-actions {
+  margin-top: var(--space-s);
+}
+
+#material-panel[hidden],
+#material-draft-box[hidden],
+#material-link-row[hidden] {
+  display: none;
+}
