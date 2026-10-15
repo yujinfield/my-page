@@ -9,6 +9,7 @@ import {
 } from './image-gen.js';
 import { loadImageSettings, saveImageSettings } from './store.js';
 import { initKeyPanel, getApiKey, promptForKey } from './key-panel.js';
+import { openSettings } from './settings-dialog.js';
 
 const TURNAROUND_FILE = '꼼쥐_턴어라운드.png';
 
@@ -98,13 +99,14 @@ function setupSettings() {
 function ready() {
   if (inClaudeArtifact()) return false;
   if (getApiKey() === '') {
-    element('image-settings-details').open = true;
-    setStatus(promptForKey());
+    const { message, focusId } = promptForKey();
+    setStatus(message);
+    openSettings(focusId);
     return false;
   }
   if (modelName(settings) === '') {
-    element('image-settings-details').open = true;
     setStatus('직접 입력할 모델 이름을 적어 주세요.');
+    openSettings('image-custom-model');
     return false;
   }
   return true;
@@ -243,6 +245,7 @@ export function initImagePanel(newOptions) {
     : '컷마다 이미지 생성 프롬프트로 GPT가 그림을 그려요. 그림마다 OpenAI 비용이 들어요.';
 
   element('image-all').addEventListener('click', drawAll);
+  element('image-open-settings').addEventListener('click', () => openSettings());
   element('image-stop').addEventListener('click', () => {
     if (controller) controller.abort();
   });

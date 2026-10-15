@@ -20,6 +20,12 @@
   padding-bottom: var(--space-l);
 }
 
+.header-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-s);
+}
+
 .app-watermark {
   color: var(--text-soft);
   font-size: var(--font-size-small);

@@ -44,6 +44,12 @@ function render() {
       : '저장하지 않았어요. 이 창을 닫거나 새로고침하면 지워져요.';
     element('key-delete').hidden = !locked;
   }
+
+  // 그림 생성 카드에 보이는 한 줄 요약
+  let summary = 'API 키가 없어요. ⚙️ 설정에서 넣어 주세요.';
+  if (activeKey !== '') summary = `🔓 키 사용 중 (${maskKey(activeKey)})`;
+  else if (locked) summary = '🔒 키가 잠겨 있어요. ⚙️ 설정에서 열어 주세요.';
+  element('image-key-summary').textContent = summary;
 }
 
 function forgetActiveKey() {
@@ -181,14 +187,13 @@ export function getApiKey() {
   return activeKey;
 }
 
-// 키가 없을 때 알맞은 칸으로 안내
+// 키가 없을 때: 안내 문구와 포커스할 칸 (설정 창 안의 칸)
 export function promptForKey() {
-  if (hasLockedKey()) {
-    element('key-unlock-pass').focus();
-    return '키가 잠겨 있어요. 잠금 비밀번호를 넣어 열어 주세요.';
-  }
-  element('key-input').focus();
-  return '먼저 OpenAI API 키를 넣어 주세요.';
+  const message = hasLockedKey()
+    ? '키가 잠겨 있어요. 잠금 비밀번호를 넣어 열어 주세요.'
+    : '먼저 OpenAI API 키를 넣어 주세요.';
+  setStatus(message);
+  return { message, focusId: hasLockedKey() ? 'key-unlock-pass' : 'key-input' };
 }
 
 export function initKeyPanel() {
