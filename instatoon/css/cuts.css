@@ -431,3 +431,25 @@ body.modal-open {
   cursor: pointer;
   margin-bottom: var(--space-xs);
 }
+
+/* ✏️ 그림 수정 요청 */
+.cut-revise {
+  width: 100%;
+}
+
+.cut-revise-box {
+  margin-top: var(--space-s);
+  padding: var(--space-m);
+  border-radius: var(--radius-m);
+  background: var(--bg);
+}
+
+.cut-revise-box[hidden],
+.button.image-button[hidden] {
+  display: none;
+}
+
+.cut-revise-box .field-input {
+  width: 100%;
+  background: var(--surface);
+}

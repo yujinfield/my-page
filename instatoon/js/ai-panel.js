@@ -6,7 +6,7 @@ import { buildContiRequest, readContiAnswer } from './ai-conti.js';
 import { addLog, makeSnapshot } from './history.js';
 import { writeContiWithGpt } from './gpt-conti.js';
 import { getApiKey, promptForKey } from './key-panel.js';
-import { getTextModelName } from './image-panel.js';
+import { getTextModelName } from './image-settings.js';
 import { openSettings } from './settings-dialog.js';
 import { makeError } from './errors.js';
 import { showError } from './error-dialog.js';

@@ -175,6 +175,17 @@ export function buildImagePrompt(cut, index) {
   return `CUT ${cutNumber(index)} | ${template.label}\n\n${parts.join('\n\n')}`;
 }
 
+// 수정 요청: 첫 번째 첨부 그림(지금 그림)을 바탕으로, 적은 부분만 고치기
+export function buildRevisePrompt(cut, index, request) {
+  return [
+    'Edit the FIRST attached image (the current version of this panel).',
+    'Keep everything exactly the same — layout, characters, art style, colors, Korean text and the \'@꼼쥐\' watermark — and change ONLY what is asked below.',
+    'Other attached images are character/layout references only.',
+    `Change request (Korean):\n${request.trim()}`,
+    `Original panel instructions, for reference:\n${buildImagePrompt(cut, index)}`,
+  ].join('\n\n');
+}
+
 // 전체 컷 프롬프트를 한 번에
 export function buildAllImagePrompts(cuts) {
   return cuts.map((cut, index) => buildImagePrompt(cut, index)).join('\n\n━━━━━━━━━━━━━━━━━━\n\n');
