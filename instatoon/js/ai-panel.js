@@ -173,6 +173,12 @@ export function renderAiNotes() {
   document.getElementById('ai-review').value = form.review;
 }
 
+// PART 3 "콘티 만들기": claude.ai 링크면 Claude, 그 밖(공용 링크·내 컴퓨터)이면 GPT로 바로 작성
+export function startAutoConti() {
+  if (inClaudeArtifact() && sample) return writeContiWithClaude();
+  return writeContiWithGptButton();
+}
+
 export function initAiPanel(newOptions) {
   options = newOptions;
 
