@@ -8,6 +8,7 @@ import { initCutEditor, renderCuts } from './cuts.js';
 import { startAutoConti } from './ai-panel.js';
 import { initMaterialPanel, renderMaterialPanel, resetMaterialPanel } from './material-panel.js';
 import { initSettingsDialog } from './settings-dialog.js';
+import { initErrorDialog } from './error-dialog.js';
 import { initHistoryPanel } from './history-panel.js';
 import { addLog } from './history.js';
 import { normalizeCut } from './cut-plan.js';
@@ -194,6 +195,7 @@ function toggleTheme() {
 function init() {
   applyTheme(loadTheme());
   initSettingsDialog();
+  initErrorDialog();
   initHistoryPanel({ onRestore: restoreSnapshot });
   initCutEditor({
     getForm: () => form,

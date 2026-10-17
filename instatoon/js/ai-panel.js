@@ -8,6 +8,8 @@ import { writeContiWithGpt } from './gpt-conti.js';
 import { getApiKey, promptForKey } from './key-panel.js';
 import { getTextModelName } from './image-panel.js';
 import { openSettings } from './settings-dialog.js';
+import { makeError } from './errors.js';
+import { showError } from './error-dialog.js';
 
 // app.js·cuts.js에서 넘겨받는 함수들
 let options = {
@@ -117,7 +119,9 @@ async function writeContiWithGptButton() {
     });
     const result = readContiAnswer(answer);
     if (!result) {
-      setAiStatus('GPT의 답에서 컷을 찾지 못했어요. 다시 눌러 주세요.', false);
+      const error = makeError({ problem: 'GPT의 답에 컷이 하나도 없었어요.', fix: '다시 눌러 주세요. 계속 그러면 모델 "바꾸기"에서 다른 모델을 골라 보세요.', settingsFocus: 'text-model' });
+      setAiStatus(error.message, false);
+      showError(error, 'GPT가 콘티를 만들지 못했어요');
       return;
     }
     if (before) addLog('바꾸기 전 콘티', `${before.cuts.length}컷`, before);
@@ -125,7 +129,10 @@ async function writeContiWithGptButton() {
     setAiStatus(`${result.cuts.length}컷 콘티가 들어왔어요! 노란 경고가 있는 컷부터 확인해 주세요.`, false);
   } catch (error) {
     setAiStatus(error.message, false);
-    if (!aiController.signal.aborted) addLog('GPT 자동 작성 실패', error.message);
+    if (!aiController.signal.aborted) {
+      addLog('GPT 자동 작성 실패', error.message);
+      showError(error, 'GPT가 콘티를 만들지 못했어요');
+    }
   } finally {
     finishWriting();
   }
@@ -151,6 +158,7 @@ async function writeContiWithClaude() {
     const result = readContiAnswer(answer);
     if (!result) {
       setAiStatus('Claude의 답에서 컷을 찾지 못했어요. 다시 눌러 주세요.', false);
+      showError(makeError({ problem: 'Claude의 답에서 컷을 찾지 못했어요.', fix: '다시 눌러 주세요.' }), 'Claude가 콘티를 만들지 못했어요');
       return;
     }
 
@@ -158,7 +166,9 @@ async function writeContiWithClaude() {
     setAiStatus(`${result.cuts.length}컷 콘티가 들어왔어요! 노란 경고가 있는 컷부터 확인해 주세요.`, false);
   } catch (error) {
     const code = error && error.code;
-    setAiStatus(ERROR_MESSAGES[code] || '잠시 문제가 생겼어요. 다시 눌러 주세요.', false);
+    const message = ERROR_MESSAGES[code] || '잠시 문제가 생겼어요. 다시 눌러 주세요.';
+    setAiStatus(message, false);
+    if (code !== 'cancelled') showError(makeError({ problem: message }), 'Claude가 콘티를 만들지 못했어요');
     if (UNAVAILABLE_CODES.includes(code)) showAiAvailability(false);
   } finally {
     finishWriting();

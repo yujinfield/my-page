@@ -313,6 +313,29 @@
     </div>
   </div>
 
+  <div id="error-dialog" class="modal" role="alertdialog" aria-modal="true" aria-labelledby="error-title" aria-describedby="error-problem" hidden>
+    <div class="modal-inner error-inner">
+      <div class="modal-head">
+        <h2 id="error-title" class="card-title">⚠️ 문제가 생겼어요</h2>
+        <button type="button" class="icon-button modal-close" aria-label="알림 닫기">✕</button>
+      </div>
+      <p class="error-label">무엇이 문제인가요?</p>
+      <p id="error-problem" class="error-text"></p>
+      <div id="error-fix-box">
+        <p class="error-label">이렇게 해 보세요</p>
+        <p id="error-fix" class="error-text"></p>
+      </div>
+      <details id="error-detail-box" class="error-detail">
+        <summary>자세한 내용 (OpenAI가 보낸 원래 문구)</summary>
+        <p id="error-detail"></p>
+      </details>
+      <div class="action-row">
+        <button type="button" id="error-settings" class="button button-primary">⚙️ 설정 열기</button>
+        <button type="button" id="error-ok" class="button">확인</button>
+      </div>
+    </div>
+  </div>
+
   <div id="copy-fallback" class="copy-fallback" role="dialog" aria-labelledby="copy-fallback-title" hidden>
     <div class="copy-fallback-inner">
       <h2 id="copy-fallback-title" class="card-title">직접 복사해 주세요</h2>

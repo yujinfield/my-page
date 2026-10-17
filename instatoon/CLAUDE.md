@@ -66,6 +66,8 @@
 | `js/key-vault.js` | API 키 암호화·복호화 (Web Crypto: PBKDF2 → AES-GCM), 화면용 가리기 |
 | `js/modal.js` | 창(모달) 여닫기 공통: Esc, 바깥 클릭, Tab이 창 안에서만 돌기, 닫으면 연 버튼으로 포커스 복귀. 새 창은 `.modal` + `.modal-close`로 만들고 `setupModal()` |
 | `js/settings-dialog.js` | 오른쪽 위 ⚙️ 설정 창 |
+| `js/errors.js` | 오류를 한국어로: `makeError({problem, fix, detail, settingsFocus})`, OpenAI 오류 응답 풀이 `describeOpenAiError` (순수 함수) |
+| `js/error-dialog.js` | ⚠️ 오류 알림 창 `showError(error, title)`. 실패를 사용자에게 알릴 때는 상태 문구와 함께 이 창을 띄움 (멈추기는 제외) |
 | `js/editor-format.js` | 컷 편집기용 JSON 형식 설명. 자동 작성(`ai-conti.js`)과 복사 요청문(`prompt.js`)이 함께 씀 |
 | `js/conti-import.js` | 붙여 넣은 Claude 답 → 컷 목록 (JSON 관대하게 읽기·잘린 JSON 살리기·콘티 글 직접 읽기·요청문 감지), 컷 구성 분석 (순수 함수) |
 | `js/paste-panel.js` | 컷 편집의 📋 Claude 답 붙여넣기 |
