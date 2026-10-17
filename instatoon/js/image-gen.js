@@ -83,6 +83,17 @@ export async function loadReference(fileName) {
   return blob;
 }
 
+// 만든 그림('data:image/png;base64,...') → 파일(Blob). 수정 요청 때 원본으로 보냄
+// (fetch로 data: 주소를 읽으면 보안 설정(CSP)에 막혀서 직접 바꿔요)
+export function dataUrlToBlob(dataUrl) {
+  const match = /^data:([^;]+);base64,(.*)$/.exec(dataUrl);
+  if (!match) return null;
+  const binary = atob(match[2]);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: match[1] });
+}
+
 // 컷 하나 그리기 → 'data:image/png;base64,...' 주소
 // references가 있으면 /edits(참고 이미지 포함), 없으면 /generations 로 보냅니다.
 export async function generateImage({ apiKey, settings, prompt, references = [], signal }) {

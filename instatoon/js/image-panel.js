@@ -2,16 +2,14 @@
 // 만든 그림은 이 화면에만 있어요(새로고침하면 사라짐). 마음에 들면 바로 내려받으세요.
 
 import { TEMPLATES, findOption } from './guide.js';
-import { buildImagePrompt } from './prompt.js';
-import {
-  TEXT_MODELS, IMAGE_MODELS, IMAGE_SIZES, IMAGE_QUALITIES, normalizeImageSettings, modelName,
-  loadReference, generateImage,
-} from './image-gen.js';
-import { loadImageSettings, saveImageSettings } from './store.js';
+import { buildImagePrompt, buildRevisePrompt } from './prompt.js';
+import { modelName, loadReference, generateImage, dataUrlToBlob } from './image-gen.js';
+import { settings, setupImageSettings } from './image-settings.js';
 import { initKeyPanel, getApiKey, promptForKey } from './key-panel.js';
 import { openSettings } from './settings-dialog.js';
 import { addLog } from './history.js';
 import { showError } from './error-dialog.js';
+import { renderRevisePart, clearReviseDraft } from './image-revise.js';
 
 const TURNAROUND_FILE = '꼼쥐_턴어라운드.png';
 
@@ -19,8 +17,8 @@ let options = {
   getForm: null,  // 지금 입력폼 (form.cuts)
 };
 
-let settings = normalizeImageSettings(loadImageSettings());
 const images = new Map();   // cut.id → 그림 주소
+const previousImages = new Map(); // cut.id → 고치기 전 그림 (한 단계만 되돌리기)
 let controller = null;      // 진행 중인 요청 (멈추기용)
 
 // claude.ai 링크로 열면 외부 인터넷이 막혀 있어요.
@@ -47,84 +45,6 @@ function setStatus(message) {
 function setBusy(busy) {
   element('image-stop').hidden = !busy;
   document.querySelectorAll('.image-button').forEach((button) => { button.disabled = busy || inClaudeArtifact(); });
-}
-
-// ---------- 설정 ----------
-
-function fillSelect(id, list, value) {
-  const select = element(id);
-  select.replaceChildren(...list.map((item) => {
-    const option = document.createElement('option');
-    option.value = item.value;
-    option.textContent = item.label;
-    option.selected = item.value === value;
-    return option;
-  }));
-}
-
-function saveSettings() {
-  saveImageSettings(settings);
-  element('image-custom-model-field').hidden = settings.model !== 'custom';
-  element('text-custom-model-field').hidden = settings.textModel !== 'custom';
-  showTextModel();
-}
-
-// 컷 편집의 "🤖 콘티 모델: …" 줄
-function showTextModel() {
-  const name = getTextModelName();
-  document.querySelectorAll('.gpt-model-name').forEach((item) => {
-    item.textContent = name || '(모델 이름을 적어 주세요)';
-  });
-}
-
-// 🤖 GPT 콘티 작성에 쓸 모델 이름 ('' 이면 직접 입력이 비어 있음)
-export function getTextModelName() {
-  return settings.textModel === 'custom' ? settings.customTextModel : settings.textModel;
-}
-
-function setupSettings() {
-  fillSelect('text-model', TEXT_MODELS, settings.textModel);
-  element('text-custom-model').value = settings.customTextModel;
-  element('text-custom-model-field').hidden = settings.textModel !== 'custom';
-  showTextModel();
-  element('text-model').addEventListener('change', (event) => {
-    settings.textModel = event.target.value;
-    settings.textModelChosen = true;
-    saveSettings();
-    if (settings.textModel === 'custom') element('text-custom-model').focus();
-  });
-  element('text-custom-model').addEventListener('input', (event) => {
-    settings.customTextModel = event.target.value.trim();
-    saveSettings();
-  });
-
-  fillSelect('image-model', IMAGE_MODELS, settings.model);
-  element('image-custom-model').value = settings.customModel;
-  fillSelect('image-size', IMAGE_SIZES, settings.size);
-  fillSelect('image-quality', IMAGE_QUALITIES, settings.quality);
-  element('image-use-refs').checked = settings.useReferences;
-  element('image-custom-model-field').hidden = settings.model !== 'custom';
-
-  element('image-model').addEventListener('change', (event) => {
-    settings.model = event.target.value;
-    saveSettings();
-  });
-  element('image-custom-model').addEventListener('input', (event) => {
-    settings.customModel = event.target.value.trim();
-    saveSettings();
-  });
-  element('image-size').addEventListener('change', (event) => {
-    settings.size = event.target.value;
-    saveSettings();
-  });
-  element('image-quality').addEventListener('change', (event) => {
-    settings.quality = event.target.value;
-    saveSettings();
-  });
-  element('image-use-refs').addEventListener('change', (event) => {
-    settings.useReferences = event.target.checked;
-    saveSettings();
-  });
 }
 
 // 그림을 만들 준비가 됐는지 확인 (안 됐으면 안내하고 false)
@@ -164,6 +84,8 @@ function showCutImage(cut, index) {
   const link = element(`cut-image-download-${cut.id}`);
   link.href = url;
   link.download = `kkomjwi-cut-${String(index + 1).padStart(2, '0')}.png`;
+  const undo = element(`cut-revise-undo-${cut.id}`);
+  if (undo) undo.hidden = !previousImages.has(cut.id);
 }
 
 function setCutStatus(cut, message) {
@@ -183,6 +105,7 @@ async function drawCut(index, signal) {
       signal,
     });
     images.set(cut.id, url);
+    previousImages.delete(cut.id);
     setCutStatus(cut, '');
     showCutImage(cut, index);
     addLog('그림 생성', `${cutLabel(index)} · ${modelName(settings)} · ${settings.size}`);
@@ -239,6 +162,57 @@ async function drawAll() {
   setBusy(false);
 }
 
+// ✏️ 수정 요청: 지금 그림을 첫 번째 참고 이미지로 보내고, 적은 부분만 고쳐 달라고 함
+async function reviseOne(index, request) {
+  if (controller || !ready()) return;
+  const cut = cuts()[index];
+  const current = dataUrlToBlob(images.get(cut.id) || '');
+  if (!current) {
+    showError({ problem: '이 그림은 고칠 수 없어요.', fix: '"🎨 이 컷 그림 만들기"로 다시 그린 뒤 수정 요청을 해 주세요.' }, `${cutLabel(index)} 그림을 고치지 못했어요`);
+    return;
+  }
+
+  controller = new AbortController();
+  setBusy(true);
+  setStatus(`${cutLabel(index)} 그림을 고치고 있어요…`);
+  setCutStatus(cut, '고치는 중… 보통 30초~1분 걸려요.');
+  try {
+    const references = settings.useReferences ? [current, await loadReference(TURNAROUND_FILE)] : [current];
+    const url = await generateImage({
+      apiKey: getApiKey(),
+      settings,
+      prompt: buildRevisePrompt(cut, index, request),
+      references,
+      signal: controller.signal,
+    });
+    previousImages.set(cut.id, images.get(cut.id));
+    images.set(cut.id, url);
+    clearReviseDraft(cut.id);
+    setCutStatus(cut, '고쳤어요! 마음에 안 들면 "↩︎ 이전 그림으로"를 누르세요.');
+    showCutImage(cut, index);
+    setStatus(`${cutLabel(index)} 그림을 고쳤어요.`);
+    addLog('그림 수정', `${cutLabel(index)} · ${request.trim().slice(0, 60)}`);
+  } catch (error) {
+    setCutStatus(cut, error.message);
+    setStatus('');
+    if (!controller.signal.aborted) {
+      addLog('그림 수정 실패', `${cutLabel(index)} · ${error.message}`);
+      showError(error, `${cutLabel(index)} 그림을 고치지 못했어요`);
+    }
+  }
+  controller = null;
+  setBusy(false);
+}
+
+function undoRevise(index) {
+  const cut = cuts()[index];
+  if (controller || !previousImages.has(cut.id)) return;
+  images.set(cut.id, previousImages.get(cut.id));
+  previousImages.delete(cut.id);
+  setCutStatus(cut, '고치기 전 그림으로 되돌렸어요.');
+  showCutImage(cut, index);
+}
+
 // ---------- 컷 카드 안의 그림 영역 (cuts.js가 부름) ----------
 
 export function renderCutImagePart(cut, index) {
@@ -269,7 +243,11 @@ export function renderCutImagePart(cut, index) {
   link.id = `cut-image-download-${cut.id}`;
   link.className = 'button button-small button-primary';
   link.textContent = '내려받기';
-  box.append(img, link);
+  const revise = renderRevisePart(cut, cutLabel(index), {
+    onSubmit: (request) => reviseOne(index, request),
+    onUndo: () => undoRevise(index),
+  });
+  box.append(img, link, revise);
 
   part.append(button, status, box);
   // 카드가 다시 그려진 뒤에 이미 만든 그림을 보여 줌
@@ -280,7 +258,7 @@ export function renderCutImagePart(cut, index) {
 export function initImagePanel(newOptions) {
   options = newOptions;
   initKeyPanel(); // 예전 평문 키 정리가 설정 저장보다 먼저 일어나야 해요
-  setupSettings();
+  setupImageSettings();
 
   element('image-help').textContent = inClaudeArtifact()
     ? '그림 생성은 공용 링크(yujinfield.github.io)나 내 컴퓨터에서 열었을 때만 돼요. claude.ai 링크는 외부 인터넷이 막혀 있어서 OpenAI에 연결할 수 없어요.'
