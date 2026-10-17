@@ -5,7 +5,7 @@ import { CTA_TYPES, MATERIAL_TYPES } from './fields.js';
 import { STORY_V1, STORY_V1_CLOSING, INFO_V2, INFO_V2_CLOSING } from './master-prompts.js';
 import { editorJsonRequest, EDITOR_JSON_NOTICE, EDITOR_JSON_REMINDER } from './editor-format.js';
 import {
-  BASE_STYLE, FIXED_RULES, TEMPLATES, CHARACTERS, EXPRESSIONS, BACKGROUNDS, findOption,
+  SALES_RULES, BASE_STYLE, FIXED_RULES, TEMPLATES, CHARACTERS, EXPRESSIONS, BACKGROUNDS, findOption,
 } from './guide.js';
 
 const EMPTY_REQUIRED = '(입력 없음 — 지어내지 말고 확인 필요로 표시)';
@@ -108,6 +108,7 @@ export function buildPrompt(form, type) {
       buildStoryInputs(form),
       '⸻',
       STORY_V1_CLOSING,
+      SALES_RULES,
       editorJsonRequest(),
       EDITOR_JSON_REMINDER,
     ].join('\n\n');
@@ -120,6 +121,7 @@ export function buildPrompt(form, type) {
     buildInfoInputs(form),
     '⸻',
     INFO_V2_CLOSING,
+    SALES_RULES,
     editorJsonRequest(),
     EDITOR_JSON_REMINDER,
   ].join('\n\n');
