@@ -3,8 +3,8 @@
 // 적다 만 수정 요청 (컷 카드가 다시 그려져도 남게)
 const drafts = new Map(); // cut.id → 글
 
-// label: 'CUT 01', onSubmit(request), onUndo(): image-panel.js에서 넘겨줌
-export function renderRevisePart(cut, label, { onSubmit, onUndo }) {
+// label: 'CUT 01', onSubmit(request), onPrevious(), onNext(): image-panel.js에서 넘겨줌
+export function renderRevisePart(cut, label, { onSubmit, onPrevious, onNext }) {
   const part = document.createElement('div');
   part.className = 'cut-revise';
 
@@ -15,14 +15,30 @@ export function renderRevisePart(cut, label, { onSubmit, onUndo }) {
   toggle.setAttribute('aria-expanded', 'false');
   toggle.setAttribute('aria-controls', `cut-revise-box-${cut.id}`);
 
-  const undo = document.createElement('button');
-  undo.type = 'button';
-  undo.id = `cut-revise-undo-${cut.id}`;
-  undo.className = 'button button-quiet button-small image-button';
-  undo.textContent = '↩︎ 이전 그림으로';
-  undo.setAttribute('aria-label', `${label} 고치기 전 그림으로 되돌리기`);
-  undo.hidden = true;
-  undo.addEventListener('click', onUndo);
+  // ◀ 이전 그림 · 1 / 2 · 다음 그림 ▶ (보이기·끄기는 image-panel.js가 함)
+  const versionRow = document.createElement('div');
+  versionRow.id = `cut-version-row-${cut.id}`;
+  versionRow.className = 'action-row cut-version-row';
+  versionRow.hidden = true;
+  const previous = document.createElement('button');
+  previous.type = 'button';
+  previous.id = `cut-version-prev-${cut.id}`;
+  previous.className = 'button button-small';
+  previous.textContent = '◀ 이전 그림';
+  previous.setAttribute('aria-label', `${label} 이전 그림 보기`);
+  previous.addEventListener('click', onPrevious);
+  const count = document.createElement('span');
+  count.id = `cut-version-count-${cut.id}`;
+  count.className = 'cut-version-count';
+  count.setAttribute('aria-live', 'polite');
+  const next = document.createElement('button');
+  next.type = 'button';
+  next.id = `cut-version-next-${cut.id}`;
+  next.className = 'button button-small';
+  next.textContent = '다음 그림 ▶';
+  next.setAttribute('aria-label', `${label} 다음 그림 보기`);
+  next.addEventListener('click', onNext);
+  versionRow.append(previous, count, next);
 
   const box = document.createElement('div');
   box.id = `cut-revise-box-${cut.id}`;
@@ -71,8 +87,8 @@ export function renderRevisePart(cut, label, { onSubmit, onUndo }) {
 
   const row = document.createElement('div');
   row.className = 'action-row';
-  row.append(toggle, undo);
-  part.append(row, box);
+  row.append(toggle);
+  part.append(versionRow, row, box);
   return part;
 }
 
