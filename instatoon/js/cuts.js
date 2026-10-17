@@ -341,5 +341,5 @@ export function initCutEditor(newOptions) {
   initImagePanel({ getForm: options.getForm });
 
   // claude.ai에서 받은 답 붙여넣기
-  initPastePanel({ getForm: options.getForm, onCutsReplaced: handleStructureChange });
+  initPastePanel({ getForm: options.getForm, copyText: options.copyText, onCutsReplaced: handleStructureChange });
 }

@@ -132,11 +132,12 @@
 
       <details id="paste-box" class="card paste-box">
         <summary>📋 Claude 답 붙여넣기 (claude.ai에서 받은 콘티)</summary>
-        <p class="field-help">결과 탭에서 복사한 요청문을 claude.ai 꼼쥐 프로젝트에 보내고, 받은 답을 <strong>통째로</strong> 붙여 넣으세요. 답의 맨 끝 JSON으로 컷 수·대본·연출·캡션을 채워요.</p>
+        <p class="field-help">① 결과 탭에서 복사한 <strong>요청문</strong>을 claude.ai 꼼쥐 프로젝트에 보내고 → ② Claude가 쓴 <strong>답</strong>을 통째로 여기에 붙여 넣으세요. 답 끝의 JSON(없으면 콘티 글)으로 컷 수·대본·연출·캡션을 채워요.</p>
         <label for="paste-input" class="visually-hidden">Claude 답</label>
         <textarea id="paste-input" class="field-input" rows="8" placeholder="Claude의 답 전체를 여기에 붙여 넣기"></textarea>
         <div class="action-row paste-actions">
           <button type="button" id="paste-apply" class="button button-primary">컷 편집기에 넣기</button>
+          <button type="button" id="paste-json-request" class="button">JSON만 다시 요청하는 문구 복사</button>
         </div>
         <p id="paste-status" class="field-help material-status" role="status" aria-live="polite"></p>
       </details>
