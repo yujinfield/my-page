@@ -4,6 +4,8 @@
 // 공용 링크(github.io)나 내 컴퓨터(localhost)에서 열었을 때만 동작합니다.
 // claude.ai 링크로 연 페이지는 외부 인터넷 접속이 막혀 있어서 OpenAI에 요청할 수 없어요.
 
+import { makeError, describeOpenAiError, CONNECT_ERROR } from './errors.js';
+
 const OPENAI_URL = 'https://api.openai.com/v1/images';
 
 // 고를 수 있는 모델 (OpenAI가 이름을 바꾸면 "직접 입력"으로 넣을 수 있음)
@@ -81,15 +83,6 @@ export async function loadReference(fileName) {
   return blob;
 }
 
-// OpenAI 오류 → 사람이 읽을 안내
-export function explainOpenAiError(status, detail) {
-  if (status === 401) return 'API 키가 맞지 않아요. 키를 다시 확인해 주세요.';
-  if (status === 403) return '이 키로는 이 모델을 쓸 수 없어요. OpenAI 계정 인증·권한을 확인하거나 다른 모델을 골라 주세요.';
-  if (status === 429) return '요청이 너무 많거나 크레딧이 부족해요. 잠시 뒤에 하거나 OpenAI 결제 상태를 확인해 주세요.';
-  if (status >= 500) return 'OpenAI 쪽에 잠시 문제가 있어요. 조금 뒤에 다시 시도해 주세요.';
-  return `OpenAI가 요청을 거절했어요: ${detail || `오류 ${status}`}`;
-}
-
 // 컷 하나 그리기 → 'data:image/png;base64,...' 주소
 // references가 있으면 /edits(참고 이미지 포함), 없으면 /generations 로 보냅니다.
 export async function generateImage({ apiKey, settings, prompt, references = [], signal }) {
@@ -118,18 +111,18 @@ export async function generateImage({ apiKey, settings, prompt, references = [],
       });
     }
   } catch (error) {
-    if (error && error.name === 'AbortError') throw new Error('멈췄어요.');
-    throw new Error('OpenAI에 연결하지 못했어요. 인터넷 연결을 확인하거나, 공용 링크·내 컴퓨터에서 열었는지 확인해 주세요.');
+    if (error && error.name === 'AbortError') throw makeError({ problem: '멈췄어요.' });
+    throw makeError(CONNECT_ERROR);
   }
 
   const data = await response.json().catch(() => null);
   if (!response.ok) {
     const detail = data && data.error && data.error.message;
-    throw new Error(explainOpenAiError(response.status, detail));
+    throw makeError(describeOpenAiError(response.status, detail, modelName(settings), 'image-model'));
   }
 
   const first = data && Array.isArray(data.data) ? data.data[0] : null;
   if (first && first.b64_json) return `data:image/png;base64,${first.b64_json}`;
   if (first && first.url) return first.url;
-  throw new Error('OpenAI 응답에 그림이 없어요. 다시 시도해 주세요.');
+  throw makeError({ problem: 'OpenAI 응답에 그림이 없어요.', fix: '다시 눌러 주세요.' });
 }

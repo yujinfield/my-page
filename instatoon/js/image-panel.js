@@ -11,6 +11,7 @@ import { loadImageSettings, saveImageSettings } from './store.js';
 import { initKeyPanel, getApiKey, promptForKey } from './key-panel.js';
 import { openSettings } from './settings-dialog.js';
 import { addLog } from './history.js';
+import { showError } from './error-dialog.js';
 
 const TURNAROUND_FILE = '꼼쥐_턴어라운드.png';
 
@@ -185,11 +186,12 @@ async function drawCut(index, signal) {
     setCutStatus(cut, '');
     showCutImage(cut, index);
     addLog('그림 생성', `${cutLabel(index)} · ${modelName(settings)} · ${settings.size}`);
-    return true;
+    return null;
   } catch (error) {
     setCutStatus(cut, error.message);
-    if (!signal.aborted) addLog('그림 생성 실패', `${cutLabel(index)} · ${error.message}`);
-    return false;
+    if (signal.aborted) return null;
+    addLog('그림 생성 실패', `${cutLabel(index)} · ${error.message}`);
+    return error;
   }
 }
 
@@ -198,8 +200,10 @@ async function drawOne(index) {
   controller = new AbortController();
   setBusy(true);
   setStatus(`${cutLabel(index)} 그림을 만들고 있어요…`);
-  const ok = await drawCut(index, controller.signal);
+  const error = await drawCut(index, controller.signal);
+  const ok = error === null && !controller.signal.aborted;
   setStatus(ok ? `${cutLabel(index)} 그림이 나왔어요! 마음에 들면 내려받아 주세요.` : '');
+  if (error) showError(error, `${cutLabel(index)} 그림을 그리지 못했어요`);
   controller = null;
   setBusy(false);
 }
@@ -216,16 +220,21 @@ async function drawAll() {
   controller = new AbortController();
   setBusy(true);
   let done = 0;
+  let firstError = null;
   for (let index = 0; index < total; index += 1) {
     if (controller.signal.aborted) break;
     setStatus(`${index + 1}/${total}컷 그리는 중…`);
-    if (await drawCut(index, controller.signal)) done += 1;
+    const error = await drawCut(index, controller.signal);
+    if (error === null && !controller.signal.aborted) done += 1;
+    if (error && !firstError) firstError = error;
   }
   if (controller.signal.aborted) {
     setStatus(`멈췄어요. ${total}컷 중 ${done}컷을 그렸어요.`);
   } else {
     setStatus(`${total}컷 중 ${done}컷을 그렸어요.${done < total ? ' 실패한 컷은 컷 카드의 안내를 확인해 주세요.' : ''}`);
   }
+  // 여러 컷이 실패해도 알림은 한 번만 (첫 번째 실패 이유)
+  if (firstError) showError(firstError, `${total - done}컷 그림을 그리지 못했어요`);
   controller = null;
   setBusy(false);
 }

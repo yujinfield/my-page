@@ -395,3 +395,39 @@ body.modal-open {
 .gpt-make .gpt-model-line .button-small {
   background: var(--surface);
 }
+
+/* ⚠️ 오류 알림 창 */
+.error-inner {
+  max-width: 480px;
+}
+
+.error-label {
+  margin-bottom: var(--space-xs);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  font-weight: 700;
+}
+
+.error-text {
+  margin-bottom: var(--space-m);
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-s);
+  background: var(--warning-bg);
+  line-height: 1.6;
+}
+
+#error-fix {
+  background: var(--surface-soft);
+}
+
+.error-detail {
+  margin-bottom: var(--space-m);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
+}
+
+.error-detail summary {
+  cursor: pointer;
+  margin-bottom: var(--space-xs);
+}
