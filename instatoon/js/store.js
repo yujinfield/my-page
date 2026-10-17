@@ -5,8 +5,9 @@ const THEME_KEY = 'kkomjwi-theme';
 // 버전 기록
 // 1: 통합 입력폼
 // 2: 컷 편집기 추가 (form.cuts). 1번 데이터는 cuts만 빈 목록으로 채워 그대로 씁니다.
+// 3: 잠깐 있던 구도(layout) 기능으로 저장된 데이터. 기능은 되돌렸지만 작업이 사라지지 않게 그대로 읽어요 (layout 값은 무시).
 const DRAFT_VERSION = 2;
-const READABLE_VERSIONS = [1, 2];
+const READABLE_VERSIONS = [1, 2, 3];
 
 // 작성 중인 입력폼 불러오기 (없거나 읽을 수 없으면 null)
 export function loadDraft() {
