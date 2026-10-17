@@ -76,8 +76,9 @@ function storyCut(message, situation, expression, background = 'simple') {
   cut.message = message;
   cut.texts.situation = situation.trim();
   cut.expression = expression;
-  cut.background = background;
   cut.characters = guessCharacters(situation);
+  // 기본 배경은 꼼쥐 + 사물 1개만: 남편·친구가 나오는 컷은 화이트로
+  cut.background = background === 'simple' && cut.characters.length > 1 ? 'white' : background;
   return cut;
 }
 
