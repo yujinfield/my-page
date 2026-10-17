@@ -5,6 +5,7 @@ import { classifyForm, checkForm } from './classify.js';
 import { buildPrompt } from './prompt.js';
 import { renderForm } from './form.js';
 import { initCutEditor, renderCuts } from './cuts.js';
+import { startAutoConti } from './ai-panel.js';
 import { initMaterialPanel, renderMaterialPanel, resetMaterialPanel } from './material-panel.js';
 import { initSettingsDialog } from './settings-dialog.js';
 import { initHistoryPanel } from './history-panel.js';
@@ -55,7 +56,7 @@ function showStep(step) {
   const index = STEPS.indexOf(step);
   prevButton.disabled = index === 0;
   nextButton.hidden = index === STEPS.length - 1;
-  const nextLabels = { part3: '요청문 만들기', result: '컷 편집' };
+  const nextLabels = { part3: '🤖 콘티 만들기', result: '컷 편집' };
   nextButton.textContent = nextLabels[step] || '다음';
 
   if (step === 'result') {
@@ -67,7 +68,18 @@ function showStep(step) {
   window.scrollTo(0, 0);
 }
 
+// PART 3에서: 요청문을 보여 주지 않고 바로 GPT에게 콘티(JSON)를 받아 컷 편집에 채움
+function makeContiNow() {
+  saveDraft(form);
+  showStep('cuts');
+  startAutoConti();
+}
+
 function moveStep(direction) {
+  if (direction === 1 && currentStep === 'part3') {
+    makeContiNow();
+    return;
+  }
   const index = STEPS.indexOf(currentStep) + direction;
   if (index >= 0 && index < STEPS.length) {
     showStep(STEPS[index]);
@@ -211,7 +223,7 @@ function init() {
   prevButton.addEventListener('click', () => moveStep(-1));
   nextButton.addEventListener('click', () => moveStep(1));
 
-  document.getElementById('make-button').addEventListener('click', () => showStep('result'));
+  document.getElementById('make-button').addEventListener('click', makeContiNow);
   document.getElementById('copy-from-form-button').addEventListener('click', copyPrompt);
   document.getElementById('copy-button').addEventListener('click', copyPrompt);
   document.getElementById('reset-button').addEventListener('click', resetForm);
