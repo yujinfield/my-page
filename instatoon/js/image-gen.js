@@ -14,6 +14,14 @@ export const IMAGE_MODELS = [
   { value: 'custom', label: '직접 입력' },
 ];
 
+// 🤖 콘티 작성(GPT) 모델. 목록에 없는 모델은 "직접 입력"으로 언제든 바꿀 수 있어요.
+export const TEXT_MODELS = [
+  { value: 'gpt-5.6-terra', label: 'GPT-5.6 Terra (기본)' },
+  { value: 'gpt-5.5', label: 'GPT-5.5' },
+  { value: 'chat-latest', label: 'chat-latest (가장 최신 채팅 모델)' },
+  { value: 'custom', label: '직접 입력' },
+];
+
 // 그림 크기: 인스타 4:5가 기본, 안 되는 모델이면 2:3 세로를 고름
 export const IMAGE_SIZES = [
   { value: '1024x1280', label: '1024×1280 (4:5 인스타 비율)' },
@@ -29,8 +37,9 @@ export const IMAGE_QUALITIES = [
 
 // API 키는 설정에 넣지 않습니다. (key-panel.js가 잠금·해제해서 따로 넘겨줌)
 export const DEFAULT_IMAGE_SETTINGS = {
-  textModel: 'gpt-5.5',   // 🤖 GPT 콘티 작성 모델
+  textModel: 'gpt-5.6-terra', // 🤖 GPT 콘티 작성 모델
   customTextModel: '',
+  textModelChosen: false,     // 사용자가 직접 고른 적이 있는지 (없으면 기본값이 바뀔 때 따라감)
   model: 'gpt-image-2',
   customModel: '',
   size: '1024x1280',
@@ -44,7 +53,11 @@ export function normalizeImageSettings(saved) {
   if (!saved) return settings;
   if (typeof saved.customModel === 'string') settings.customModel = saved.customModel.trim();
   if (typeof saved.customTextModel === 'string') settings.customTextModel = saved.customTextModel.trim();
-  if (['gpt-5.5', 'chat-latest', 'custom'].includes(saved.textModel)) settings.textModel = saved.textModel;
+  // 직접 고른 모델만 기억하고, 고른 적 없으면 지금 기본값(GPT-5.6 Terra)을 씀
+  if (saved.textModelChosen === true && TEXT_MODELS.some((item) => item.value === saved.textModel)) {
+    settings.textModel = saved.textModel;
+    settings.textModelChosen = true;
+  }
   if (IMAGE_MODELS.some((item) => item.value === saved.model)) settings.model = saved.model;
   if (IMAGE_SIZES.some((item) => item.value === saved.size)) settings.size = saved.size;
   if (IMAGE_QUALITIES.some((item) => item.value === saved.quality)) settings.quality = saved.quality;

@@ -6,13 +6,6 @@ import { explainOpenAiError } from './image-gen.js';
 
 const CHAT_URL = 'https://api.openai.com/v1/chat/completions';
 
-// 고를 수 있는 글쓰기 모델 (이름이 바뀌면 "직접 입력")
-export const TEXT_MODELS = [
-  { value: 'gpt-5.5', label: 'gpt-5.5 (기본, OpenAI 추천)' },
-  { value: 'chat-latest', label: 'chat-latest (가장 최신 채팅 모델)' },
-  { value: 'custom', label: '직접 입력' },
-];
-
 const SYSTEM_MESSAGE = '너는 인스타그램 @꼼쥐의 콘텐츠 기획자다. 요청한 형식의 JSON 객체 하나만 출력한다. 설명 문장이나 코드블록 표시 없이 JSON만.';
 
 // 요청문 → JSON 객체 (실패하면 Error)

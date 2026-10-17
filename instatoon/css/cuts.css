@@ -374,3 +374,16 @@ body.modal-open {
 .settings-note {
   margin-bottom: var(--space-l);
 }
+
+/* 컷 편집의 "🤖 GPT 콘티 모델" 줄 */
+.gpt-model-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-s);
+  margin-bottom: var(--space-m);
+}
+
+.gpt-model-line .button-small {
+  background: var(--surface-soft);
+}

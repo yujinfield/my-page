@@ -131,6 +131,11 @@
       <h2 class="step-title"><span class="highlight-pink">컷 편집</span> 컷별 콘티와 이미지 프롬프트</h2>
       <p class="step-desc">Claude에게 콘티를 맡기거나 직접 컷을 짜면, 컷마다 이미지 생성 프롬프트가 바로 만들어져요.</p>
 
+      <div class="gpt-model-line">
+        <p class="field-help">🤖 GPT 콘티 모델: <strong id="gpt-model-name"></strong></p>
+        <button type="button" id="gpt-model-change" class="button button-small" aria-label="GPT 콘티 작성 모델 바꾸기">바꾸기</button>
+      </div>
+
       <details id="paste-box" class="card paste-box">
         <summary>📋 Claude 답 붙여넣기 (claude.ai에서 받은 콘티)</summary>
         <p class="field-help">① 결과 탭에서 복사한 <strong>요청문</strong>을 claude.ai 꼼쥐 프로젝트에 보내고 → ② Claude가 쓴 <strong>답</strong>을 통째로 여기에 붙여 넣으세요. 답 끝의 JSON(없으면 콘티 글)으로 컷 수·대본·연출·캡션을 채워요.</p>
@@ -246,9 +251,9 @@
       </div>
       <div id="text-custom-model-field" class="field field-compact" hidden>
         <label for="text-custom-model" class="field-label">모델 이름 직접 입력</label>
-        <input type="text" id="text-custom-model" class="field-input" autocomplete="off" spellcheck="false" placeholder="예) gpt-5.5">
+        <input type="text" id="text-custom-model" class="field-input" autocomplete="off" spellcheck="false" placeholder="예) gpt-5.6-terra">
       </div>
-      <p class="field-help settings-note">API 키는 아래 그림 생성과 같은 OpenAI 키를 써요.</p>
+      <p class="field-help settings-note">API 키는 아래 그림 생성과 같은 OpenAI 키를 써요. 목록에 없는 모델은 "직접 입력"으로 OpenAI 모델 이름을 그대로 적으면 돼요.</p>
 
       <h3 class="settings-section-title">🎨 그림 생성 (GPT)</h3>
         <div class="key-section">
