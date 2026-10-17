@@ -1,7 +1,7 @@
 // 컷 편집기에 바로 넣을 수 있는 JSON 형식 설명
 // Claude 자동 작성(ai-conti.js)과 복사용 요청문(prompt.js)이 같은 형식을 쓰도록 한 곳에 둡니다.
 
-import { TEMPLATES, EXPRESSIONS, BACKGROUNDS, CHARACTERS } from './guide.js';
+import { TEMPLATES, EXPRESSIONS, BACKGROUNDS, CHARACTERS, SIMPLE_BACKGROUND_RULE } from './guide.js';
 
 function optionList(list) {
   return list.map((item) => `"${item.value}"(${item.label})`).join(', ');
@@ -24,6 +24,7 @@ export function editorValues() {
 ${describeTemplates()}
 표정: ${optionList(EXPRESSIONS)}
 배경: ${optionList(BACKGROUNDS)}
+  - ${SIMPLE_BACKGROUND_RULE}
 등장 캐릭터: ${optionList(CHARACTERS)}`;
 }
 

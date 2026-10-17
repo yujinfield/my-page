@@ -47,9 +47,19 @@ export const EXPRESSIONS = [
 // 배경 (마스터 프롬프트: 화이트 / 간단한 배경 / 상세 배경)
 export const BACKGROUNDS = [
   { value: 'white', label: '화이트', prompt: 'plain cream background' },
-  { value: 'simple', label: '간단한 배경', prompt: 'simple background with only a few props' },
+  {
+    value: 'simple',
+    label: '기본 배경 (꼼쥐 + 사물 1개)',
+    prompt: 'plain cream background with no scenery. Draw ONLY the squirrel and exactly ONE everyday object '
+      + '(such as a phone, laptop, notepad, cup or pencil). If the scene mentions several objects, draw only the single most important one. '
+      + 'No other props, furniture, walls, windows, plants, decorations or extra characters',
+  },
   { value: 'detailed', label: '상세 배경', prompt: 'detailed background scene of the place' },
 ];
+
+// 기본 배경 규칙: 콘티를 쓰는 AI에게도 알려 줌 (editor-format.js)
+export const SIMPLE_BACKGROUND_RULE = '배경 "simple"(기본 배경)은 꼼쥐 + 사물 1개(핸드폰·노트북·메모장·컵·연필 등)만 그린다. '
+  + 'characters는 ["kkomjwi"]만, scene에는 꼼쥐의 포즈와 사물 1개만 적는다. 남편·친구나 장소가 꼭 필요하면 "white"나 "detailed"를 고른다.';
 
 // 대사 규칙 (지침 3번): 컷당 2줄 이내, 한 줄 15자 내외
 export const MAX_DIALOGUE_LINES = 2;

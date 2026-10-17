@@ -106,6 +106,11 @@ export function checkCuts(cuts, form) {
     checkTextLength(cut, index, warnings);
     checkFacts(cut, index, sourceText, warnings);
 
+    // 기본 배경은 꼼쥐 + 사물 1개만
+    if (cut.background === 'simple' && (cut.characters.length !== 1 || cut.characters[0] !== 'kkomjwi')) {
+      warnings.push({ cutIndex: index, message: '기본 배경은 꼼쥐 + 사물 1개만 그려요. 다른 캐릭터가 나오면 배경을 화이트나 상세 배경으로 바꿔 주세요.' });
+    }
+
     if (index === 0) return;
     const previous = cuts[index - 1];
 
