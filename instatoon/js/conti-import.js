@@ -306,7 +306,8 @@ export function readContiText(text) {
 
 // 사이트가 만든 "요청문"을 그대로 붙여 넣은 경우
 function looksLikeRequest(text) {
-  return text.includes('[컷 편집기용 데이터]') || (text.includes('[컷 편집기 값]') && text.includes('템플릿 값 하나'));
+  return text.includes('[컷 편집기용 데이터]') || text.includes('[먼저 읽어 줘 — 꼼쥐툰 메이커 사용 중]')
+    || (text.includes('[컷 편집기 값]') && text.includes('템플릿 값 하나'));
 }
 
 // 붙여 넣은 글 → { result, source, notice } 또는 { error }
