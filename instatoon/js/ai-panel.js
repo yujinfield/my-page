@@ -1,8 +1,13 @@
-// Claude 자동 작성 패널 (컷 편집기 안)
-// claude.ai 링크로 열었을 때만 쓸 수 있어요. 사용하는 사람의 claude.ai 사용량을 쓰고, API 키는 필요 없어요.
+// 콘티 자동 작성 패널 (컷 편집기 안)
+//  - ✨ Claude: claude.ai 링크로 열었을 때만. 사용하는 사람의 claude.ai 사용량을 쓰고 API 키 불필요
+//  - 🤖 GPT: 공용 링크·내 컴퓨터에서. ⚙️ 설정의 OpenAI API 키를 씀
 
 import { buildContiRequest, readContiAnswer } from './ai-conti.js';
 import { addLog, makeSnapshot } from './history.js';
+import { writeContiWithGpt } from './gpt-conti.js';
+import { getApiKey, promptForKey } from './key-panel.js';
+import { getTextModelName } from './image-panel.js';
+import { openSettings } from './settings-dialog.js';
 
 // app.js·cuts.js에서 넘겨받는 함수들
 let options = {
@@ -57,7 +62,73 @@ function setAiStatus(message, busy) {
   document.getElementById('ai-status-box').hidden = message === '';
   document.getElementById('ai-status-text').textContent = message;
   document.getElementById('ai-stop').hidden = !busy;
-  document.querySelectorAll('.ai-button').forEach((button) => { button.disabled = busy; });
+  document.querySelectorAll('.ai-button, .gpt-button').forEach((button) => { button.disabled = busy; });
+}
+
+// 받은 콘티를 컷 편집기에 넣기 (Claude·GPT 공통)
+function applyConti(result, logAction) {
+  const form = options.getForm();
+  form.cuts = result.cuts;
+  form.caption = result.caption;
+  form.review = result.review;
+  options.onCutsReplaced();
+  addLog(logAction, `${result.cuts.length}컷`, makeSnapshot(form));
+}
+
+function finishWriting() {
+  aiController = null;
+  document.querySelectorAll('.ai-button, .gpt-button').forEach((button) => { button.disabled = false; });
+  document.getElementById('ai-stop').hidden = true;
+}
+
+// claude.ai 링크 안에서는 외부 인터넷이 막혀 있어서 GPT를 못 불러요.
+function inClaudeArtifact() {
+  return Boolean(window.claude && typeof window.claude.use === 'function');
+}
+
+async function writeContiWithGptButton() {
+  if (aiController) return;
+  const apiKey = getApiKey();
+  if (apiKey === '') {
+    const { message, focusId } = promptForKey();
+    setAiStatus(`GPT로 쓰려면 OpenAI API 키가 필요해요. ${message}`, false);
+    openSettings(focusId);
+    return;
+  }
+  const model = getTextModelName();
+  if (model === '') {
+    setAiStatus('⚙️ 설정에서 콘티 작성 모델 이름을 적어 주세요.', false);
+    openSettings('text-custom-model');
+    return;
+  }
+  if (options.getForm().cuts.length > 0 && !confirm('지금 컷을 지우고 GPT가 새로 쓴 콘티로 바꿀까요? (지금 콘티는 📜 기록에서 되돌릴 수 있어요)')) return;
+  // 성공했을 때만 "바꾸기 전 콘티"를 기록에 남기려고 미리 복사해 둠
+  const before = options.getForm().cuts.length > 0 ? makeSnapshot(options.getForm()) : null;
+
+  const type = options.getType();
+  aiController = new AbortController();
+  setAiStatus(`GPT(${model})가 ${TYPE_NAMES[type]} 콘티를 쓰고 있어요… 보통 30초~2분 걸려요.`, true);
+  try {
+    const answer = await writeContiWithGpt({
+      apiKey,
+      model,
+      prompt: buildContiRequest(options.getForm(), type),
+      signal: aiController.signal,
+    });
+    const result = readContiAnswer(answer);
+    if (!result) {
+      setAiStatus('GPT의 답에서 컷을 찾지 못했어요. 다시 눌러 주세요.', false);
+      return;
+    }
+    if (before) addLog('바꾸기 전 콘티', `${before.cuts.length}컷`, before);
+    applyConti(result, `GPT 자동 작성 (${model})`);
+    setAiStatus(`${result.cuts.length}컷 콘티가 들어왔어요! 노란 경고가 있는 컷부터 확인해 주세요.`, false);
+  } catch (error) {
+    setAiStatus(error.message, false);
+    if (!aiController.signal.aborted) addLog('GPT 자동 작성 실패', error.message);
+  } finally {
+    finishWriting();
+  }
 }
 
 async function writeContiWithClaude() {
@@ -83,21 +154,14 @@ async function writeContiWithClaude() {
       return;
     }
 
-    const form = options.getForm();
-    form.cuts = result.cuts;
-    form.caption = result.caption;
-    form.review = result.review;
-    options.onCutsReplaced();
-    addLog('Claude 자동 작성', `${result.cuts.length}컷`, makeSnapshot(form));
+    applyConti(result, 'Claude 자동 작성');
     setAiStatus(`${result.cuts.length}컷 콘티가 들어왔어요! 노란 경고가 있는 컷부터 확인해 주세요.`, false);
   } catch (error) {
     const code = error && error.code;
     setAiStatus(ERROR_MESSAGES[code] || '잠시 문제가 생겼어요. 다시 눌러 주세요.', false);
     if (UNAVAILABLE_CODES.includes(code)) showAiAvailability(false);
   } finally {
-    aiController = null;
-    document.querySelectorAll('.ai-button').forEach((button) => { button.disabled = false; });
-    document.getElementById('ai-stop').hidden = true;
+    finishWriting();
   }
 }
 
@@ -114,6 +178,9 @@ export function initAiPanel(newOptions) {
 
   document.getElementById('ai-start').addEventListener('click', writeContiWithClaude);
   document.getElementById('ai-rebuild').addEventListener('click', writeContiWithClaude);
+  document.getElementById('gpt-start').addEventListener('click', writeContiWithGptButton);
+  document.getElementById('gpt-rebuild').addEventListener('click', writeContiWithGptButton);
+  document.querySelectorAll('.gpt-button').forEach((button) => { button.hidden = inClaudeArtifact(); });
   document.getElementById('ai-stop').addEventListener('click', () => {
     if (aiController) aiController.abort();
   });

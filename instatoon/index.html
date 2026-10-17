@@ -146,11 +146,12 @@
       <div id="cut-empty" class="card">
         <p class="field-help">아직 컷이 없어요. Claude에게 콘티를 맡기거나, 입력한 문장을 그대로 옮긴 기본 구성으로 시작하세요. (어느 쪽이든 입력하지 않은 경험은 지어내지 않아요)</p>
         <div class="action-row">
+          <button type="button" id="gpt-start" class="button button-primary gpt-button">🤖 GPT로 콘티 자동 작성</button>
           <button type="button" id="ai-start" class="button button-primary ai-button" hidden>✨ Claude로 콘티 자동 작성</button>
           <button type="button" id="cut-start" class="button">입력 내용으로 기본 구성 만들기</button>
         </div>
         <p id="ai-unavailable" class="field-help ai-unavailable" hidden>
-          ✨ Claude 자동 작성은 claude.ai 링크로 열었을 때만 쓸 수 있어요.
+          🤖 GPT 자동 작성은 ⚙️ 설정의 OpenAI API 키로 동작해요. (✨ Claude 자동 작성은 claude.ai 링크에서만 돼요)
         </p>
       </div>
 
@@ -164,6 +165,7 @@
         <div class="action-row">
           <button type="button" id="cut-copy-all" class="button button-primary">전체 프롬프트 복사</button>
           <button type="button" id="cut-add" class="button">컷 추가</button>
+          <button type="button" id="gpt-rebuild" class="button gpt-button">🤖 GPT로 다시 작성</button>
           <button type="button" id="ai-rebuild" class="button ai-button" hidden>✨ Claude로 다시 작성</button>
           <button type="button" id="cut-rebuild" class="button button-quiet">기본 구성 다시 만들기</button>
         </div>
@@ -237,6 +239,17 @@
         <h2 id="settings-title" class="card-title">⚙️ 설정</h2>
         <button type="button" id="settings-close" class="icon-button modal-close" aria-label="설정 닫기">✕</button>
       </div>
+      <h3 class="settings-section-title">🤖 콘티 작성 (GPT)</h3>
+      <div class="field field-compact">
+        <label for="text-model" class="field-label">콘티 작성 모델</label>
+        <select id="text-model" class="field-input"></select>
+      </div>
+      <div id="text-custom-model-field" class="field field-compact" hidden>
+        <label for="text-custom-model" class="field-label">모델 이름 직접 입력</label>
+        <input type="text" id="text-custom-model" class="field-input" autocomplete="off" spellcheck="false" placeholder="예) gpt-5.5">
+      </div>
+      <p class="field-help settings-note">API 키는 아래 그림 생성과 같은 OpenAI 키를 써요.</p>
+
       <h3 class="settings-section-title">🎨 그림 생성 (GPT)</h3>
         <div class="key-section">
           <p class="field-label">OpenAI API 키</p>

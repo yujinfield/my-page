@@ -11,6 +11,7 @@ import { loadImageSettings, saveImageSettings } from './store.js';
 import { initKeyPanel, getApiKey, promptForKey } from './key-panel.js';
 import { openSettings } from './settings-dialog.js';
 import { addLog } from './history.js';
+import { TEXT_MODELS } from './gpt-conti.js';
 
 const TURNAROUND_FILE = '꼼쥐_턴어라운드.png';
 
@@ -64,9 +65,27 @@ function fillSelect(id, list, value) {
 function saveSettings() {
   saveImageSettings(settings);
   element('image-custom-model-field').hidden = settings.model !== 'custom';
+  element('text-custom-model-field').hidden = settings.textModel !== 'custom';
+}
+
+// 🤖 GPT 콘티 작성에 쓸 모델 이름 ('' 이면 직접 입력이 비어 있음)
+export function getTextModelName() {
+  return settings.textModel === 'custom' ? settings.customTextModel : settings.textModel;
 }
 
 function setupSettings() {
+  fillSelect('text-model', TEXT_MODELS, settings.textModel);
+  element('text-custom-model').value = settings.customTextModel;
+  element('text-custom-model-field').hidden = settings.textModel !== 'custom';
+  element('text-model').addEventListener('change', (event) => {
+    settings.textModel = event.target.value;
+    saveSettings();
+  });
+  element('text-custom-model').addEventListener('input', (event) => {
+    settings.customTextModel = event.target.value.trim();
+    saveSettings();
+  });
+
   fillSelect('image-model', IMAGE_MODELS, settings.model);
   element('image-custom-model').value = settings.customModel;
   fillSelect('image-size', IMAGE_SIZES, settings.size);

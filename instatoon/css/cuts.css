@@ -364,3 +364,13 @@ body.modal-open {
 .history-item .button-small {
   background: var(--surface-soft);
 }
+
+/* 🤖 GPT 콘티 작성 */
+#text-custom-model-field[hidden],
+.button.gpt-button[hidden] {
+  display: none;
+}
+
+.settings-note {
+  margin-bottom: var(--space-l);
+}

@@ -29,6 +29,8 @@ export const IMAGE_QUALITIES = [
 
 // API 키는 설정에 넣지 않습니다. (key-panel.js가 잠금·해제해서 따로 넘겨줌)
 export const DEFAULT_IMAGE_SETTINGS = {
+  textModel: 'gpt-5.5',   // 🤖 GPT 콘티 작성 모델
+  customTextModel: '',
   model: 'gpt-image-2',
   customModel: '',
   size: '1024x1280',
@@ -41,6 +43,8 @@ export function normalizeImageSettings(saved) {
   const settings = { ...DEFAULT_IMAGE_SETTINGS };
   if (!saved) return settings;
   if (typeof saved.customModel === 'string') settings.customModel = saved.customModel.trim();
+  if (typeof saved.customTextModel === 'string') settings.customTextModel = saved.customTextModel.trim();
+  if (['gpt-5.5', 'chat-latest', 'custom'].includes(saved.textModel)) settings.textModel = saved.textModel;
   if (IMAGE_MODELS.some((item) => item.value === saved.model)) settings.model = saved.model;
   if (IMAGE_SIZES.some((item) => item.value === saved.size)) settings.size = saved.size;
   if (IMAGE_QUALITIES.some((item) => item.value === saved.quality)) settings.quality = saved.quality;
@@ -65,7 +69,7 @@ export async function loadReference(fileName) {
 }
 
 // OpenAI 오류 → 사람이 읽을 안내
-function explainError(status, detail) {
+export function explainOpenAiError(status, detail) {
   if (status === 401) return 'API 키가 맞지 않아요. 키를 다시 확인해 주세요.';
   if (status === 403) return '이 키로는 이 모델을 쓸 수 없어요. OpenAI 계정 인증·권한을 확인하거나 다른 모델을 골라 주세요.';
   if (status === 429) return '요청이 너무 많거나 크레딧이 부족해요. 잠시 뒤에 하거나 OpenAI 결제 상태를 확인해 주세요.';
@@ -108,7 +112,7 @@ export async function generateImage({ apiKey, settings, prompt, references = [],
   const data = await response.json().catch(() => null);
   if (!response.ok) {
     const detail = data && data.error && data.error.message;
-    throw new Error(explainError(response.status, detail));
+    throw new Error(explainOpenAiError(response.status, detail));
   }
 
   const first = data && Array.isArray(data.data) ? data.data[0] : null;

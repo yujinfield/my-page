@@ -57,6 +57,7 @@
 | `js/checks.js` | 컷 최종 검토 규칙 (순수 함수, 경고 목록 반환) |
 | `js/cuts.js` | 컷 편집기 화면 (추가·삭제·순서 변경, 템플릿별 입력 칸, 프롬프트 복사) |
 | `js/ai-conti.js` | Claude 콘티 요청문 만들기, Claude 답(JSON) → 컷 목록 (순수 함수) |
+| `js/gpt-conti.js` | GPT(OpenAI Chat Completions, JSON 모드)로 콘티 쓰기. 요청문·JSON 형식은 `ai-conti.js`와 같음, 키는 그림 생성과 같은 OpenAI 키 |
 | `js/ai-panel.js` | Claude 자동 작성 버튼, 진행 상황·멈추기, 캡션·검토 메모 |
 | `js/notion-material.js` | 댓글 자료 요청문, 노션 페이지 입력 만들기, 응답에서 페이지 주소 찾기 (순수 함수) |
 | `js/material-panel.js` | PART 3 노션 자료 패널 (초안 쓰기 → 고치기 → 노션에 저장, 요청문 복사) |
