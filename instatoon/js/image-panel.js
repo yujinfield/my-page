@@ -4,14 +4,13 @@
 import { TEMPLATES, findOption } from './guide.js';
 import { buildImagePrompt } from './prompt.js';
 import {
-  IMAGE_MODELS, IMAGE_SIZES, IMAGE_QUALITIES, normalizeImageSettings, modelName,
+  TEXT_MODELS, IMAGE_MODELS, IMAGE_SIZES, IMAGE_QUALITIES, normalizeImageSettings, modelName,
   loadReference, generateImage,
 } from './image-gen.js';
 import { loadImageSettings, saveImageSettings } from './store.js';
 import { initKeyPanel, getApiKey, promptForKey } from './key-panel.js';
 import { openSettings } from './settings-dialog.js';
 import { addLog } from './history.js';
-import { TEXT_MODELS } from './gpt-conti.js';
 
 const TURNAROUND_FILE = '꼼쥐_턴어라운드.png';
 
@@ -66,6 +65,13 @@ function saveSettings() {
   saveImageSettings(settings);
   element('image-custom-model-field').hidden = settings.model !== 'custom';
   element('text-custom-model-field').hidden = settings.textModel !== 'custom';
+  showTextModel();
+}
+
+// 컷 편집의 "🤖 콘티 모델: …" 줄
+function showTextModel() {
+  const name = getTextModelName();
+  element('gpt-model-name').textContent = name || '(모델 이름을 적어 주세요)';
 }
 
 // 🤖 GPT 콘티 작성에 쓸 모델 이름 ('' 이면 직접 입력이 비어 있음)
@@ -77,9 +83,12 @@ function setupSettings() {
   fillSelect('text-model', TEXT_MODELS, settings.textModel);
   element('text-custom-model').value = settings.customTextModel;
   element('text-custom-model-field').hidden = settings.textModel !== 'custom';
+  showTextModel();
   element('text-model').addEventListener('change', (event) => {
     settings.textModel = event.target.value;
+    settings.textModelChosen = true;
     saveSettings();
+    if (settings.textModel === 'custom') element('text-custom-model').focus();
   });
   element('text-custom-model').addEventListener('input', (event) => {
     settings.customTextModel = event.target.value.trim();
@@ -268,6 +277,7 @@ export function initImagePanel(newOptions) {
 
   element('image-all').addEventListener('click', drawAll);
   element('image-open-settings').addEventListener('click', () => openSettings());
+  element('gpt-model-change').addEventListener('click', () => openSettings('text-model'));
   element('image-stop').addEventListener('click', () => {
     if (controller) controller.abort();
   });
