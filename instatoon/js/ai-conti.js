@@ -1,7 +1,7 @@
 // Claude에게 콘티를 맡길 요청문 만들기와 답 정리
 // DOM을 쓰지 않는 순수 함수만 둡니다. 실제 호출은 cuts.js에서 합니다.
 
-import { CONTI_RULES } from './guide.js';
+import { CONTI_RULES, SALES_RULES } from './guide.js';
 import { editorValues, EDITOR_JSON_SHAPE } from './editor-format.js';
 import { STORY_V1, INFO_V2 } from './master-prompts.js';
 import { buildUserInputs } from './prompt.js';
@@ -22,8 +22,9 @@ export function buildContiRequest(form, type) {
 
   return [
     '너는 인스타그램 \'@꼼쥐\'의 전담 콘텐츠 기획자이자 스토리 작가다.',
-    '아래 [꼼쥐 규칙]과 [마스터 프롬프트]를 따르고, [사용자 입력]에 있는 내용만 근거로 컷별 콘티를 작성한다.',
+    '아래 [꼼쥐 규칙]·[반드시 지킬 판매 원칙]·[마스터 프롬프트]를 따르고, [사용자 입력]에 있는 내용만 근거로 컷별 콘티를 작성한다.',
     CONTI_RULES,
+    SALES_RULES,
     `[마스터 프롬프트]\n${master}`,
     `[사용자 입력]\n${buildUserInputs(form, type)}`,
     editorValues(),

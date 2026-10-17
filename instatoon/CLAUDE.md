@@ -139,9 +139,11 @@
 
 - 페이지 안에서 Claude를 부르는 claude.ai 아티팩트 기능(`window.claude.use('sample')`)을 씁니다. **API 키가 필요 없고**, 쓰는 사람의 claude.ai 사용량을 씁니다.
 - claude.ai 링크로 열었을 때만 동작합니다. 아티팩트로 올릴 때 `capabilities: {sample: {}}`를 꼭 선언합니다. 공용 링크(github.io)나 내 컴퓨터에서 열면 `window.claude`가 없으므로 버튼을 숨기고 안내 문구만 보여 줍니다.
-- 요청문(`ai-conti.js`) = 꼼쥐 핵심 규칙(`guide.js`의 `CONTI_RULES`) + 유형별 마스터 프롬프트 + 사용자 입력 + 컷 편집기 값 목록 + JSON 답 형식. 이미지 프롬프트는 Claude에게 받지 않고 사이트가 조립합니다.
+- 요청문(`ai-conti.js`) = 꼼쥐 핵심 규칙(`guide.js`의 `CONTI_RULES`) + 판매 원칙(`SALES_RULES`) + 유형별 마스터 프롬프트 + 사용자 입력 + 컷 편집기 값 목록 + JSON 답 형식. 이미지 프롬프트는 Claude에게 받지 않고 사이트가 조립합니다.
 - 답은 `sample.json`으로 받고, `readContiAnswer`가 모르는 값을 기본값으로 바꿉니다 (`normalizeCut`). 화면에 넣을 때는 항상 `textContent`/`value`를 씁니다.
 - 버튼을 누를 때만 부르고, 자동 재시도는 하지 않습니다. 권한 거절(`not_granted` 등)이면 버튼을 숨깁니다.
+
+- **판매 원칙**(`guide.js`의 `SALES_RULES`): 1컷 통념 깨기+숫자, 2컷 독자 걱정, 중간 꼼쥐·남편 대조(꼼쥐가 기준 제시), 추상 표현 금지, 유추 컷 1개 이상, 마지막 컷 공백 → 캡션·댓글. GPT·Claude 자동 작성과 복사용 요청문 모두에 들어가고, 마스터 프롬프트와 겹치면 판매 원칙이 우선입니다. 숫자·남편 이야기는 사용자 입력에 있는 것만 쓰고, 없으면 `[입력 필요]` + review로 남깁니다.
 
 ## 댓글 자료 → 노션
 
