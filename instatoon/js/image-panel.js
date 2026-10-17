@@ -71,7 +71,9 @@ function saveSettings() {
 // 컷 편집의 "🤖 콘티 모델: …" 줄
 function showTextModel() {
   const name = getTextModelName();
-  element('gpt-model-name').textContent = name || '(모델 이름을 적어 주세요)';
+  document.querySelectorAll('.gpt-model-name').forEach((item) => {
+    item.textContent = name || '(모델 이름을 적어 주세요)';
+  });
 }
 
 // 🤖 GPT 콘티 작성에 쓸 모델 이름 ('' 이면 직접 입력이 비어 있음)
@@ -277,7 +279,9 @@ export function initImagePanel(newOptions) {
 
   element('image-all').addEventListener('click', drawAll);
   element('image-open-settings').addEventListener('click', () => openSettings());
-  element('gpt-model-change').addEventListener('click', () => openSettings('text-model'));
+  document.querySelectorAll('.gpt-model-change').forEach((button) => {
+    button.addEventListener('click', () => openSettings('text-model'));
+  });
   element('image-stop').addEventListener('click', () => {
     if (controller) controller.abort();
   });

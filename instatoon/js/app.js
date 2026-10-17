@@ -56,7 +56,7 @@ function showStep(step) {
   const index = STEPS.indexOf(step);
   prevButton.disabled = index === 0;
   nextButton.hidden = index === STEPS.length - 1;
-  const nextLabels = { part3: '🤖 콘티 만들기', result: '컷 편집' };
+  const nextLabels = { part3: '결과 보기', result: '컷 편집' };
   nextButton.textContent = nextLabels[step] || '다음';
 
   if (step === 'result') {
@@ -68,7 +68,7 @@ function showStep(step) {
   window.scrollTo(0, 0);
 }
 
-// PART 3에서: 요청문을 보여 주지 않고 바로 GPT에게 콘티(JSON)를 받아 컷 편집에 채움
+// 결과 탭에서: 고른 마스터 프롬프트로 GPT에게 콘티(JSON)를 받아 컷 편집에 컷마다 나눠 채움
 function makeContiNow() {
   saveDraft(form);
   showStep('cuts');
@@ -76,10 +76,6 @@ function makeContiNow() {
 }
 
 function moveStep(direction) {
-  if (direction === 1 && currentStep === 'part3') {
-    makeContiNow();
-    return;
-  }
   const index = STEPS.indexOf(currentStep) + direction;
   if (index >= 0 && index < STEPS.length) {
     showStep(STEPS[index]);
@@ -117,9 +113,7 @@ function updateResult() {
   document.getElementById('warnings-box').hidden = warnings.length === 0;
   fillList(document.getElementById('warnings'), warnings);
 
-  document.getElementById('prompt-title').textContent =
-    `${PROMPT_NAMES[finalType]} 마스터 프롬프트 + 입력 내용`;
-  document.getElementById('prompt-output').value = buildPrompt(form, finalType);
+  document.getElementById('make-prompt-name').textContent = PROMPT_NAMES[finalType];
 }
 
 function setTypeChoiceRadios() {
@@ -223,12 +217,11 @@ function init() {
   prevButton.addEventListener('click', () => moveStep(-1));
   nextButton.addEventListener('click', () => moveStep(1));
 
-  document.getElementById('make-button').addEventListener('click', makeContiNow);
+  document.getElementById('make-button').addEventListener('click', () => showStep('result'));
+  document.getElementById('result-make-button').addEventListener('click', makeContiNow);
   document.getElementById('copy-from-form-button').addEventListener('click', copyPrompt);
-  document.getElementById('copy-button').addEventListener('click', copyPrompt);
   document.getElementById('reset-button').addEventListener('click', resetForm);
   document.getElementById('theme-button').addEventListener('click', toggleTheme);
-  document.getElementById('go-cuts-button').addEventListener('click', () => showStep('cuts'));
   document.getElementById('copy-fallback-close').addEventListener('click', () => {
     document.getElementById('copy-fallback').hidden = true;
   });

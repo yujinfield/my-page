@@ -387,3 +387,11 @@ body.modal-open {
 .gpt-model-line .button-small {
   background: var(--surface-soft);
 }
+
+.gpt-make .gpt-model-line {
+  margin: var(--space-s) 0 var(--space-m);
+}
+
+.gpt-make .gpt-model-line .button-small {
+  background: var(--surface);
+}
