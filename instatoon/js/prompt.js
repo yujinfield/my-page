@@ -3,7 +3,7 @@
 
 import { CTA_TYPES, MATERIAL_TYPES } from './fields.js';
 import { STORY_V1, STORY_V1_CLOSING, INFO_V2, INFO_V2_CLOSING } from './master-prompts.js';
-import { editorJsonRequest } from './editor-format.js';
+import { editorJsonRequest, EDITOR_JSON_NOTICE, EDITOR_JSON_REMINDER } from './editor-format.js';
 import {
   BASE_STYLE, FIXED_RULES, TEMPLATES, CHARACTERS, EXPRESSIONS, BACKGROUNDS, findOption,
 } from './guide.js';
@@ -102,22 +102,26 @@ export function buildUserInputs(form, type) {
 export function buildPrompt(form, type) {
   if (type === 'story') {
     return [
+      EDITOR_JSON_NOTICE,
       STORY_V1,
       '7. 사용자 입력',
       buildStoryInputs(form),
       '⸻',
       STORY_V1_CLOSING,
       editorJsonRequest(),
+      EDITOR_JSON_REMINDER,
     ].join('\n\n');
   }
 
   return [
+    EDITOR_JSON_NOTICE,
     INFO_V2,
     '사용자 입력폼 제출 내용',
     buildInfoInputs(form),
     '⸻',
     INFO_V2_CLOSING,
     editorJsonRequest(),
+    EDITOR_JSON_REMINDER,
   ].join('\n\n');
 }
 
