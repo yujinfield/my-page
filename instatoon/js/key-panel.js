@@ -184,10 +184,33 @@ function migratePlainKey() {
   }
 }
 
+// 키 칸에 적기만 하고 버튼을 안 눌렀을 때: 적힌 키를 바로 씀
+// 잠금 비밀번호도 적혀 있으면 잠가서 저장까지 하고, 없으면 "이번만 쓰기"처럼 씀
+function adoptTypedKey() {
+  const apiKey = element('key-input').value.trim();
+  if (apiKey === '' || hasLockedKey()) return;
+  const passphrase = element('key-pass').value;
+  clearInputs();
+  useKey(apiKey);
+
+  if (passphrase.length < MIN_PASSPHRASE || !canEncrypt()) {
+    addLog('API 키', '이번만 쓰기 (저장 안 함)');
+    setStatus('적어 둔 키를 이번 창에서 쓰고 있어요. 저장하려면 "잠그기" 뒤 키와 잠금 비밀번호를 넣고 "잠가서 저장"을 눌러 주세요.');
+    return;
+  }
+  lockKey(apiKey, passphrase).then((record) => {
+    if (!saveLockedKey(record)) return;
+    addLog('API 키', '잠가서 저장');
+    render();
+    setStatus('적어 둔 키를 잠가서 이 기기에 저장했어요.');
+  });
+}
+
 // ---------- 다른 파일에서 쓰는 함수 ----------
 
 // 지금 쓸 수 있는 키 ('' 이면 없음)
 export function getApiKey() {
+  if (activeKey === '') adoptTypedKey();
   if (activeKey !== '') touch();
   return activeKey;
 }
@@ -209,6 +232,8 @@ export function initKeyPanel() {
   element('key-delete').addEventListener('click', deleteKey);
   element('key-delete-locked').addEventListener('click', deleteKey);
   onEnter('key-pass', saveLocked);
+  // 키만 넣고 Enter: 비밀번호가 있으면 잠가서 저장, 없으면 이번만 쓰기
+  onEnter('key-input', () => (element('key-pass').value === '' ? useOnce() : saveLocked()));
   onEnter('key-unlock-pass', unlock);
 
   if (!canEncrypt()) {
