@@ -453,3 +453,20 @@ body.modal-open {
   width: 100%;
   background: var(--surface);
 }
+
+/* ◀ 이전 그림 · 1 / 2 · 다음 그림 ▶ */
+.cut-version-row {
+  align-items: center;
+  margin-bottom: var(--space-s);
+}
+
+.cut-version-row[hidden] {
+  display: none;
+}
+
+.cut-version-count {
+  min-width: 3.5em;
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  text-align: center;
+}

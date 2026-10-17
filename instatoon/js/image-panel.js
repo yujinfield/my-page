@@ -17,8 +17,21 @@ let options = {
   getForm: null,  // 지금 입력폼 (form.cuts)
 };
 
-const images = new Map();   // cut.id → 그림 주소
-const previousImages = new Map(); // cut.id → 고치기 전 그림 (한 단계만 되돌리기)
+// cut.id → { list: [그림 주소, ...], index: 지금 보는 그림 번호 }
+// 새로 그리거나 고칠 때마다 맨 뒤에 쌓여서, 이전·다음 그림으로 오갈 수 있어요.
+const versions = new Map();
+
+function currentImage(cutId) {
+  const version = versions.get(cutId);
+  return version ? version.list[version.index] : '';
+}
+
+function addImage(cutId, url) {
+  const version = versions.get(cutId) || { list: [], index: 0 };
+  version.list.push(url);
+  version.index = version.list.length - 1;
+  versions.set(cutId, version);
+}
 let controller = null;      // 진행 중인 요청 (멈추기용)
 
 // claude.ai 링크로 열면 외부 인터넷이 막혀 있어요.
@@ -45,6 +58,7 @@ function setStatus(message) {
 function setBusy(busy) {
   element('image-stop').hidden = !busy;
   document.querySelectorAll('.image-button').forEach((button) => { button.disabled = busy || inClaudeArtifact(); });
+  versions.forEach((version, cutId) => showVersionButtons(cutId));
 }
 
 // 그림을 만들 준비가 됐는지 확인 (안 됐으면 안내하고 false)
@@ -73,7 +87,7 @@ async function referencesFor(cut) {
 }
 
 function showCutImage(cut, index) {
-  const url = images.get(cut.id);
+  const url = currentImage(cut.id);
   const box = element(`cut-image-box-${cut.id}`);
   if (!box) return;
   box.hidden = !url;
@@ -84,8 +98,18 @@ function showCutImage(cut, index) {
   const link = element(`cut-image-download-${cut.id}`);
   link.href = url;
   link.download = `kkomjwi-cut-${String(index + 1).padStart(2, '0')}.png`;
-  const undo = element(`cut-revise-undo-${cut.id}`);
-  if (undo) undo.hidden = !previousImages.has(cut.id);
+  showVersionButtons(cut.id);
+}
+
+// ◀ 이전 그림 · 2/3 · 다음 그림 ▶ (그림이 2장 이상일 때만)
+function showVersionButtons(cutId) {
+  const version = versions.get(cutId);
+  const row = element(`cut-version-row-${cutId}`);
+  if (!version || !row) return;
+  row.hidden = version.list.length < 2;
+  element(`cut-version-count-${cutId}`).textContent = `${version.index + 1} / ${version.list.length}`;
+  element(`cut-version-prev-${cutId}`).disabled = controller !== null || version.index === 0;
+  element(`cut-version-next-${cutId}`).disabled = controller !== null || version.index === version.list.length - 1;
 }
 
 function setCutStatus(cut, message) {
@@ -104,8 +128,7 @@ async function drawCut(index, signal) {
       references: await referencesFor(cut),
       signal,
     });
-    images.set(cut.id, url);
-    previousImages.delete(cut.id);
+    addImage(cut.id, url);
     setCutStatus(cut, '');
     showCutImage(cut, index);
     addLog('그림 생성', `${cutLabel(index)} · ${modelName(settings)} · ${settings.size}`);
@@ -166,7 +189,7 @@ async function drawAll() {
 async function reviseOne(index, request) {
   if (controller || !ready()) return;
   const cut = cuts()[index];
-  const current = dataUrlToBlob(images.get(cut.id) || '');
+  const current = dataUrlToBlob(currentImage(cut.id));
   if (!current) {
     showError({ problem: '이 그림은 고칠 수 없어요.', fix: '"🎨 이 컷 그림 만들기"로 다시 그린 뒤 수정 요청을 해 주세요.' }, `${cutLabel(index)} 그림을 고치지 못했어요`);
     return;
@@ -185,10 +208,9 @@ async function reviseOne(index, request) {
       references,
       signal: controller.signal,
     });
-    previousImages.set(cut.id, images.get(cut.id));
-    images.set(cut.id, url);
+    addImage(cut.id, url);
     clearReviseDraft(cut.id);
-    setCutStatus(cut, '고쳤어요! 마음에 안 들면 "↩︎ 이전 그림으로"를 누르세요.');
+    setCutStatus(cut, '고쳤어요! 마음에 안 들면 "◀ 이전 그림"을 누르세요.');
     showCutImage(cut, index);
     setStatus(`${cutLabel(index)} 그림을 고쳤어요.`);
     addLog('그림 수정', `${cutLabel(index)} · ${request.trim().slice(0, 60)}`);
@@ -204,12 +226,15 @@ async function reviseOne(index, request) {
   setBusy(false);
 }
 
-function undoRevise(index) {
+// step: -1(이전 그림) / +1(다음 그림)
+function moveVersion(index, step) {
   const cut = cuts()[index];
-  if (controller || !previousImages.has(cut.id)) return;
-  images.set(cut.id, previousImages.get(cut.id));
-  previousImages.delete(cut.id);
-  setCutStatus(cut, '고치기 전 그림으로 되돌렸어요.');
+  const version = versions.get(cut.id);
+  if (controller || !version) return;
+  const next = version.index + step;
+  if (next < 0 || next >= version.list.length) return;
+  version.index = next;
+  setCutStatus(cut, '');
   showCutImage(cut, index);
 }
 
@@ -245,7 +270,8 @@ export function renderCutImagePart(cut, index) {
   link.textContent = '내려받기';
   const revise = renderRevisePart(cut, cutLabel(index), {
     onSubmit: (request) => reviseOne(index, request),
-    onUndo: () => undoRevise(index),
+    onPrevious: () => moveVersion(index, -1),
+    onNext: () => moveVersion(index, 1),
   });
   box.append(img, link, revise);
 

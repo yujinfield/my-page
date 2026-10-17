@@ -62,9 +62,9 @@
 | `js/notion-material.js` | 댓글 자료 요청문, 노션 페이지 입력 만들기, 응답에서 페이지 주소 찾기 (순수 함수) |
 | `js/material-panel.js` | PART 3 노션 자료 패널 (초안 쓰기 → 고치기 → 노션에 저장, 요청문 복사) |
 | `js/image-gen.js` | GPT 이미지 API 호출(참고 이미지 있으면 /edits, 없으면 /generations), 모델·크기·품질 목록과 기본값 |
-| `js/image-panel.js` | 그림 생성 카드, 컷별 그림 만들기·전체 만들기·내려받기, 수정 요청(지금 그림을 첫 번째 참고 이미지로 /edits에 보냄, 한 단계 되돌리기) |
+| `js/image-panel.js` | 그림 생성 카드, 컷별 그림 만들기·전체 만들기·내려받기, 수정 요청(지금 보는 그림을 첫 번째 참고 이미지로 /edits에 보냄), 컷마다 그린 그림을 모두 쌓아 이전·다음 그림으로 오가기 |
 | `js/image-settings.js` | ⚙️ 설정의 콘티 작성 모델·그림 설정 화면과 값(`settings`), `getTextModelName()` |
-| `js/image-revise.js` | 컷 그림 아래 ✏️ 수정 요청 칸 화면 조립 (적다 만 글 기억) |
+| `js/image-revise.js` | 컷 그림 아래 ◀ 이전·다음 ▶ 그림 버튼과 ✏️ 수정 요청 칸 화면 조립 (적다 만 글 기억) |
 | `js/key-vault.js` | API 키 암호화·복호화 (Web Crypto: PBKDF2 → AES-GCM), 화면용 가리기 |
 | `js/modal.js` | 창(모달) 여닫기 공통: Esc, 바깥 클릭, Tab이 창 안에서만 돌기, 닫으면 연 버튼으로 포커스 복귀. 새 창은 `.modal` + `.modal-close`로 만들고 `setupModal()` |
 | `js/settings-dialog.js` | 오른쪽 위 ⚙️ 설정 창 |
