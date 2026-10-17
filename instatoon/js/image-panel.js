@@ -83,6 +83,8 @@ function ready() {
 async function referencesFor(cut) {
   if (!settings.useReferences) return [];
   const template = findOption(TEMPLATES, cut.template);
+  // 구도 템플릿은 레퍼런스 그림이 없어서 턴어라운드만 보내요.
+  if (!template.reference) return [await loadReference(TURNAROUND_FILE)];
   return Promise.all([loadReference(TURNAROUND_FILE), loadReference(template.reference)]);
 }
 

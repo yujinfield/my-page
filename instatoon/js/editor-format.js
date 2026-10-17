@@ -25,7 +25,8 @@ ${describeTemplates()}
 표정: ${optionList(EXPRESSIONS)}
 배경: ${optionList(BACKGROUNDS)}
   - ${SIMPLE_BACKGROUND_RULE}
-등장 캐릭터: ${optionList(CHARACTERS)}`;
+등장 캐릭터: ${optionList(CHARACTERS)}
+템플릿 규칙: "cover-…", "story-…"처럼 이름에 구도가 붙은 템플릿은 기본 템플릿과 texts가 같고 화면 배치만 다르다. 같은 계열이 연달아 나오면 다른 구도 템플릿을 섞어서 매번 같은 틀이 되지 않게 한다.`;
 }
 
 // JSON 모양

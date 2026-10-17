@@ -3,7 +3,7 @@
 // 결과: [{ cutIndex: 숫자 또는 null(전체), message: '...' }]
 
 import {
-  TEMPLATES, MAX_LINE_LENGTH, MIN_CUTS, MAX_CUTS, findOption,
+  TEMPLATES, MAX_LINE_LENGTH, MIN_CUTS, MAX_CUTS, findOption, templateFamily,
 } from './guide.js';
 
 // 가격·시기처럼 바뀔 수 있는 정보 (지침 9번)
@@ -51,7 +51,7 @@ function checkTextLength(cut, index, warnings) {
     }
   });
 
-  if (cut.template === 'compare') {
+  if (templateFamily(cut.template) === 'compare') {
     const left = splitLines(cut.texts.leftItems || '').length;
     const right = splitLines(cut.texts.rightItems || '').length;
     if (left !== right) {
@@ -91,7 +91,7 @@ export function checkCuts(cuts, form) {
   if (cuts.length < MIN_CUTS || cuts.length > MAX_CUTS) {
     warnings.push({ cutIndex: null, message: `지금 ${cuts.length}컷이에요. 보통 ${MIN_CUTS}~12컷, 항목이 많으면 ${MAX_CUTS}컷까지 써요.` });
   }
-  if (cuts[0].template !== 'cover') {
+  if (templateFamily(cuts[0].template) !== 'cover') {
     warnings.push({ cutIndex: 0, message: '1번 컷은 표지형으로 시작해요.' });
   }
 
@@ -122,7 +122,7 @@ export function checkCuts(cuts, form) {
     }
 
     // 연속된 스토리형은 표정·배경을 다양하게 (지침 7번)
-    if (cut.template === 'story' && previous.template === 'story' &&
+    if (templateFamily(cut.template) === 'story' && templateFamily(previous.template) === 'story' &&
         cut.expression === previous.expression && cut.background === previous.background) {
       warnings.push({ cutIndex: index, message: '바로 앞 스토리형 컷과 표정·배경이 같아요. 표정, 카메라 거리, 말풍선 위치를 바꿔 주세요.' });
     }

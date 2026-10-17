@@ -65,10 +65,10 @@ export const SIMPLE_BACKGROUND_RULE = '배경 "simple"(기본 배경)은 꼼쥐 
 export const MAX_DIALOGUE_LINES = 2;
 export const MAX_LINE_LENGTH = 15;
 
-// 템플릿 4종 (지침 6-1번)
+// 기본 템플릿 4종 (지침 6-1번)
 // texts: 이 템플릿에서 입력받는 문구 칸
 //   lines: 화면에 들어갈 최대 줄 수 / dialogue: 대사라서 한 줄 15자 규칙을 적용할지
-export const TEMPLATES = [
+const BASE_TEMPLATES = [
   {
     value: 'cover',
     label: '표지형',
@@ -123,6 +123,106 @@ export const TEMPLATES = [
     ],
   },
 ];
+
+// 구도 템플릿: 기본 템플릿과 문구 칸은 같고 화면 배치만 달라요. (매번 같은 틀로 보이지 않게)
+// 레퍼런스 그림이 없어서(reference: '') 그림 생성 때 꼼쥐 턴어라운드만 보내요.
+const LAYOUT_TEMPLATES = [
+  {
+    base: 'cover', value: 'cover-question', label: '표지형 · 질문 + 클로즈업',
+    help: '질문형 제목 + 꼼쥐 얼굴 크게 + 속마음 말풍선',
+    prompt: 'Cover panel: the title written as a question across the top, a large close-up of the squirrel\'s face reacting below it, highlighter strokes on key words, a small inner-thought bubble beside the face.',
+  },
+  {
+    base: 'cover', value: 'cover-number', label: '표지형 · 숫자 크게',
+    help: '핵심 숫자 하나를 아주 크게 + 작은 꼼쥐',
+    prompt: 'Cover panel: one key number drawn very large in the center like a sticker, the rest of the title in smaller handwritten lines around it, a small squirrel pointing at the number from the corner, one small speech bubble.',
+  },
+  {
+    base: 'cover', value: 'cover-memo', label: '표지형 · 메모지',
+    help: '큰 메모지·노트 위에 손글씨 제목 + 옆에서 꼼쥐',
+    prompt: 'Cover panel: the title handwritten on a big pastel sticky note or notebook page taking most of the panel, the squirrel peeking from the side or holding the note, highlighter strokes on key words, one small speech bubble.',
+  },
+  {
+    base: 'story', value: 'story-closeup', label: '스토리형 · 얼굴 클로즈업',
+    help: '얼굴 크게 + 큰 대사, 상황은 위에 한 줄',
+    prompt: 'Story panel: a close-up of the character\'s face filling the lower two thirds, the dialogue in a large speech bubble, the situation narration as one short line at the top edge (no big cloud bubble).',
+  },
+  {
+    base: 'story', value: 'story-wide', label: '스토리형 · 전신 와이드',
+    help: '여백 많은 전신 컷 + 구석에 짧은 상황 글',
+    prompt: 'Story panel: a wide full-body shot with lots of empty space around the character(s), the situation narration as a short handwritten caption in a corner, a small speech bubble near the head.',
+  },
+  {
+    base: 'story', value: 'story-topdown', label: '스토리형 · 위에서 보기',
+    help: '위에서 내려다본 책상·바닥 + 위쪽 상황 박스',
+    prompt: 'Story panel: a top-down view looking down at the character and the object on the floor or desk, the narration in a rounded box along the top, a small speech bubble.',
+  },
+  {
+    base: 'story', value: 'story-prop', label: '스토리형 · 소품 클로즈업',
+    help: '꼼쥐 손에 든 소품을 크게 (손만 보이게)',
+    prompt: 'Story panel: a close-up of the key object held by the squirrel\'s small paws (only paws or part of the body visible), the narration as a caption above, the dialogue as a small bubble from outside the frame.',
+  },
+  {
+    base: 'story', value: 'story-text', label: '스토리형 · 글 위주',
+    help: '상황 글을 크게 + 구석에 작은 꼼쥐',
+    prompt: 'Story panel: the narration written large and centered as handwritten text with highlighter strokes, a small squirrel reacting in a bottom corner, the dialogue as a tiny bubble from the squirrel.',
+  },
+  {
+    base: 'story', value: 'story-split', label: '스토리형 · 위아래 2분할',
+    help: '위(전) / 아래(후) 두 칸으로 나눈 컷',
+    prompt: 'Story panel split into two stacked frames (before on top, after on the bottom) separated by a thin pastel line, the narration split across the two frames, the dialogue in the bottom frame.',
+  },
+  {
+    base: 'info', value: 'info-picture', label: '정보형 · 그림 크게',
+    help: '설명 그림을 크게 + 짧은 설명 + 얇은 요약 띠',
+    prompt: 'Info panel: the explanatory illustration drawn large in the center, the label and bold subtitle at the top, the description as one or two short lines under the illustration, a slim summary strip with a check icon at the bottom.',
+  },
+  {
+    base: 'info', value: 'info-checklist', label: '정보형 · 체크리스트',
+    help: '설명을 체크박스 목록으로 + 옆에서 꼼쥐',
+    prompt: 'Info panel: the label and bold subtitle at the top, the description written as a checklist with pastel check boxes in a notebook style, a small squirrel pointing at the list from the side, the summary as a highlighted last line.',
+  },
+  {
+    base: 'info', value: 'info-teacher', label: '정보형 · 꼼쥐 선생님',
+    help: '지시봉 든 꼼쥐 + 말풍선·칠판에 설명',
+    prompt: 'Info panel: the squirrel on one side holding a pointer like a teacher, the subtitle and description written inside a big rounded speech bubble or small whiteboard next to it, the summary box at the bottom.',
+  },
+  {
+    base: 'compare', value: 'compare-stacked', label: '비교형 · 위아래 카드',
+    help: 'A(위)·B(아래) 카드 + 하단 결론 띠',
+    prompt: 'Comparison panel: a question-style title at the top, two cards stacked vertically (A on top in pastel pink, B below in pastel green) with the same number of check items, a small squirrel inner-thought bubble beside each card, a conclusion strip at the bottom.',
+  },
+  {
+    base: 'compare', value: 'compare-versus', label: '비교형 · VS 대결',
+    help: '가운데 큰 VS + 좌우 그림 + 하단 결론 띠',
+    prompt: 'Comparison panel: a playful versus layout with a big \'VS\' in the middle, A on the left and B on the right each with a simple illustration and short check items, the squirrel in the bottom center thinking, a conclusion strip at the bottom.',
+  },
+];
+
+// 컷 편집기 템플릿 목록: 기본 템플릿 바로 뒤에 그 구도 템플릿들
+// family: 어느 기본 템플릿에서 나왔는지 ('cover' | 'story' | 'info' | 'compare')
+export const TEMPLATES = [];
+BASE_TEMPLATES.forEach((base) => {
+  TEMPLATES.push({ ...base, family: base.value });
+  LAYOUT_TEMPLATES
+    .filter((layout) => layout.base === base.value)
+    .forEach((layout) => {
+      TEMPLATES.push({
+        ...base,
+        value: layout.value,
+        label: layout.label,
+        help: layout.help,
+        prompt: layout.prompt,
+        reference: '',
+        family: base.value,
+      });
+    });
+});
+
+// 템플릿 값 → 기본 템플릿 값 (예: 'story-closeup' → 'story')
+export function templateFamily(value) {
+  return findOption(TEMPLATES, value).family;
+}
 
 // 컷 수 (지침 6번): 기본 8~12컷, 항목이 많으면 14컷 이상 허용
 export const MIN_CUTS = 8;

@@ -112,7 +112,7 @@
     cuts: [
       {
         id: "c_<timestamp>_<n>",
-        template: "cover",     // "cover" | "story" | "info" | "compare"
+        template: "cover",     // "cover" | "story" | "info" | "compare" 또는 구도 템플릿 ("story-closeup" 등, guide.js의 LAYOUT_TEMPLATES)
         message: "",           // 핵심 메시지 1개
         texts: {},             // 템플릿별 문구 (guide.js의 TEMPLATES[].texts 키)
         expression: "basic",   // "basic" | "surprised" | "thinking" | "proud" | "heart"
@@ -133,6 +133,7 @@
 
 - 기본 컷 구성(`cut-plan.js`)은 입력폼 문장을 그대로 옮겨 담기만 합니다. 실제 사례가 빈 정보는 사례 컷을 만들지 않습니다.
 - 구성: 표지형 → 도입 스토리형(경험, 고민) → 핵심 ①②③마다 사례(스토리형) + 핵심(정보형) → 결과 → CTA
+- **구도 템플릿**: 같은 틀 반복을 막으려고 기본 템플릿 4종 말고도 `guide.js`의 `LAYOUT_TEMPLATES`(예: `story-closeup`, `cover-number`)를 템플릿 목록에 함께 둡니다. 기본 템플릿과 문구 칸(texts)이 같고 화면 배치(prompt)만 다르며, 레퍼런스 그림이 없어서 그림 생성 때 턴어라운드만 보냅니다. "표지형인가?"처럼 계열을 볼 때는 `templateFamily()`를 씁니다. 기본 구성은 스토리형 컷에 구도 템플릿을 돌아가며 씁니다.
 - 글자만 바뀌면 입력칸은 다시 그리지 않고 프롬프트·경고만 갱신합니다 (포커스 유지). 템플릿 변경·추가·삭제·순서 변경 때만 전체를 다시 그립니다.
 
 ## Claude 콘티 자동 작성

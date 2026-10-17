@@ -6,7 +6,7 @@
 //     답이 길어 중간에 잘렸으면 끝까지 온 컷만이라도 살립니다.
 //  2) JSON이 없으면 콘티 글("CUT 01 | 표지형", "핵심 메시지:", "이미지에 들어갈 문구:" …)을 직접 읽습니다.
 
-import { TEMPLATES, MIN_CUTS, MAX_CUTS } from './guide.js';
+import { TEMPLATES, MIN_CUTS, MAX_CUTS, templateFamily } from './guide.js';
 import { readContiAnswer } from './ai-conti.js';
 import { normalizeCut } from './cut-plan.js';
 
@@ -359,9 +359,10 @@ ${shape}`;
 
 // 총 컷 수, 템플릿별 개수, 권장 범위
 export function analyzeCuts(cuts) {
-  const counts = TEMPLATES.map((template) => ({
+  // 구도 템플릿은 기본 템플릿(표지형·스토리형·정보형·비교형)에 합쳐서 셉니다.
+  const counts = TEMPLATES.filter((template) => template.family === template.value).map((template) => ({
     label: template.label,
-    count: cuts.filter((cut) => cut.template === template.value).length,
+    count: cuts.filter((cut) => templateFamily(cut.template) === template.value).length,
   }));
 
   let advice = '알맞은 분량이에요';

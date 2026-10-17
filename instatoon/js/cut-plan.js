@@ -71,6 +71,9 @@ function guessCharacters(text) {
   return characters;
 }
 
+// 기본 구성에서 스토리형 컷이 매번 같은 틀이 되지 않게 돌아가며 쓰는 템플릿
+const STORY_TURNS = ['story', 'story-closeup', 'story-wide', 'story-prop', 'story-text', 'story-topdown'];
+
 function storyCut(message, situation, expression, background = 'simple') {
   const cut = createCut('story');
   cut.message = message;
@@ -143,5 +146,12 @@ export function buildDefaultCuts(form, type) {
     cuts.push(cta);
   }
 
+  // 스토리형 컷은 구도 템플릿을 돌아가며 (문구 칸이 같아서 template만 바꾸면 돼요)
+  let storyCount = 0;
+  cuts.forEach((cut) => {
+    if (cut.template !== 'story') return;
+    cut.template = STORY_TURNS[storyCount % STORY_TURNS.length];
+    storyCount += 1;
+  });
   return cuts;
 }
