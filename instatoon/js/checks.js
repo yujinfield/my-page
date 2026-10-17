@@ -121,11 +121,6 @@ export function checkCuts(cuts, form) {
       warnings.push({ cutIndex: index, message: `바로 앞 컷과 같은 문장이 있어요: "${repeated[0]}"` });
     }
 
-    // 같은 템플릿이 연달아 나오면 구도를 바꾸기 (매번 같은 틀 방지)
-    if (cut.template === previous.template && cut.layout === previous.layout) {
-      warnings.push({ cutIndex: index, message: '바로 앞 컷과 템플릿·구도가 같아요. "구도"를 바꾸면 덜 반복돼 보여요.' });
-    }
-
     // 연속된 스토리형은 표정·배경을 다양하게 (지침 7번)
     if (cut.template === 'story' && previous.template === 'story' &&
         cut.expression === previous.expression && cut.background === previous.background) {
