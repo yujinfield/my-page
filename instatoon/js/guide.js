@@ -61,6 +61,11 @@ export const BACKGROUNDS = [
 export const SIMPLE_BACKGROUND_RULE = '배경 "simple"(기본 배경)은 꼼쥐 + 사물 1개(핸드폰·노트북·메모장·컵·연필 등)만 그린다. '
   + 'characters는 ["kkomjwi"]만, scene에는 꼼쥐의 포즈와 사물 1개만 적는다. 남편·친구나 장소가 꼭 필요하면 "white"나 "detailed"를 고른다.';
 
+// 컷의 구도 찾기 (모르는 값이면 그 템플릿의 기본 구도)
+export function findLayout(template, value) {
+  return findOption(template.layouts, value);
+}
+
 // 대사 규칙 (지침 3번): 컷당 2줄 이내, 한 줄 15자 내외
 export const MAX_DIALOGUE_LINES = 2;
 export const MAX_LINE_LENGTH = 15;
@@ -75,6 +80,13 @@ export const TEMPLATES = [
     reference: '표지형_레퍼런스.png',
     help: '1번 컷. 큰 제목 3줄 이내 + 핵심 키워드 형광펜 강조 + 하단 꼼쥐 + 독자 속마음 말풍선 1개',
     prompt: 'Cover panel: a big bold handwritten title (3 lines max) in the upper-middle, key words emphasized with pastel highlighter strokes, the squirrel at the bottom, one small speech bubble with the reader\'s inner thought.',
+    // 구도: 같은 템플릿이 매번 똑같아 보이지 않게 고르는 화면 배치 (첫 번째가 기본, prompt가 비면 위 prompt를 씀)
+    layouts: [
+      { value: 'basic', label: '기본 (큰 제목 + 하단 꼼쥐)', prompt: '' },
+      { value: 'question', label: '질문 제목 + 꼼쥐 표정 클로즈업', prompt: 'Cover panel: the title written as a question across the top, a large close-up of the squirrel\'s face reacting below it, highlighter strokes on key words, a small inner-thought bubble beside the face.' },
+      { value: 'number', label: '숫자 크게 + 작은 꼼쥐', prompt: 'Cover panel: one key number drawn very large in the center like a sticker, the rest of the title in smaller handwritten lines around it, a small squirrel pointing at the number from the corner, one small speech bubble.' },
+      { value: 'memo', label: '메모지 위 제목', prompt: 'Cover panel: the title handwritten on a big pastel sticky note or notebook page taking most of the panel, the squirrel peeking from the side or holding the note, highlighter strokes on key words, one small speech bubble.' },
+    ],
     texts: [
       { key: 'title', label: '큰 제목', lines: 3, placeholder: '예) 촬영 드레스 가봉\n모르고 가면 손해!\n3가지 꿀팁' },
       { key: 'highlight', label: '형광펜 강조 단어', lines: 1, placeholder: '예) 촬영, 손해' },
@@ -87,6 +99,15 @@ export const TEMPLATES = [
     reference: '스토리형_레퍼런스.png',
     help: '경험·감정·대화 컷. 상단 큰 구름 말풍선(상황 설명) + 캐릭터 + 작은 말풍선(대사)',
     prompt: 'Story panel: a big cloud-shaped bubble at the top for the situation narration, the character(s) below, a smaller speech bubble for the dialogue placed along the character\'s gaze. Leave enough space so text and characters do not overlap.',
+    layouts: [
+      { value: 'basic', label: '기본 (위 구름 말풍선)', prompt: '' },
+      { value: 'closeup', label: '얼굴 클로즈업 + 큰 대사', prompt: 'Story panel: a close-up of the character\'s face filling the lower two thirds, the dialogue in a large speech bubble, the situation narration as one short line at the top edge (no big cloud bubble).' },
+      { value: 'wide', label: '전신 와이드 + 짧은 글', prompt: 'Story panel: a wide full-body shot with lots of empty space around the character(s), the situation narration as a short handwritten caption in a corner, a small speech bubble near the head.' },
+      { value: 'topdown', label: '위에서 내려다보기', prompt: 'Story panel: a top-down view looking down at the character and the object on the floor or desk, the narration in a rounded box along the top, a small speech bubble.' },
+      { value: 'prop', label: '소품 클로즈업 (꼼쥐 손만)', prompt: 'Story panel: a close-up of the key object held by the squirrel\'s small paws (only paws or part of the body visible), the narration as a caption above, the dialogue as a small bubble from outside the frame.' },
+      { value: 'text', label: '글 위주 (작은 꼼쥐)', prompt: 'Story panel: the narration written large and centered as handwritten text with highlighter strokes, a small squirrel reacting in a bottom corner, the dialogue as a tiny bubble from the squirrel.' },
+      { value: 'split', label: '위아래 2분할 (전/후)', prompt: 'Story panel split into two stacked frames (before on top, after on the bottom) separated by a thin pastel line, the narration split across the two frames, the dialogue in the bottom frame.' },
+    ],
     texts: [
       { key: 'situation', label: '상황 설명 (구름 말풍선)', lines: 3, placeholder: '예) 웨딩 카페에서\n촬영 전 네일 필수라는 글을 봤어요' },
       { key: 'dialogue', label: '캐릭터 대사', lines: MAX_DIALOGUE_LINES, dialogue: true, placeholder: '예) 하루 촬영에\n10만원이라니..!' },
@@ -98,6 +119,12 @@ export const TEMPLATES = [
     reference: '정보형_레퍼런스.png',
     help: '팁 1개당 1장. "첫째," 라벨 + 소제목 + 설명 2줄 + 설명 그림 + 하단 요약 박스(체크 아이콘)',
     prompt: 'Info panel: a small rounded label at the top left, a bold subtitle with a highlighter stroke, two short description lines, an explanatory illustration in the middle, a summary box with a check icon at the bottom. Readability first.',
+    layouts: [
+      { value: 'basic', label: '기본 (라벨·설명·요약 박스)', prompt: '' },
+      { value: 'bigpicture', label: '그림 크게 + 짧은 설명', prompt: 'Info panel: the explanatory illustration drawn large in the center, the label and bold subtitle at the top, the description as one or two short lines under the illustration, a slim summary strip with a check icon at the bottom.' },
+      { value: 'checklist', label: '체크리스트', prompt: 'Info panel: the label and bold subtitle at the top, the description written as a checklist with pastel check boxes in a notebook style, a small squirrel pointing at the list from the side, the summary as a highlighted last line.' },
+      { value: 'teacher', label: '꼼쥐가 설명 (말풍선)', prompt: 'Info panel: the squirrel on one side holding a pointer like a teacher, the subtitle and description written inside a big rounded speech bubble or small whiteboard next to it, the summary box at the bottom.' },
+    ],
     texts: [
       { key: 'label', label: '라벨', lines: 1, placeholder: '예) 첫째,' },
       { key: 'subtitle', label: '소제목', lines: 1, placeholder: '예) 드레스 미리 알아가기' },
@@ -111,6 +138,11 @@ export const TEMPLATES = [
     reference: '비교형_레퍼런스.png',
     help: 'A vs B 판단 컷. 상단 질문형 제목 + 좌우 2칸 카드(같은 개수의 체크 항목) + 칸마다 꼼쥐 속마음 + 하단 결론 띠',
     prompt: 'Comparison panel: a question-style title at the top, two side-by-side cards (A on the left in pastel pink, B on the right in pastel green) with the same number of check items, the squirrel\'s inner-thought bubble in each card, a conclusion strip at the bottom.',
+    layouts: [
+      { value: 'basic', label: '기본 (좌우 카드)', prompt: '' },
+      { value: 'stacked', label: '위아래 카드', prompt: 'Comparison panel: a question-style title at the top, two cards stacked vertically (A on top in pastel pink, B below in pastel green) with the same number of check items, a small squirrel inner-thought bubble beside each card, a conclusion strip at the bottom.' },
+      { value: 'versus', label: 'VS 대결', prompt: 'Comparison panel: a playful versus layout with a big \'VS\' in the middle, A on the left and B on the right each with a simple illustration and short check items, the squirrel in the bottom center thinking, a conclusion strip at the bottom.' },
+    ],
     texts: [
       { key: 'question', label: '질문형 제목', lines: 1, placeholder: '예) A랑 B 중 뭐가 좋을까?' },
       { key: 'leftTitle', label: 'A 카드 제목', lines: 1, placeholder: '예) A. 풍성 드레스' },

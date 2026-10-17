@@ -1,7 +1,7 @@
 // 컷 편집기의 "그림 생성 (GPT)" 카드와 컷별 그림 영역
 // 만든 그림은 이 화면에만 있어요(새로고침하면 사라짐). 마음에 들면 바로 내려받으세요.
 
-import { TEMPLATES, findOption } from './guide.js';
+import { TEMPLATES, findOption, findLayout } from './guide.js';
 import { buildImagePrompt, buildRevisePrompt } from './prompt.js';
 import { modelName, loadReference, generateImage, dataUrlToBlob } from './image-gen.js';
 import { settings, setupImageSettings } from './image-settings.js';
@@ -83,6 +83,8 @@ function ready() {
 async function referencesFor(cut) {
   if (!settings.useReferences) return [];
   const template = findOption(TEMPLATES, cut.template);
+  // 기본이 아닌 구도는 템플릿 레퍼런스를 보내지 않아요 (보내면 늘 같은 틀로 그려져서)
+  if (findLayout(template, cut.layout).prompt !== '') return [await loadReference(TURNAROUND_FILE)];
   return Promise.all([loadReference(TURNAROUND_FILE), loadReference(template.reference)]);
 }
 

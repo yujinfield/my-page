@@ -5,7 +5,7 @@ import { CTA_TYPES, MATERIAL_TYPES } from './fields.js';
 import { STORY_V1, STORY_V1_CLOSING, INFO_V2, INFO_V2_CLOSING } from './master-prompts.js';
 import { editorJsonRequest, EDITOR_JSON_NOTICE, EDITOR_JSON_REMINDER } from './editor-format.js';
 import {
-  SALES_RULES, BASE_STYLE, FIXED_RULES, TEMPLATES, CHARACTERS, EXPRESSIONS, BACKGROUNDS, findOption,
+  SALES_RULES, BASE_STYLE, FIXED_RULES, TEMPLATES, CHARACTERS, EXPRESSIONS, BACKGROUNDS, findOption, findLayout,
 } from './guide.js';
 
 const EMPTY_REQUIRED = '(입력 없음 — 지어내지 말고 확인 필요로 표시)';
@@ -137,6 +137,7 @@ function cutNumber(index) {
 // 순서: 공통 문구 → 추가 캐릭터 → 템플릿 구성 → 컷 내용 → 고정 조건 (CLAUDE.md "프롬프트 조립 규칙")
 export function buildImagePrompt(cut, index) {
   const template = findOption(TEMPLATES, cut.template);
+  const layout = findLayout(template, cut.layout);
   const parts = [BASE_STYLE];
 
   CHARACTERS.forEach((character) => {
@@ -145,7 +146,12 @@ export function buildImagePrompt(cut, index) {
     }
   });
 
-  parts.push(`Layout reference: ${template.reference}\n${template.prompt}`);
+  // 기본 구도는 템플릿 레퍼런스 그대로, 다른 구도는 레퍼런스 구도를 따라 하지 않게
+  if (layout.prompt === '') {
+    parts.push(`Layout reference: ${template.reference}\n${template.prompt}`);
+  } else {
+    parts.push(`Layout: ${layout.prompt}\nDo not copy the composition of the usual ${template.value} template; follow this layout instead.`);
+  }
 
   const details = [];
   if (cut.characters.length === 0) {
@@ -174,7 +180,8 @@ export function buildImagePrompt(cut, index) {
 
   parts.push(FIXED_RULES);
 
-  return `CUT ${cutNumber(index)} | ${template.label}\n\n${parts.join('\n\n')}`;
+  const title = layout.prompt === '' ? template.label : `${template.label} · ${layout.label}`;
+  return `CUT ${cutNumber(index)} | ${title}\n\n${parts.join('\n\n')}`;
 }
 
 // 수정 요청: 첫 번째 첨부 그림(지금 그림)을 바탕으로, 적은 부분만 고치기
