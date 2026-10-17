@@ -97,7 +97,7 @@
 ```js
 // localStorage 키: "kkomjwi-draft"
 {
-  version: 3,   // 1: 입력폼만 / 2: cuts 추가 (1번 데이터는 cuts: []로 채워 그대로 씀) / 3: 컷 구도(layout) 추가 (예전 컷은 normalizeCut이 "basic"으로)
+  version: 2,   // 1: 입력폼만 / 2: cuts 추가 (1번 데이터는 cuts: []로 채워 그대로 씀)
   form: {
     title, question, topic, startStory, feeling, result,   // PART 1 (문자열)
     points: [{ main, case, oneLine }, ...],                // PART 2 (항상 3개)
@@ -113,7 +113,6 @@
       {
         id: "c_<timestamp>_<n>",
         template: "cover",     // "cover" | "story" | "info" | "compare"
-        layout: "basic",       // 구도: 템플릿마다 다름 (guide.js의 TEMPLATES[].layouts)
         message: "",           // 핵심 메시지 1개
         texts: {},             // 템플릿별 문구 (guide.js의 TEMPLATES[].texts 키)
         expression: "basic",   // "basic" | "surprised" | "thinking" | "proud" | "heart"
@@ -134,7 +133,6 @@
 
 - 기본 컷 구성(`cut-plan.js`)은 입력폼 문장을 그대로 옮겨 담기만 합니다. 실제 사례가 빈 정보는 사례 컷을 만들지 않습니다.
 - 구성: 표지형 → 도입 스토리형(경험, 고민) → 핵심 ①②③마다 사례(스토리형) + 핵심(정보형) → 결과 → CTA
-- **구도(layout)**: 같은 템플릿이 매번 같은 틀로 보이지 않도록 템플릿마다 화면 배치를 여러 개 둡니다(`guide.js`의 `layouts`, 첫 번째가 기본). 기본이 아닌 구도는 이미지 프롬프트에 그 배치 문구를 넣고 "레퍼런스 구도를 따라 하지 말라"고 적으며, 그림 생성 때 템플릿 레퍼런스 이미지는 보내지 않고 턴어라운드만 보냅니다. 기본 구성은 스토리형 구도를 돌아가며 쓰고, 콘티를 쓰는 AI에게도 구도 값을 알려 줍니다. 같은 템플릿·구도가 연달아 나오면 검토 경고를 띄웁니다.
 - 글자만 바뀌면 입력칸은 다시 그리지 않고 프롬프트·경고만 갱신합니다 (포커스 유지). 템플릿 변경·추가·삭제·순서 변경 때만 전체를 다시 그립니다.
 
 ## Claude 콘티 자동 작성

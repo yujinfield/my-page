@@ -171,17 +171,10 @@ function renderTemplatePart(cut, index) {
   const part = makeElement('div', 'cut-section');
   const template = findOption(TEMPLATES, cut.template);
 
-  const row = makeElement('div', 'field-row');
-  row.append(makeSelect(`cut-${index}-template`, '템플릿', TEMPLATES, cut.template, (value) => {
+  part.append(makeSelect(`cut-${index}-template`, '템플릿', TEMPLATES, cut.template, (value) => {
     cuts()[index] = changeTemplate(cut, value);
     handleStructureChange();
   }));
-  // 구도: 같은 템플릿도 컷마다 화면 배치를 다르게
-  row.append(makeSelect(`cut-${index}-layout`, '구도', template.layouts, cut.layout, (value) => {
-    cut.layout = value;
-    handleTextChange(index);
-  }));
-  part.append(row);
 
   const help = makeElement('p', 'field-help', template.help);
   const link = makeElement('a', '', ' 레퍼런스 보기');
