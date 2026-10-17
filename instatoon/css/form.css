@@ -221,7 +221,3 @@ textarea.field-input {
 #material-link-row[hidden] {
   display: none;
 }
-
-.make-help {
-  margin-top: var(--space-s);
-}
