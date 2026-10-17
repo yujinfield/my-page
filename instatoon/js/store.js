@@ -5,8 +5,9 @@ const THEME_KEY = 'kkomjwi-theme';
 // 버전 기록
 // 1: 통합 입력폼
 // 2: 컷 편집기 추가 (form.cuts). 1번 데이터는 cuts만 빈 목록으로 채워 그대로 씁니다.
-const DRAFT_VERSION = 2;
-const READABLE_VERSIONS = [1, 2];
+// 3: 컷마다 구도(layout) 추가. 예전 컷은 cut-plan.js의 normalizeCut이 기본 구도('basic')로 채웁니다.
+const DRAFT_VERSION = 3;
+const READABLE_VERSIONS = [1, 2, 3];
 
 // 작성 중인 입력폼 불러오기 (없거나 읽을 수 없으면 null)
 export function loadDraft() {

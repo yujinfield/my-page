@@ -13,7 +13,7 @@ function describeTemplates() {
     const keys = template.texts
       .map((field) => `${field.key}: ${field.label}, 최대 ${field.lines}줄`)
       .join(' / ');
-    return `- "${template.value}"(${template.label}) — ${template.help}\n  texts = { ${keys} }`;
+    return `- "${template.value}"(${template.label}) — ${template.help}\n  texts = { ${keys} }\n  layout(구도) = ${optionList(template.layouts)}`;
   }).join('\n');
 }
 
@@ -25,7 +25,8 @@ ${describeTemplates()}
 표정: ${optionList(EXPRESSIONS)}
 배경: ${optionList(BACKGROUNDS)}
   - ${SIMPLE_BACKGROUND_RULE}
-등장 캐릭터: ${optionList(CHARACTERS)}`;
+등장 캐릭터: ${optionList(CHARACTERS)}
+구도 규칙: 같은 템플릿이 연달아 나오면 layout(구도)을 바꾼다. 스토리형은 basic만 반복하지 말고 클로즈업·와이드·소품·글 위주 등을 섞는다.`;
 }
 
 // JSON 모양
@@ -34,6 +35,7 @@ export const EDITOR_JSON_SHAPE = `{
   "cuts": [
     {
       "template": 템플릿 값 하나,
+      "layout": 그 템플릿의 구도 값 하나,
       "message": "이 컷의 핵심 메시지 1개",
       "texts": { 템플릿별 키: "이미지에 실제로 들어갈 문구 (줄바꿈은 \\n)" },
       "expression": 표정 값 하나,

@@ -1,7 +1,7 @@
 // 컷 데이터 만들기와 기본 컷 구성
 // DOM을 쓰지 않는 순수 함수만 둡니다.
 
-import { TEMPLATES, CHARACTERS, EXPRESSIONS, BACKGROUNDS, findOption } from './guide.js';
+import { TEMPLATES, CHARACTERS, EXPRESSIONS, BACKGROUNDS, findOption, findLayout } from './guide.js';
 
 const ORDER_LABELS = ['첫째,', '둘째,', '셋째,'];
 const CIRCLES = ['①', '②', '③'];
@@ -21,6 +21,7 @@ export function createCut(template = 'story') {
   return {
     id: makeId(),
     template: templateInfo.value,
+    layout: 'basic',      // 구도 (템플릿마다 고를 수 있는 화면 배치, guide.js의 layouts)
     message: '',          // 이 컷의 핵심 메시지 1개
     texts,                // 템플릿별 문구
     expression: 'basic',
@@ -37,7 +38,8 @@ export function changeTemplate(cut, template) {
   Object.keys(fresh.texts).forEach((key) => {
     if (typeof cut.texts[key] === 'string') fresh.texts[key] = cut.texts[key];
   });
-  return { ...cut, template: fresh.template, texts: fresh.texts };
+  // 구도는 템플릿마다 달라서 기본으로 돌아가요.
+  return { ...cut, template: fresh.template, layout: fresh.layout, texts: fresh.texts };
 }
 
 // 저장된 컷에 빠진 값이 있으면 기본값으로 채웁니다.
@@ -48,6 +50,7 @@ export function normalizeCut(saved) {
   ['id', 'message', 'scene', 'direction'].forEach((key) => {
     if (typeof saved[key] === 'string') cut[key] = saved[key];
   });
+  cut.layout = findLayout(findOption(TEMPLATES, cut.template), saved.layout).value;
   cut.expression = findOption(EXPRESSIONS, saved.expression).value;
   cut.background = findOption(BACKGROUNDS, saved.background).value;
 
@@ -70,6 +73,9 @@ function guessCharacters(text) {
   if (text.includes('친구')) characters.push('friend');
   return characters;
 }
+
+// 기본 구성에서 스토리형 컷이 매번 같은 틀이 되지 않게 돌아가며 쓰는 구도
+const STORY_LAYOUT_TURNS = ['basic', 'closeup', 'wide', 'prop', 'text', 'topdown'];
 
 function storyCut(message, situation, expression, background = 'simple') {
   const cut = createCut('story');
@@ -143,5 +149,11 @@ export function buildDefaultCuts(form, type) {
     cuts.push(cta);
   }
 
+  let storyCount = 0;
+  cuts.forEach((cut) => {
+    if (cut.template !== 'story') return;
+    cut.layout = STORY_LAYOUT_TURNS[storyCount % STORY_LAYOUT_TURNS.length];
+    storyCount += 1;
+  });
   return cuts;
 }
