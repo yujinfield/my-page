@@ -191,7 +191,7 @@ export const COMMON_GROUPS = [
       {
         key: 'checkedDate',
         label: '작성일 (가격·조건 확인일)',
-        help: '🔄 표시 정보는 이 날짜 기준으로 다시 확인해요. 글 맨 위에 “○월 ○일 기준”으로 들어가요.',
+        help: '🔄 표시 정보는 이 날짜 기준으로 다시 확인해요. 글 맨 위에 “○월 ○일 기준”으로 들어가요. 날짜를 바꾸면 확인 체크가 모두 풀려요.',
         type: 'date',
       },
     ],
@@ -258,6 +258,7 @@ export function createEmptyDraft() {
     category: '',
     common,
     details: createEmptyDetails(),
+    verified: {}, // 작성일 기준 확인 기록 (verify.js)
     createdAt: now,
     updatedAt: now,
   };
@@ -274,7 +275,8 @@ export function fillMissing(saved) {
   Object.keys(draft.details).forEach((category) => {
     details[category] = { ...draft.details[category], ...(savedDetails[category] || {}) };
   });
-  return { ...draft, ...saved, common, details };
+  const verified = saved.verified || {};
+  return { ...draft, ...saved, common, details, verified };
 }
 
 function hasValue(value) {

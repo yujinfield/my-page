@@ -3,6 +3,7 @@
 
 import { COMMON_GROUPS, DETAIL_GROUPS } from './fields.js';
 import { CATEGORIES, PACKAGE_TYPES, findCategory } from './categories.js';
+import { createVerifyBox } from './verify-panel.js';
 
 // 선택지는 { value, label } 또는 문자열(값 = 보이는 글자)입니다.
 function optionValue(option) {
@@ -178,9 +179,12 @@ function createField(field, id, value, onInput) {
   return wrapper;
 }
 
+// ---------- 묶음 그리기 ----------
+
 // 묶음마다 카드 하나. values[field.key]를 읽고 고칩니다.
-// idPrefix는 입력칸 id가 겹치지 않게 붙이는 앞말입니다. (예: field-common-destination)
-function renderGroups(container, groups, values, idPrefix, onChange) {
+// scope는 'common' 또는 카테고리 id입니다. 입력칸 id가 겹치지 않게 앞에 붙입니다. (예: field-common-destination)
+function renderGroups(container, groups, draft, scope, onChange) {
+  const values = scope === 'common' ? draft.common : draft.details[scope];
   container.replaceChildren();
 
   groups.forEach((group) => {
@@ -199,11 +203,14 @@ function renderGroups(container, groups, values, idPrefix, onChange) {
     }
 
     group.fields.forEach((field) => {
-      const id = `field-${idPrefix}-${field.key}`;
+      const id = `field-${scope}-${field.key}`;
       const element = createField(field, id, values[field.key], (value) => {
         values[field.key] = value;
-        onChange({});
+        onChange({ fieldKey: field.key });
       });
+      if (field.volatile) {
+        element.append(createVerifyBox(draft, scope, field, onChange));
+      }
       card.append(element);
     });
 
@@ -215,7 +222,7 @@ function renderGroups(container, groups, values, idPrefix, onChange) {
 
 export function renderCommonForm(draft, onChange) {
   const container = document.getElementById('common-fields');
-  renderGroups(container, COMMON_GROUPS, draft.common, 'common', onChange);
+  renderGroups(container, COMMON_GROUPS, draft, 'common', onChange);
   updateReaderQuestionHint(draft);
 }
 
@@ -260,5 +267,5 @@ export function renderDetailStep(draft, onChange) {
     list.append(item);
   });
 
-  renderGroups(container, DETAIL_GROUPS[category.id], draft.details[category.id], category.id, onChange);
+  renderGroups(container, DETAIL_GROUPS[category.id], draft, category.id, onChange);
 }

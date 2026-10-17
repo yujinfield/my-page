@@ -7,6 +7,7 @@ import {
   renderDetailStep,
   updateReaderQuestionHint,
 } from './form.js';
+import { updateVerifyBoxes, updateVerifySummary } from './verify-panel.js';
 import { loadDraft, saveDraft, clearDraft, loadTheme, saveTheme } from './store.js';
 
 const STEPS = ['category', 'common', 'detail'];
@@ -27,6 +28,10 @@ function handleChange(change) {
   saveDraft(draft);
   saveStatus.textContent = '자동 저장됨';
   updateProgress();
+  if (change.fieldKey === 'checkedDate') {
+    updateVerifyBoxes(draft); // 작성일이 바뀌면 확인 체크가 풀립니다.
+  }
+  updateVerifySummary(draft);
   if (change.categoryChanged) {
     updateReaderQuestionHint(draft);
     updateStepButtons();
@@ -64,6 +69,8 @@ function showStep(step) {
   if (step === 'detail') {
     renderDetailStep(draft, handleChange);
   }
+  document.getElementById('verify-summary').hidden = step === 'category';
+  updateVerifySummary(draft);
   updateStepButtons();
   window.scrollTo(0, 0);
 }
