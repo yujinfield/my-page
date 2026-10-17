@@ -177,11 +177,13 @@ function renderTemplatePart(cut, index) {
   }));
 
   const help = makeElement('p', 'field-help', template.help);
-  const link = makeElement('a', '', ' 레퍼런스 보기');
-  link.href = `references/${template.reference}`;
-  link.target = '_blank';
-  link.rel = 'noopener';
-  help.append(link);
+  if (template.reference) {
+    const link = makeElement('a', '', ' 레퍼런스 보기');
+    link.href = `references/${template.reference}`;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    help.append(link);
+  }
   part.append(help);
 
   part.append(makeTextField(`cut-${index}-message`, '핵심 메시지 (1개)', cut.message, 1,

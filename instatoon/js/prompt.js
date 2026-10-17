@@ -145,7 +145,12 @@ export function buildImagePrompt(cut, index) {
     }
   });
 
-  parts.push(`Layout reference: ${template.reference}\n${template.prompt}`);
+  // 구도 템플릿은 레퍼런스 그림이 없어요. 기본 틀을 따라 하지 않게 한 줄 더 적어요.
+  if (template.reference) {
+    parts.push(`Layout reference: ${template.reference}\n${template.prompt}`);
+  } else {
+    parts.push(`Layout: ${template.prompt}\nDo not copy the usual ${template.family} template composition; follow this layout instead.`);
+  }
 
   const details = [];
   if (cut.characters.length === 0) {
