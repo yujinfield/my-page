@@ -124,8 +124,8 @@ export function extractJson(text) {
 
 // ---------- 콘티 글 읽기 (JSON이 없을 때) ----------
 
-const TEMPLATE_NAMES = { 표지형: 'cover', 스토리형: 'story', 정보형: 'info', 비교형: 'compare' };
-const TEMPLATE_PATTERN = /표지형|스토리형|정보형|비교형/;
+const TEMPLATE_NAMES = { 표지형: 'cover', 스토리형: 'story', 정보형: 'info', 비교형: 'compare', CTA형: 'cta' };
+const TEMPLATE_PATTERN = /표지형|스토리형|정보형|비교형|CTA형/;
 // "CUT 01 | 표지형", "### CUT 1 — 스토리형", "**컷 3 (정보형)**", "4컷: 비교형"
 const HEADER_PATTERNS = [
   /^(?:#{1,6}\s*)?[*_\s]*(?:CUT|컷)\s*0*(\d{1,2})(?!\d)/i,
@@ -149,11 +149,11 @@ function fieldFor(label) {
   if (/프롬프트|이미지 생성/.test(label)) return 'prompt';
   if (/핵심/.test(label)) return 'message';
   if (/대사|말풍선 내용/.test(label)) return 'dialogue';
-  if (/문구/.test(label)) return 'text';
+  if (/문구|제목|부제/.test(label)) return 'text';
   if (/장면|소품/.test(label)) return 'scene';
   if (/배경/.test(label)) return 'background';
   if (/캐릭터|표정|포즈/.test(label)) return 'character';
-  if (/배치|강조|연결|연출/.test(label)) return 'direction';
+  if (/배치|강조|연결|연출|구도|레이아웃|여백/.test(label)) return 'direction';
   if (/템플릿|유형/.test(label)) return 'template';
   return null;
 }
@@ -198,7 +198,9 @@ function readFields(block) {
     const field = match ? fieldFor(match[1]) : null;
     if (match && field) {
       currentField = field;
-      const value = stripQuotes(match[2]);
+      // 연출 항목은 "구도: 클로즈업"처럼 이름을 붙여 남겨요.
+      const raw = stripQuotes(match[2]);
+      const value = field === 'direction' && raw ? `${match[1].trim()}: ${raw}` : raw;
       if (value) fields[field] = fields[field] ? `${fields[field]}\n${value}` : value;
       return;
     }
@@ -248,7 +250,7 @@ function cutFromFields(block, fields) {
   if (template === 'cover') {
     texts.title = textLines.slice(0, 3).join('\n');
     texts.bubble = dialogue;
-  } else if (template === 'story') {
+  } else if (template === 'story' || template === 'cta') {
     texts.situation = textLines.join('\n');
     texts.dialogue = dialogue;
   } else if (template === 'info') {

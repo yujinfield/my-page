@@ -47,6 +47,7 @@ export const DEFAULT_IMAGE_SETTINGS = {
   size: '1024x1280',
   quality: 'auto',
   useReferences: true,
+  drawText: false,            // false: 문구 자리만 비워 두기(후편집) / true: 그림에 한글 문구 직접 넣기
 };
 
 // 저장된 설정의 빈 칸·잘못된 값을 기본값으로
@@ -64,6 +65,7 @@ export function normalizeImageSettings(saved) {
   if (IMAGE_SIZES.some((item) => item.value === saved.size)) settings.size = saved.size;
   if (IMAGE_QUALITIES.some((item) => item.value === saved.quality)) settings.quality = saved.quality;
   if (typeof saved.useReferences === 'boolean') settings.useReferences = saved.useReferences;
+  if (typeof saved.drawText === 'boolean') settings.drawText = saved.drawText;
   return settings;
 }
 

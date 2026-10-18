@@ -7,6 +7,7 @@ import { buildImagePrompt, buildAllImagePrompts } from './prompt.js';
 import { checkCuts } from './checks.js';
 import { initAiPanel, renderAiNotes } from './ai-panel.js';
 import { initImagePanel, renderCutImagePart } from './image-panel.js';
+import { settings } from './image-settings.js';
 import { initPastePanel } from './paste-panel.js';
 import { describeAnalysis } from './conti-import.js';
 import { addLog, makeSnapshot } from './history.js';
@@ -95,7 +96,7 @@ function setCuts(newCuts) {
 function handleTextChange(index) {
   options.onChange();
   const output = document.getElementById(`cut-prompt-${index}`);
-  if (output) output.value = buildImagePrompt(cuts()[index], index);
+  if (output) output.value = buildImagePrompt(cuts()[index], index, settings.drawText);
   updateWarnings();
 }
 
@@ -241,8 +242,8 @@ function renderDirectionPart(cut, index) {
       cut.scene = value;
       handleTextChange(index);
     }));
-  details.append(makeTextField(`cut-${index}-direction`, '연출 메모 (카메라 거리, 말풍선 위치)', cut.direction, 1,
-    '예) 표정 클로즈업, 말풍선은 오른쪽 위', (value) => {
+  details.append(makeTextField(`cut-${index}-direction`, '연출 메모 (행동·표정, 구도, 소품, 레이아웃, 텍스트 여백, 다음 컷 연결)', cut.direction, 4,
+    '예) 구도: 얼굴 클로즈업\n텍스트 여백: 위쪽 1/3 비워 두기\n다음 컷 연결: 가격표를 뒤집는 손', (value) => {
       cut.direction = value;
       handleTextChange(index);
     }));
@@ -255,14 +256,14 @@ function renderPromptPart(cut, index) {
   const label = makeElement('label', 'field-label', '이미지 생성 프롬프트');
   label.htmlFor = `cut-prompt-${index}`;
   head.append(label, makeButton('복사', `${cutLabel(index)} 프롬프트 복사`, () => {
-    options.copyText(buildImagePrompt(cuts()[index], index), `${cutLabel(index)} 프롬프트를 복사했어요!`);
+    options.copyText(buildImagePrompt(cuts()[index], index, settings.drawText), `${cutLabel(index)} 프롬프트를 복사했어요!`);
   }, 'button button-primary button-small'));
 
   const output = makeElement('textarea', 'prompt-output prompt-output-small');
   output.id = `cut-prompt-${index}`;
   output.rows = 6;
   output.readOnly = true;
-  output.value = buildImagePrompt(cut, index);
+  output.value = buildImagePrompt(cut, index, settings.drawText);
 
   part.append(head, output);
   return part;
@@ -327,7 +328,7 @@ export function initCutEditor(newOptions) {
   document.getElementById('cut-add').addEventListener('click', addCut);
   document.getElementById('cut-add-bottom').addEventListener('click', addCut);
   document.getElementById('cut-copy-all').addEventListener('click', () => {
-    options.copyText(buildAllImagePrompts(cuts()), `${cuts().length}컷 프롬프트를 모두 복사했어요!`);
+    options.copyText(buildAllImagePrompts(cuts(), settings.drawText), `${cuts().length}컷 프롬프트를 모두 복사했어요!`);
   });
 
   // Claude 자동 작성: 새 컷이 들어오면 저장하고 다시 그립니다.
@@ -341,6 +342,13 @@ export function initCutEditor(newOptions) {
 
   // GPT 그림 생성 설정과 버튼
   initImagePanel({ getForm: options.getForm });
+  // "그림에 한글 문구 직접 넣기"를 바꾸면 컷마다 보이는 프롬프트도 다시 써요.
+  document.getElementById('image-draw-text').addEventListener('change', () => {
+    cuts().forEach((cut, index) => {
+      const output = document.getElementById(`cut-prompt-${index}`);
+      if (output) output.value = buildImagePrompt(cut, index, settings.drawText);
+    });
+  });
 
   // claude.ai에서 받은 답 붙여넣기
   initPastePanel({ getForm: options.getForm, copyText: options.copyText, onCutsReplaced: handleStructureChange });

@@ -65,6 +65,7 @@ export function setupImageSettings() {
   fillSelect('image-size', IMAGE_SIZES, settings.size);
   fillSelect('image-quality', IMAGE_QUALITIES, settings.quality);
   element('image-use-refs').checked = settings.useReferences;
+  element('image-draw-text').checked = settings.drawText;
   element('image-custom-model-field').hidden = settings.model !== 'custom';
 
   element('image-model').addEventListener('change', (event) => {
@@ -81,6 +82,10 @@ export function setupImageSettings() {
   });
   element('image-quality').addEventListener('change', (event) => {
     settings.quality = event.target.value;
+    saveSettings();
+  });
+  element('image-draw-text').addEventListener('change', (event) => {
+    settings.drawText = event.target.checked;
     saveSettings();
   });
   element('image-use-refs').addEventListener('change', (event) => {

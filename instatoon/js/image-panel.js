@@ -126,7 +126,7 @@ async function drawCut(index, signal) {
     const url = await generateImage({
       apiKey: getApiKey(),
       settings,
-      prompt: buildImagePrompt(cut, index),
+      prompt: buildImagePrompt(cut, index, settings.drawText),
       references: await referencesFor(cut),
       signal,
     });
@@ -206,7 +206,7 @@ async function reviseOne(index, request) {
     const url = await generateImage({
       apiKey: getApiKey(),
       settings,
-      prompt: buildRevisePrompt(cut, index, request),
+      prompt: buildRevisePrompt(cut, index, request, settings.drawText),
       references,
       signal: controller.signal,
     });

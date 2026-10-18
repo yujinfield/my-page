@@ -112,14 +112,14 @@
     cuts: [
       {
         id: "c_<timestamp>_<n>",
-        template: "cover",     // "cover" | "story" | "info" | "compare" 또는 구도 템플릿 ("story-closeup" 등, guide.js의 LAYOUT_TEMPLATES)
+        template: "cover",     // "cover" | "story" | "info" | "compare" | "cta" 또는 구도 템플릿 ("story-closeup" 등, guide.js의 LAYOUT_TEMPLATES)
         message: "",           // 핵심 메시지 1개
         texts: {},             // 템플릿별 문구 (guide.js의 TEMPLATES[].texts 키)
         expression: "basic",   // "basic" | "surprised" | "thinking" | "proud" | "heart"
         characters: ["kkomjwi"], // "kkomjwi" | "husband" | "friend"
         scene: "",             // 그림 장면·소품·포즈
         background: "white",   // "white" | "simple" | "detailed"
-        direction: ""          // 카메라 거리, 말풍선 위치 등
+        direction: ""          // 연출 메모: 행동·표정, 구도, 소품, 레이아웃, 텍스트 여백, 다음 컷 연결 (줄마다 "이름: 값")
       }
     ]
   }
@@ -144,6 +144,8 @@
 - 답은 `sample.json`으로 받고, `readContiAnswer`가 모르는 값을 기본값으로 바꿉니다 (`normalizeCut`). 화면에 넣을 때는 항상 `textContent`/`value`를 씁니다.
 - 버튼을 누를 때만 부르고, 자동 재시도는 하지 않습니다. 권한 거절(`not_granted` 등)이면 버튼을 숨깁니다.
 
+- **그림 연출 규칙**(`guide.js`의 `DIRECTION_RULES`): 컷마다 장면·행동·표정·구도·소품(최대 3)·레이아웃·텍스트 여백·다음 컷 연결까지 제안하게 합니다. JSON 답에는 `scene`·`action`·`camera`·`props`·`layout`·`textSpace`·`next`로 받고, `readContiAnswer`가 행동~연결을 "이름: 값" 줄로 모아 컷의 `direction`(연출 메모)에 넣습니다 (저장 형식은 그대로). 복사용 요청문에는 글 답 형식(`DIRECTION_TEXT_FORMAT`, "## 01컷 | 표지형")도 함께 넣고, 붙여넣기 글 읽기도 이 형식을 읽습니다.
+- **CTA형 템플릿**(`cta`): 마지막 행동 유도 컷. 스토리형과 문구 칸이 같고 레퍼런스 그림이 없습니다. 기본 구성의 CTA 컷이 이 템플릿을 씁니다.
 - **판매 원칙**(`guide.js`의 `SALES_RULES`): 1컷 통념 깨기+숫자, 2컷 독자 걱정, 중간 꼼쥐·남편 대조(꼼쥐가 기준 제시), 추상 표현 금지, 유추 컷 1개 이상, 마지막 컷 공백 → 캡션·댓글. 책 「잘 파는 사람은 이렇게 말합니다」 1부의 **판매 화법 도구** 목록(컷마다 하나씩, 연달아 같은 화법 금지)도 함께 있습니다. GPT·Claude 자동 작성과 복사용 요청문 모두에 들어가고, 마스터 프롬프트와 겹치면 판매 원칙이 우선입니다. 숫자·남편 이야기는 사용자 입력에 있는 것만 쓰고, 없으면 `[입력 필요]` + review로 남깁니다.
 
 ## 댓글 자료 → 노션
@@ -169,6 +171,8 @@
 - 브라우저만으로는 키를 완벽히 숨길 수 없습니다(키가 풀린 동안 페이지 코드는 키를 씀). 사용자에게 OpenAI 사용 한도·이미지 전용 키를 권합니다.
 - OpenAI는 브라우저에서 바로 부릅니다(서버 없음). claude.ai 아티팩트 안에서는 외부 인터넷이 막혀 있으므로 버튼을 끄고 "공용 링크나 내 컴퓨터에서 열기" 안내를 보여 줍니다.
 - 모델 이름·크기는 바뀔 수 있어서 고정하지 않고 선택지 + "직접 입력"으로 둡니다. OpenAI가 거절하면 그 오류 메시지를 그대로 보여 줍니다.
+- **그림 속 문구**: 기본은 그림에 한글을 그리지 않고 문구 자리·말풍선·카드를 비워 둡니다(후편집, 연출 규칙 9번). ⚙️ 설정의 "그림에 한글 문구 직접 넣기"(`settings.drawText`)를 켜면 예전처럼 문구를 넣으라고 합니다. `buildImagePrompt(cut, index, drawText)`.
+- 꼼쥐는 **입이 없습니다**. `FIXED_RULES`에 점눈·볼터치·둥근 귀·소용돌이 꼬리·손그림 외곽선 유지와 함께 넣어 둡니다.
 - 그림은 비용이 드므로 버튼을 누를 때만, 전체 생성은 시작 전에 확인하고 한 장씩 차례로 만듭니다. 만든 그림은 메모리에만 두고 내려받기로 저장합니다.
 
 ## 프롬프트 조립 규칙
