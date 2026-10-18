@@ -1,7 +1,7 @@
 // Claude에게 콘티를 맡길 요청문 만들기와 답 정리
 // DOM을 쓰지 않는 순수 함수만 둡니다. 실제 호출은 cuts.js에서 합니다.
 
-import { CONTI_RULES, SALES_RULES } from './guide.js';
+import { CONTI_RULES, SALES_RULES, DIRECTION_RULES } from './guide.js';
 import { editorValues, EDITOR_JSON_SHAPE } from './editor-format.js';
 import { STORY_V1, INFO_V2 } from './master-prompts.js';
 import { buildUserInputs } from './prompt.js';
@@ -25,6 +25,7 @@ export function buildContiRequest(form, type) {
     '아래 [꼼쥐 규칙]·[반드시 지킬 판매 원칙]·[마스터 프롬프트]를 따르고, [사용자 입력]에 있는 내용만 근거로 컷별 콘티를 작성한다.',
     CONTI_RULES,
     SALES_RULES,
+    DIRECTION_RULES,
     `[마스터 프롬프트]\n${master}`,
     `[사용자 입력]\n${buildUserInputs(form, type)}`,
     editorValues(),
@@ -36,6 +37,28 @@ function toText(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+// 그림 연출 항목(행동·구도·소품·레이아웃·여백·연결)을 컷의 "연출 메모" 한 칸에 모아요.
+// 연출 메모는 이미지 프롬프트에 그대로 들어가요.
+const DIRECTION_FIELDS = [
+  ['action', '꼼쥐 행동·표정'],
+  ['camera', '구도'],
+  ['props', '소품'],
+  ['layout', '레이아웃'],
+  ['textSpace', '텍스트 여백'],
+  ['next', '다음 컷 연결'],
+];
+
+function directionFromAnswer(cut) {
+  const lines = [];
+  DIRECTION_FIELDS.forEach(([key, label]) => {
+    const value = Array.isArray(cut[key]) ? cut[key].map(toText).filter((item) => item !== '').slice(0, 3).join(', ') : toText(cut[key]);
+    if (value !== '') lines.push(`${label}: ${value}`);
+  });
+  const extra = toText(cut.direction);
+  if (extra !== '') lines.push(extra);
+  return lines.join('\n');
+}
+
 // Claude의 답(JSON) → { cuts, caption, review }
 // 모르는 값은 normalizeCut이 기본값으로 바꿉니다. 컷이 하나도 없으면 null.
 export function readContiAnswer(answer) {
@@ -44,7 +67,7 @@ export function readContiAnswer(answer) {
   const cuts = answer.cuts
     .slice(0, MAX_AI_CUTS)
     .filter((cut) => cut && typeof cut === 'object')
-    .map((cut) => normalizeCut(cut));
+    .map((cut) => normalizeCut({ ...cut, direction: directionFromAnswer(cut) }));
   if (cuts.length === 0) return null;
 
   const hashtags = Array.isArray(answer.hashtags)

@@ -5,7 +5,7 @@ import { CTA_TYPES, MATERIAL_TYPES } from './fields.js';
 import { STORY_V1, STORY_V1_CLOSING, INFO_V2, INFO_V2_CLOSING } from './master-prompts.js';
 import { editorJsonRequest, EDITOR_JSON_NOTICE, EDITOR_JSON_REMINDER } from './editor-format.js';
 import {
-  SALES_RULES, BASE_STYLE, FIXED_RULES, TEMPLATES, CHARACTERS, EXPRESSIONS, BACKGROUNDS, findOption,
+  SALES_RULES, DIRECTION_RULES, DIRECTION_TEXT_FORMAT, BASE_STYLE, FIXED_RULES, TEMPLATES, CHARACTERS, EXPRESSIONS, BACKGROUNDS, findOption,
 } from './guide.js';
 
 const EMPTY_REQUIRED = '(입력 없음 — 지어내지 말고 확인 필요로 표시)';
@@ -109,6 +109,8 @@ export function buildPrompt(form, type) {
       '⸻',
       STORY_V1_CLOSING,
       SALES_RULES,
+      DIRECTION_RULES,
+      DIRECTION_TEXT_FORMAT,
       editorJsonRequest(),
       EDITOR_JSON_REMINDER,
     ].join('\n\n');
@@ -122,6 +124,8 @@ export function buildPrompt(form, type) {
     '⸻',
     INFO_V2_CLOSING,
     SALES_RULES,
+    DIRECTION_RULES,
+    DIRECTION_TEXT_FORMAT,
     editorJsonRequest(),
     EDITOR_JSON_REMINDER,
   ].join('\n\n');
@@ -135,7 +139,8 @@ function cutNumber(index) {
 
 // 컷 하나 → Make에 붙여 넣을 이미지 프롬프트
 // 순서: 공통 문구 → 추가 캐릭터 → 템플릿 구성 → 컷 내용 → 고정 조건 (CLAUDE.md "프롬프트 조립 규칙")
-export function buildImagePrompt(cut, index) {
+// drawText: true면 한글 문구를 그림에 직접 넣고, false면 문구 자리만 비워 둬요 (후편집용, 기본)
+export function buildImagePrompt(cut, index, drawText = false) {
   const template = findOption(TEMPLATES, cut.template);
   const parts = [BASE_STYLE];
 
@@ -148,6 +153,8 @@ export function buildImagePrompt(cut, index) {
   // 구도 템플릿은 레퍼런스 그림이 없어요. 기본 틀을 따라 하지 않게 한 줄 더 적어요.
   if (template.reference) {
     parts.push(`Layout reference: ${template.reference}\n${template.prompt}`);
+  } else if (template.value === template.family) {
+    parts.push(`Layout: ${template.prompt}`);
   } else {
     parts.push(`Layout: ${template.prompt}\nDo not copy the usual ${template.family} template composition; follow this layout instead.`);
   }
@@ -167,12 +174,20 @@ export function buildImagePrompt(cut, index) {
 
   // 화면에 들어갈 한글 문구: 입력한 칸만, 줄바꿈 그대로
   const textLines = [];
+  const textSpaces = [];
   template.texts.forEach((field) => {
     const value = (cut.texts[field.key] || '').trim();
-    if (value !== '') textLines.push(`[${field.label}]\n${value}`);
+    if (value === '') return;
+    textLines.push(`[${field.label}]\n${value}`);
+    textSpaces.push(`- ${field.label}: about ${value.split('\n').length} line(s)`);
   });
-  if (textLines.length > 0) {
+  if (textLines.length > 0 && drawText) {
     parts.push(`Write exactly this Korean text, keeping the line breaks (the [labels] only tell where each text goes; do not draw them):\n${textLines.join('\n\n')}`);
+  } else if (textLines.length > 0) {
+    // 연출 규칙 9번: 한글은 후편집으로 넣으니 깨끗한 빈 자리만 (말풍선·카드는 비워서)
+    parts.push(`Do NOT draw any letters, words or numbers (Korean or English) anywhere except the '@꼼쥐' watermark; this overrides any instruction above about handwritten text.
+Instead leave clean, plain empty space for these texts, which will be added later in editing. Draw speech bubbles, cards and boxes EMPTY:
+${textSpaces.join('\n')}`);
   } else {
     parts.push('No text in this panel except the \'@꼼쥐\' watermark.');
   }
@@ -183,17 +198,17 @@ export function buildImagePrompt(cut, index) {
 }
 
 // 수정 요청: 첫 번째 첨부 그림(지금 그림)을 바탕으로, 적은 부분만 고치기
-export function buildRevisePrompt(cut, index, request) {
+export function buildRevisePrompt(cut, index, request, drawText = false) {
   return [
     'Edit the FIRST attached image (the current version of this panel).',
     'Keep everything exactly the same — layout, characters, art style, colors, Korean text and the \'@꼼쥐\' watermark — and change ONLY what is asked below.',
     'Other attached images are character/layout references only.',
     `Change request (Korean):\n${request.trim()}`,
-    `Original panel instructions, for reference:\n${buildImagePrompt(cut, index)}`,
+    `Original panel instructions, for reference:\n${buildImagePrompt(cut, index, drawText)}`,
   ].join('\n\n');
 }
 
 // 전체 컷 프롬프트를 한 번에
-export function buildAllImagePrompts(cuts) {
-  return cuts.map((cut, index) => buildImagePrompt(cut, index)).join('\n\n━━━━━━━━━━━━━━━━━━\n\n');
+export function buildAllImagePrompts(cuts, drawText = false) {
+  return cuts.map((cut, index) => buildImagePrompt(cut, index, drawText)).join('\n\n━━━━━━━━━━━━━━━━━━\n\n');
 }

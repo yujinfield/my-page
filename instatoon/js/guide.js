@@ -16,7 +16,8 @@ not perfectly symmetric`;
 // 모든 컷에 붙는 고정 조건 (지침 1·2·6번, 마스터 프롬프트 금지 사항)
 export const FIXED_RULES = `Keep the squirrel exactly like the official reference 꼼쥐_턴어라운드.png (same face shape, ears, eyes, blush, body and swirl tail proportions); change only the expression and pose.
 One single panel only, 4:5 portrait, 1080x1350px. Do not combine multiple panels, do not add captions or tables under the image.
-Do not put any real brand logo on props (e.g. no apple logo on laptops).`;
+Do not put any real brand logo on props (e.g. no apple logo on laptops).
+The squirrel has NO mouth: keep the black dot eyes, pink blush cheeks, round ears, swirl tail and hand-drawn outline.`;
 
 // 등장 캐릭터 (지침 1번)
 export const CHARACTERS = [
@@ -120,6 +121,18 @@ const BASE_TEMPLATES = [
       { key: 'rightItems', label: 'B 체크 항목 (한 줄에 하나)', lines: 4, placeholder: '예) 세련된 실루엣\n움직이기 편함' },
       { key: 'rightThought', label: 'B 꼼쥐 속마음', lines: MAX_DIALOGUE_LINES, dialogue: true, placeholder: '예) 부담스럽지 않을까?' },
       { key: 'conclusion', label: '하단 결론 띠', lines: 2, placeholder: '예) 촬영 컨셉과 취향에 맞춰\n최종 3~4벌을 셀렉했어요!' },
+    ],
+  },
+  {
+    value: 'cta',
+    label: 'CTA형',
+    reference: '',
+    help: '마지막 행동 유도 컷. 복잡한 정보 없이 꼼쥐 손짓·질문·댓글창·키워드 카드 중 하나만',
+    prompt: 'CTA panel: keep it simple with no complex information. Use only ONE device: the squirrel\'s inviting hand gesture, a question, a comment-box mock-up, or a keyword card. Large empty area for the call-to-action line.',
+    // 스토리형과 같은 문구 칸이라 서로 바꿔도 글이 남아요.
+    texts: [
+      { key: 'situation', label: '안내 문구', lines: 3, placeholder: "예) 만드는 법이 궁금하다면\n댓글에 '셀프'!" },
+      { key: 'dialogue', label: '꼼쥐 말', lines: MAX_DIALOGUE_LINES, dialogue: true, placeholder: '예) 보내드릴게요!' },
     ],
   },
 ];
@@ -231,6 +244,53 @@ export const MAX_CUTS = 14;
 export function findOption(list, value) {
   return list.find((item) => item.value === value) || list[0];
 }
+
+// 컷별 그림 연출 자동 설계 규칙 (사용자 지침). 콘티를 쓰는 AI에게 항상 보냄 (ai-conti.js, prompt.js)
+export const DIRECTION_RULES = `[컷별 그림 연출 자동 설계 규칙]
+각 컷의 본문을 만든 뒤, 반드시 아래 항목까지 함께 제안한다. 이 항목은 이미지 생성 프롬프트를 만들기 위한 그림 연출 가이드다.
+- 컷 유형: 표지형 / 스토리형 / 정보형 / 비교형 / CTA형
+- 장면 한 줄: 이 컷에서 독자가 한눈에 이해해야 하는 상황
+- 캐릭터 행동·표정: 꼼쥐가 무엇을 하고 어떤 감정인지
+- 구도: 클로즈업 / 전신 / 위에서 내려다본 구도 / 좌우 비교 / 화면 속 화면 등
+- 소품: 장면 이해에 꼭 필요한 소품 1~3개만 제안
+- 레이아웃: 제목·본문·캐릭터·정보 카드가 들어갈 위치
+- 텍스트 여백: 실제 문구를 후편집으로 넣을 수 있도록 비워둘 위치
+- 다음 컷 연결: 다음 컷의 정보나 반전으로 자연스럽게 넘어가는 장치
+
+그림 연출은 아래 기준을 따른다.
+1. 매 컷 캐릭터의 포즈·카메라 거리·배치가 반복되지 않게 한다.
+2. 한 컷에는 하나의 감정과 하나의 행동만 담는다.
+3. 소품은 최대 3개까지만 사용한다. (배경이 "simple"(기본 배경)이면 1개)
+4. 정보형은 '꼼쥐 + 큰 정보 카드 또는 체크리스트' 구조로 만든다.
+5. 비교형은 화면을 좌우 또는 상하로 명확하게 나누고, 각 영역의 차이가 그림만 봐도 이해되도록 구성한다.
+6. 스토리형은 설명보다 꼼쥐의 행동과 표정으로 상황을 먼저 전달한다.
+7. 표지형은 제목을 넣을 상단 여백을 넓게 확보하고, 중앙에는 감정이 큰 꼼쥐와 핵심 상징 소품을 배치한다.
+8. CTA형은 복잡한 정보를 넣지 말고, 꼼쥐의 손짓·질문·댓글창 또는 키워드 카드 중 하나만 활용한다.
+9. 이미지 안에 한글 문구를 직접 생성하는 방식이 아니라, 문구를 넣을 깨끗한 빈 여백과 카드 영역을 제안한다.
+10. 모든 컷은 꼼쥐 공식 캐릭터 가이드의 외형을 유지한다. 입은 추가하지 않고, 검은 점눈·볼터치·둥근 귀·소용돌이 꼬리·손그림 외곽선을 유지한다.
+
+컷 유형별로 자동으로 가장 적합한 장면을 선택하되, '휴대폰 보는 꼼쥐', '손가락 들고 설명하는 꼼쥐' 같은 장면을 연속해서 반복하지 않는다.
+스토리형은 실제 생활 장면을 우선한다. 예: 검색하다 멈칫함, 가격표를 보고 고민함, 물건을 비교함, 준비물을 펼쳐둠, 사진을 확대해 봄, 거울 앞에서 확인함, 선택 후 만족해함.
+정보형은 카드·체크리스트·타임라인·간단한 흐름도로 시각화한다.
+비교형은 좌우 비교, 전후 비교, 선택지 비교 중 내용에 가장 맞는 방식을 고른다.`;
+
+// 복사용 요청문(claude.ai)에서 글로 답할 때의 컷별 형식
+export const DIRECTION_TEXT_FORMAT = `[컷별 출력 형식]
+## 01컷 | 표지형
+이미지 문구:
+- 제목:
+- 부제:
+
+그림 연출:
+- 장면:
+- 꼼쥐 행동·표정:
+- 구도:
+- 소품:
+- 레이아웃:
+- 텍스트 여백:
+- 다음 컷 연결:
+
+이 형식을 모든 컷에 반복한다.`;
 
 // 사이트에서 Claude에게 콘티를 맡길 때 함께 보내는 꼼쥐 핵심 규칙 (지침 1·3·4·6·7·9번 요약)
 // claude.ai 프로젝트 밖에서 부르므로 지침을 직접 담아 보냅니다.

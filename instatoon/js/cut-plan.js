@@ -133,7 +133,7 @@ export function buildDefaultCuts(form, type) {
 
   // CTA: 자연스러운 결론이 아니면 마지막 컷을 따로 둡니다.
   if (form.ctaType !== 'natural') {
-    const cta = createCut('story');
+    const cta = createCut('cta');
     const goals = { comment: '댓글 키워드 유도', save: '저장 유도', share: '공유 유도' };
     cta.message = `CTA — ${goals[form.ctaType]}`;
     cta.texts.dialogue = form.commentLine.trim();
