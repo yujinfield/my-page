@@ -2,7 +2,7 @@
 // 사용자가 쓴 글은 항상 value / textContent로 넣습니다.
 
 import { cutLabel } from './grid.js';
-import { LAYOUTS } from './redraw-prompt.js';
+import { LAYOUTS, resolveLayout } from './redraw-prompt.js';
 
 const NUDGE_SIDES = [
   { key: 'top', label: '위' },
@@ -38,16 +38,25 @@ function makeTextarea(labelText, value, rows, onInput) {
   return { label, textarea };
 }
 
-// 다시 그릴 때 쓸 배치(여백) 고르기
+// "자동" 칸에 보여 줄 글: 컷 내용을 보고 고른 배치 이름
+function autoLayoutText(text) {
+  const layout = resolveLayout('auto', text);
+  if (layout === 'none') return '자동 → 못 정함 (배치 지정 안 함)';
+  return `자동 → ${LAYOUTS.find((item) => item.value === layout).label}`;
+}
+
+// 다시 그릴 때 쓸 배치(여백) 고르기. "자동" 칸은 컷 내용이 바뀔 때마다 고른 배치를 다시 보여 줌
 function makeLayoutSelect(index, cut, onLayout) {
   const label = make('label', 'field', '다시 그릴 배치 (여백)');
   const select = document.createElement('select');
   LAYOUTS.forEach((item) => select.append(new Option(item.label, item.value)));
+  const autoOption = select.options[0];
+  autoOption.textContent = autoLayoutText(cut.text);
   select.value = cut.layout;
   select.setAttribute('aria-label', `${cutLabel(index)}컷 다시 그릴 배치`);
   select.addEventListener('change', () => onLayout(index, select.value));
-  label.append(select);
-  return label;
+  label.append(select, make('span', 'hint', '자동은 컷 내용의 "컷 유형: 정보형" 같은 줄을 보고 골라요.'));
+  return { label, autoOption };
 }
 
 function makeNudgeBox(index, cut, onNudge) {
@@ -106,7 +115,11 @@ function makeCard(index, cut, handlers) {
   nav.append(prevButton, counter, nextButton);
   nav.hidden = true;
 
-  const text = makeTextarea('컷 내용 (그림 속 문구·그림 설명)', cut.text, 5, (value) => handlers.onText(index, 'text', value));
+  const layout = makeLayoutSelect(index, cut, handlers.onLayout);
+  const text = makeTextarea('컷 내용 (그림 속 문구·그림 설명)', cut.text, 5, (value) => {
+    handlers.onText(index, 'text', value);
+    layout.autoOption.textContent = autoLayoutText(value);
+  });
   const memo = makeTextarea('수정 메모 (다시 그릴 때 바꿀 점)', cut.memo, 2, (value) => handlers.onText(index, 'memo', value));
 
   const actions = make('div', 'row');
@@ -122,11 +135,11 @@ function makeCard(index, cut, handlers) {
   const status = make('p', 'status');
   status.setAttribute('role', 'status');
 
-  card.append(pair, nav, text.label, memo.label, makeLayoutSelect(index, cut, handlers.onLayout), makeNudgeBox(index, cut, handlers.onNudge), actions, status);
+  card.append(pair, nav, text.label, memo.label, layout.label, makeNudgeBox(index, cut, handlers.onNudge), actions, status);
 
   return {
     card, originalBox, redrawBox, redrawImage, redrawEmpty, nav, counter, prevButton, nextButton,
-    textArea: text.textarea, redrawButton, reviseButton, downloadRedrawButton, status,
+    textArea: text.textarea, autoOption: layout.autoOption, redrawButton, reviseButton, downloadRedrawButton, status,
   };
 }
 
@@ -148,7 +161,9 @@ export function updatePreview(index, canvas) {
 
 // 예시 대본을 불러왔을 때 글 칸 채우기
 export function setCutText(index, text) {
-  if (cards[index]) cards[index].textArea.value = text;
+  if (!cards[index]) return;
+  cards[index].textArea.value = text;
+  cards[index].autoOption.textContent = autoLayoutText(text);
 }
 
 // redraw: { images: ['data:...'], current: 0 }

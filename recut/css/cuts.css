@@ -84,7 +84,8 @@
 }
 
 .cut-card .field input,
-.cut-card .field textarea {
+.cut-card .field textarea,
+.cut-card .field select {
   background: var(--surface);
 }
 
