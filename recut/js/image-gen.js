@@ -38,7 +38,7 @@ export const DEFAULT_IMAGE_SETTINGS = {
   quality: 'auto',
   style: 'original',   // "original": 원본 그림체 그대로 / "kkomjwi": 꼼쥐툰 스타일 (redraw-prompt.js의 STYLES)
   watermark: '',       // 그림 위쪽 가운데 작은 글씨 (예: @내계정). 비우면 넣지 않음
-  useTurnaround: true, // 꼼쥐툰 스타일일 때 꼼쥐 턴어라운드를 두 번째 참고 이미지로 함께 보냄
+  useCharacterImage: true, // 캐릭터 참고 이미지(올린 것, 없으면 꼼쥐툰 스타일일 때 기본 턴어라운드)를 두 번째 참고 이미지로 보냄
 };
 
 // 저장된 설정의 빈 칸·잘못된 값을 기본값으로
@@ -51,7 +51,8 @@ export function normalizeImageSettings(saved) {
   if (IMAGE_QUALITIES.some((item) => item.value === saved.quality)) settings.quality = saved.quality;
   if (saved.style === 'original' || saved.style === 'kkomjwi') settings.style = saved.style;
   if (typeof saved.watermark === 'string') settings.watermark = saved.watermark.trim();
-  if (typeof saved.useTurnaround === 'boolean') settings.useTurnaround = saved.useTurnaround;
+  if (typeof saved.useCharacterImage === 'boolean') settings.useCharacterImage = saved.useCharacterImage;
+  else if (typeof saved.useTurnaround === 'boolean') settings.useCharacterImage = saved.useTurnaround; // 예전 이름
   return settings;
 }
 
@@ -59,13 +60,13 @@ export function modelName(settings) {
   return settings.model === 'custom' ? settings.customModel : settings.model;
 }
 
-// 꼼쥐 턴어라운드 읽기 (한 번 읽으면 기억해 둠)
+// 기본 꼼쥐 턴어라운드 읽기 (캐릭터 이미지를 안 올렸을 때 꼼쥐툰 스타일에서 씀, 한 번 읽으면 기억해 둠)
 let turnaroundBlob = null;
 
 export async function loadTurnaround() {
   if (turnaroundBlob) return turnaroundBlob;
   const response = await fetch(TURNAROUND_URL);
-  if (!response.ok) throw makeError({ problem: '꼼쥐 턴어라운드 이미지를 열 수 없어요.', fix: '그림 설정에서 "턴어라운드 함께 보내기"를 끄고 다시 해 보세요.' });
+  if (!response.ok) throw makeError({ problem: '꼼쥐 턴어라운드 이미지를 열 수 없어요.', fix: '그림 설정에서 캐릭터 이미지를 직접 올리거나 "캐릭터 참고 이미지 함께 보내기"를 끄고 다시 해 보세요.' });
   turnaroundBlob = await response.blob();
   return turnaroundBlob;
 }

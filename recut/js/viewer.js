@@ -2,14 +2,14 @@
 // 창을 연 버튼으로 포커스를 돌려주고, Esc·바깥 클릭으로 닫히며, Tab은 창 안에서만 돕니다.
 
 import { cutLabel } from './grid.js';
-import { downloadUrl } from './crop.js';
+import { saveFiles, saveMessage } from './downloads.js';
 
 const KIND_LABELS = { original: '원본 (4:5)', redraw: '다시 그린 그림' };
 
 const el = {};
-let options = null;      // { getCount(), hasRedraw(index), getImage(index, kind) → Promise<{ url, fileName } | null> }
+let options = null;      // { getCount(), hasRedraw(index), getImage(index, kind) → Promise<{ url, blob, fileName } | null> }
 let current = { index: 0, kind: 'original' };
-let shown = null;        // 지금 보이는 { url, fileName }
+let shown = null;        // 지금 보이는 { url, blob, fileName }
 let opener = null;       // 창을 연 버튼 (닫으면 여기로 포커스)
 
 function focusableElements() {
@@ -21,6 +21,7 @@ async function show(index, kind) {
   if (!image) return false;
   current = { index, kind };
   shown = image;
+  el.status.textContent = '';
   el.image.src = image.url;
   el.image.alt = `${cutLabel(index)}컷 ${KIND_LABELS[kind]}`;
   el.title.textContent = `${cutLabel(index)}컷 · ${KIND_LABELS[kind]}`;
@@ -85,13 +86,16 @@ export function setupViewer(viewerOptions) {
   el.redraw = document.getElementById('viewer-redraw');
   el.save = document.getElementById('viewer-save');
   el.close = document.getElementById('viewer-close');
+  el.status = document.getElementById('viewer-status');
 
   el.prev.addEventListener('click', () => move(-1));
   el.next.addEventListener('click', () => move(1));
   el.original.addEventListener('click', () => show(current.index, 'original'));
   el.redraw.addEventListener('click', () => show(current.index, 'redraw'));
-  el.save.addEventListener('click', () => {
-    if (shown) downloadUrl(shown.url, shown.fileName);
+  el.save.addEventListener('click', async () => {
+    if (!shown) return;
+    const result = await saveFiles([{ blob: shown.blob, fileName: shown.fileName }]);
+    el.status.textContent = saveMessage(result, 1);
   });
   el.close.addEventListener('click', closeViewer);
   // 어두운 바깥을 누르면 닫기

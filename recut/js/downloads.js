@@ -1,10 +1,12 @@
-// 컷 그림 내려받기: 파일 이름 정하기, 여러 장 차례로 내려받기
+// 컷 그림 저장: 파일 이름 정하기, 한 장 / 여러 장 저장
+//
+// 휴대폰(터치 화면)에서는 공유 창(navigator.share)을 엽니다. 아이폰은 여기서 "이미지 저장"을 누르면 사진 앱에 들어가요.
+// 컴퓨터나 공유를 못 쓰는 브라우저에서는 <a download>로 내려받기 폴더에 저장합니다.
 
 import { cutLabel } from './grid.js';
-import { downloadCanvas, downloadUrl } from './crop.js';
 
-const WAIT_BETWEEN_FILES_MS = 300; // 한꺼번에 받으면 브라우저가 일부를 막을 수 있어서 조금씩 쉼
-const MANY_FILES_NOTICE = '내려받는 중… 브라우저가 "여러 파일 내려받기"를 물으면 허용해 주세요.';
+const WAIT_BETWEEN_FILES_MS = 400;   // 한꺼번에 받으면 브라우저가 일부를 막을 수 있어서 조금씩 쉼
+const REVOKE_AFTER_MS = 60 * 1000;   // 파일 주소를 너무 빨리 지우면(특히 Safari) 내려받기가 실패해서 1분 뒤에 지움
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -21,29 +23,45 @@ export function redrawFileName(index, redraw) {
   return `${cutLabel(index)}_redraw${version}.png`;
 }
 
-// makeCanvas(index) → 1080×1350 캔버스, setStatus(글)
-export async function downloadAllOriginals(count, makeCanvas, setStatus) {
-  setStatus(MANY_FILES_NOTICE);
-  for (let index = 0; index < count; index += 1) {
-    await downloadCanvas(makeCanvas(index), originalFileName(index));
-    await wait(WAIT_BETWEEN_FILES_MS);
-  }
-  setStatus(`${count}장을 내려받았어요. (1080×1350)`);
+function downloadBlob(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), REVOKE_AFTER_MS);
 }
 
-// 컷마다 지금 보고 있는 다시 그린 그림 한 장씩
-export async function downloadAllRedraws(redraws, setStatus) {
-  const drawn = redraws
-    .map((redraw, index) => ({ redraw, index }))
-    .filter((item) => item.redraw.images.length > 0);
-  if (drawn.length === 0) {
-    setStatus('아직 다시 그린 그림이 없어요.');
-    return;
+// 터치 화면이고 파일 공유가 되는 브라우저인지
+function canShareFiles(files) {
+  const isTouch = window.matchMedia('(pointer: coarse)').matches;
+  return isTouch && Boolean(navigator.canShare) && navigator.canShare({ files });
+}
+
+// items: [{ blob, fileName }] → 'shared' | 'cancelled' | 'downloaded'
+export async function saveFiles(items) {
+  const files = items.map((item) => new File([item.blob], item.fileName, { type: item.blob.type || 'image/png' }));
+  if (canShareFiles(files)) {
+    try {
+      await navigator.share({ files });
+      return 'shared';
+    } catch (error) {
+      if (error && error.name === 'AbortError') return 'cancelled';
+      // 공유가 막히면(시간이 지나 허락이 풀린 경우 등) 아래 내려받기로 넘어감
+    }
   }
-  setStatus(MANY_FILES_NOTICE);
-  for (const { redraw, index } of drawn) {
-    downloadUrl(redraw.images[redraw.current], redrawFileName(index, redraw));
-    await wait(WAIT_BETWEEN_FILES_MS);
+  for (let i = 0; i < items.length; i += 1) {
+    if (i > 0) await wait(WAIT_BETWEEN_FILES_MS);
+    downloadBlob(items[i].blob, items[i].fileName);
   }
-  setStatus(`다시 그린 그림 ${drawn.length}장을 내려받았어요. (컷마다 지금 보고 있는 그림)`);
+  return 'downloaded';
+}
+
+// 결과를 사용자에게 보여 줄 글
+export function saveMessage(result, count) {
+  if (result === 'shared') return `${count}장을 공유 창으로 보냈어요. 아이폰은 "이미지 저장"을 누르면 사진 앱에 들어가요.`;
+  if (result === 'cancelled') return '저장을 취소했어요.';
+  return `${count}장을 내려받았어요. 내려받기 폴더(아이폰은 파일 앱)를 확인해 주세요. 카카오톡·인스타그램 안에서 열었다면 Safari·Chrome으로 열어 주세요.`;
 }

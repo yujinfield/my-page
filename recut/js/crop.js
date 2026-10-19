@@ -1,4 +1,4 @@
-// 캔버스로 컷 자르기, 4:5에 맞추기, 내려받기
+// 캔버스로 컷 자르기, 4:5에 맞추기
 // 이미지는 서버로 보내지 않고 브라우저 안에서만 처리합니다.
 
 export const OUTPUT_WIDTH = 1080;
@@ -43,23 +43,6 @@ export function fitToPortrait(source, mode) {
 
 export function canvasToBlob(canvas) {
   return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-}
-
-// 파일 내려받기 (주소 → <a download>)
-export function downloadUrl(url, fileName) {
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  document.body.append(link);
-  link.click();
-  link.remove();
-}
-
-export async function downloadCanvas(canvas, fileName) {
-  const blob = await canvasToBlob(canvas);
-  const url = URL.createObjectURL(blob);
-  downloadUrl(url, fileName);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // 자동 맞추기용: 세로줄(열)마다, 가로줄(행)마다 평균 밝기 목록

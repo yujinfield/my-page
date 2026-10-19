@@ -34,7 +34,7 @@
       </div>
       <div class="row">
         <button type="button" id="sample-button" class="button">예시 불러오기: 웨딩 촬영 네일 (12컷)</button>
-        <span class="hint">어떤 컷 묶음 이미지든 돼요 (행·열은 2단계에서 바꿔요).</span>
+        <span class="hint">어떤 컷 묶음 이미지든 돼요 (칸 수는 2단계에서 바꿔요).</span>
       </div>
       <p id="upload-status" class="status" role="status"></p>
     </section>
@@ -42,10 +42,10 @@
     <!-- ② 격자 맞추기 -->
     <section class="card" aria-labelledby="grid-title">
       <h2 id="grid-title" class="card-title"><span class="step-badge">2</span> 격자 맞추기</h2>
-      <p class="help">원본 위의 빨간 선이 컷 경계에 맞도록 조정하세요. 컷 번호는 왼쪽 → 오른쪽, 위 → 아래 순서예요.</p>
+      <p class="help">원본 위의 빨간 선이 컷 경계에 맞도록 조정하세요. 예: 12컷이 위아래 3줄 × 좌우 4개면 세로 3, 가로 4. 컷 번호는 왼쪽 → 오른쪽, 위 → 아래 순서예요.</p>
       <div class="field-row">
-        <label class="field">행 (가로줄 수)<input type="number" id="grid-rows" min="1" max="10"></label>
-        <label class="field">열 (세로줄 수)<input type="number" id="grid-cols" min="1" max="10"></label>
+        <label class="field">세로 칸 수 (행, 위→아래)<input type="number" id="grid-rows" min="1" max="10"></label>
+        <label class="field">가로 칸 수 (열, 왼쪽→오른쪽)<input type="number" id="grid-cols" min="1" max="10"></label>
         <label class="field">바깥 여백 (px)<input type="number" id="grid-margin" min="0" max="500"></label>
         <label class="field">컷 사이 간격 (px)<input type="number" id="grid-gap" min="0" max="200"></label>
       </div>
@@ -103,7 +103,20 @@
         <label class="field">그림 스타일<select id="redraw-style"></select></label>
         <label class="field" id="watermark-field">워터마크 (위쪽 가운데, 비우면 없음)<input type="text" id="watermark" autocomplete="off" placeholder="@내계정"></label>
       </div>
-      <label class="check" id="turnaround-field"><input type="checkbox" id="use-turnaround"> 꼼쥐 턴어라운드를 참고 이미지로 함께 보내기 (외형 유지)</label>
+      <div class="character-box">
+        <p class="field-title">캐릭터 참고 이미지 (선택)</p>
+        <p class="hint">캐릭터 시트(턴어라운드)를 올리면 다시 그릴 때 함께 보내서 캐릭터 외형을 맞춰요.</p>
+        <div class="row">
+          <img id="character-preview" class="character-preview" alt="올린 캐릭터 참고 이미지" hidden>
+          <label class="button">
+            🖼️ 캐릭터 이미지 올리기
+            <input type="file" id="character-input" class="visually-hidden" accept="image/png,image/jpeg,image/webp">
+          </label>
+          <button type="button" id="character-clear" class="button" aria-label="올린 캐릭터 이미지 지우기" hidden>지우기</button>
+        </div>
+        <p id="character-status" class="status" role="status"></p>
+        <label class="check"><input type="checkbox" id="use-character"> 다시 그릴 때 캐릭터 참고 이미지 함께 보내기</label>
+      </div>
     </section>
 
     <!-- ④ 컷 목록 -->
@@ -137,7 +150,8 @@
         <button type="button" id="viewer-next" class="button" aria-label="다음 컷 보기">다음 컷 ▶</button>
         <button type="button" id="viewer-save" class="button button-primary" aria-label="지금 보는 그림 저장">⬇️ 저장</button>
       </div>
-      <p class="hint">← → 키로 컷을 넘기고 Esc로 닫아요. 아이폰은 그림을 길게 눌러 '사진에 저장'할 수도 있어요.</p>
+      <p id="viewer-status" class="status" role="status"></p>
+      <p class="hint">← → 키로 컷을 넘기고 Esc로 닫아요. 휴대폰은 ⬇️ 저장 → "이미지 저장", 또는 그림을 길게 눌러 저장해도 돼요.</p>
     </div>
   </div>
 

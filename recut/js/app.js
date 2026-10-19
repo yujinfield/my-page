@@ -1,7 +1,7 @@
 // 진입점: 상태를 들고 각 모듈을 연결합니다.
 
 import { computeCutRects, applyNudge, cutCount, cutLabel, findLines, normalizeGrid } from './grid.js';
-import { cropToCanvas, fitToPortrait, canvasToBlob, downloadCanvas, downloadUrl, measureBrightness } from './crop.js';
+import { cropToCanvas, fitToPortrait, canvasToBlob, measureBrightness } from './crop.js';
 import { loadImage, loadImageFromFile, setupUpload } from './upload.js';
 import { SAMPLES, fetchSampleCuts, sampleImageUrl } from './sample.js';
 import { setupGridPanel, fillGridInputs, drawGridPreview } from './grid-panel.js';
@@ -10,9 +10,10 @@ import { setupKeyPanel, getApiKey } from './key-panel.js';
 import { buildRedrawPrompt, buildRevisePrompt } from './redraw-prompt.js';
 import { generateImage, loadTurnaround, dataUrlToBlob } from './image-gen.js';
 import { setupImageSettings } from './image-settings.js';
+import { setupCharacterImage, getCharacterImageBlob } from './character-image.js';
 import { setupTheme } from './theme.js';
 import { setupViewer, openViewer } from './viewer.js';
-import { originalFileName, redrawFileName, downloadAllOriginals, downloadAllRedraws } from './downloads.js';
+import { originalFileName, redrawFileName, saveFiles, saveMessage } from './downloads.js';
 import { loadDraft, saveDraft, emptyCut, loadImageSettings, saveImageSettings } from './store.js';
 
 const state = {
@@ -173,11 +174,13 @@ async function drawCut(index, mode, apiKey, signal) {
     prompt = buildRevisePrompt({ index, total, memo: cut.memo });
   } else {
     references.push(await canvasToBlob(cropCut(index)));
-    const { style, watermark, useTurnaround } = state.settings;
-    const sendTurnaround = style === 'kkomjwi' && useTurnaround;
-    if (sendTurnaround) references.push(await loadTurnaround());
+    const { style, watermark, useCharacterImage } = state.settings;
+    // 올린 캐릭터 이미지가 우선, 없으면 꼼쥐툰 스타일일 때만 기본 꼼쥐 턴어라운드
+    let character = null;
+    if (useCharacterImage) character = getCharacterImageBlob() || (style === 'kkomjwi' ? await loadTurnaround() : null);
+    if (character) references.push(character);
     prompt = buildRedrawPrompt({
-      index, total, text: cut.text, memo: cut.memo, layout: cut.layout, style, watermark, useTurnaround: sendTurnaround,
+      index, total, text: cut.text, memo: cut.memo, layout: cut.layout, style, watermark, useCharacterImage: Boolean(character),
     });
   }
 
@@ -268,8 +271,9 @@ const cutHandlers = {
     refreshPreview(index);
     drawGridPreview(state.image, cutRects());
   },
-  onDownload(index) {
-    downloadCanvas(portraitCut(index), originalFileName(index));
+  async onDownload(index) {
+    const result = await saveFiles([await originalItem(index)]);
+    setCutStatus(index, saveMessage(result, 1));
   },
   onRedraw(index) {
     redrawOne(index, 'redraw');
@@ -277,9 +281,9 @@ const cutHandlers = {
   onRevise(index) {
     redrawOne(index, 'revise');
   },
-  onDownloadRedraw(index) {
-    const redraw = state.redraws[index];
-    downloadUrl(redraw.images[redraw.current], redrawFileName(index, redraw));
+  async onDownloadRedraw(index) {
+    const result = await saveFiles([redrawItem(index)]);
+    setCutStatus(index, saveMessage(result, 1));
   },
   onView(index, kind, button) {
     openViewer(index, kind, button);
@@ -290,6 +294,38 @@ const cutHandlers = {
     showRedraw(index, redraw);
   },
 };
+
+// ---------- 저장 ----------
+
+async function originalItem(index) {
+  return { blob: await canvasToBlob(portraitCut(index)), fileName: originalFileName(index) };
+}
+
+// 컷마다 지금 보고 있는 다시 그린 그림
+function redrawItem(index) {
+  const redraw = state.redraws[index];
+  return { blob: dataUrlToBlob(redraw.images[redraw.current]), fileName: redrawFileName(index, redraw) };
+}
+
+async function saveAllOriginals() {
+  if (!state.image) return;
+  el.cutsStatus.textContent = '저장할 그림을 만드는 중…';
+  const items = [];
+  for (let index = 0; index < state.draft.cuts.length; index += 1) items.push(await originalItem(index));
+  el.cutsStatus.textContent = saveMessage(await saveFiles(items), items.length);
+}
+
+async function saveAllRedraws() {
+  const drawn = state.redraws
+    .map((redraw, index) => index)
+    .filter((index) => state.redraws[index].images.length > 0);
+  if (drawn.length === 0) {
+    el.cutsStatus.textContent = '아직 다시 그린 그림이 없어요.';
+    return;
+  }
+  const items = drawn.map(redrawItem);
+  el.cutsStatus.textContent = saveMessage(await saveFiles(items), items.length);
+}
 
 // ---------- 크게 보기 ----------
 
@@ -302,12 +338,12 @@ async function viewerImage(index, kind) {
   if (kind === 'redraw') {
     const redraw = state.redraws[index];
     if (!redraw || redraw.images.length === 0) return null;
-    return { url: redraw.images[redraw.current], fileName: redrawFileName(index, redraw) };
+    return { url: redraw.images[redraw.current], ...redrawItem(index) };
   }
-  const blob = await canvasToBlob(portraitCut(index));
+  const item = await originalItem(index);
   if (viewerUrl) URL.revokeObjectURL(viewerUrl);
-  viewerUrl = URL.createObjectURL(blob);
-  return { url: viewerUrl, fileName: originalFileName(index) };
+  viewerUrl = URL.createObjectURL(item.blob);
+  return { url: viewerUrl, ...item };
 }
 
 // ---------- 시작 ----------
@@ -323,6 +359,7 @@ setupUpload({
 document.getElementById('sample-button').addEventListener('click', openSample);
 setupGridPanel(gridHandlers);
 setupKeyPanel();
+setupCharacterImage();
 setupImageSettings(state.settings, (settings) => {
   state.settings = settings;
   saveImageSettings(settings);
@@ -332,13 +369,8 @@ setupViewer({
   hasRedraw: (index) => Boolean(state.redraws[index] && state.redraws[index].images.length > 0),
   getImage: viewerImage,
 });
-const setCutsStatus = (text) => { el.cutsStatus.textContent = text; };
-document.getElementById('download-all-button').addEventListener('click', () => {
-  if (state.image) downloadAllOriginals(state.draft.cuts.length, portraitCut, setCutsStatus);
-});
-document.getElementById('download-redraws-button').addEventListener('click', () => {
-  downloadAllRedraws(state.redraws, setCutsStatus);
-});
+document.getElementById('download-all-button').addEventListener('click', saveAllOriginals);
+document.getElementById('download-redraws-button').addEventListener('click', saveAllRedraws);
 el.redrawAllButton.addEventListener('click', redrawAll);
 el.stopButton.addEventListener('click', () => {
   if (state.controller) state.controller.abort();
