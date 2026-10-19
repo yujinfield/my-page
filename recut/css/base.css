@@ -1,0 +1,137 @@
+/* 색상·간격·폰트 변수, 리셋, 다크 모드 */
+
+:root {
+  /* 꼼쥐툰 색: 아이보리 배경 + 파스텔 포인트 */
+  --bg: #fbf7ee;
+  --surface: #ffffff;
+  --surface-soft: #f4ecdd;
+  --text: #2b2622;
+  --text-soft: #7b6f65;
+  --line: #e6dccb;
+
+  --pink: #f8d3d4;
+  --yellow: #f9eaa6;
+  --green: #d9edcc;
+  --sky: #d3e8f4;
+  --accent: #d9686f;
+  --accent-text: #ffffff;
+  --warning-bg: #fff4d6;
+  --overlay: rgba(0, 0, 0, 0.4);
+
+  --space-xs: 4px;
+  --space-s: 8px;
+  --space-m: 16px;
+  --space-l: 24px;
+  --space-xl: 40px;
+
+  --radius-s: 10px;
+  --radius-m: 18px;
+  --radius-l: 28px;
+
+  --font: "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --font-size: 16px;
+  --font-size-small: 14px;
+  --font-size-title: 26px;
+
+  --content-width: 1080px;
+}
+
+/* 시스템이 다크 모드이고, 직접 라이트로 고르지 않았을 때 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1f1c19;
+    --surface: #2a2622;
+    --surface-soft: #34302b;
+    --text: #f1ebe2;
+    --text-soft: #b3a89c;
+    --line: #463f38;
+
+    --pink: #6b3f42;
+    --yellow: #6a5a26;
+    --green: #3f5435;
+    --sky: #34505f;
+    --accent: #e98a90;
+    --accent-text: #1f1c19;
+    --warning-bg: #4a3f22;
+  }
+}
+
+/* 직접 다크 모드로 바꿨을 때 */
+:root[data-theme="dark"] {
+  --bg: #1f1c19;
+  --surface: #2a2622;
+  --surface-soft: #34302b;
+  --text: #f1ebe2;
+  --text-soft: #b3a89c;
+  --line: #463f38;
+
+  --pink: #6b3f42;
+  --yellow: #6a5a26;
+  --green: #3f5435;
+  --sky: #34505f;
+  --accent: #e98a90;
+  --accent-text: #1f1c19;
+  --warning-bg: #4a3f22;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--font-size);
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--accent);
+}
+
+/* 화면에는 안 보이고 스크린 리더만 읽는 글 */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* 형광펜 밑줄 강조 */
+.highlight-pink,
+.highlight-green,
+.highlight-yellow,
+.highlight-sky {
+  padding: 0 var(--space-xs);
+  border-radius: var(--radius-s);
+}
+
+.highlight-pink { background: var(--pink); }
+.highlight-green { background: var(--green); }
+.highlight-yellow { background: var(--yellow); }
+.highlight-sky { background: var(--sky); }
+
+/* hidden 속성이 display 지정보다 항상 이기도록 */
+[hidden] {
+  display: none !important;
+}
