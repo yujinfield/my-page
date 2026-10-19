@@ -110,15 +110,36 @@
     <section class="card" aria-labelledby="cuts-title">
       <h2 id="cuts-title" class="card-title"><span class="step-badge">4</span> 컷 <span id="cut-total">0</span>장</h2>
       <div class="row">
-        <button type="button" id="download-all-button" class="button">⬇️ 4:5 전체 내려받기</button>
+        <button type="button" id="download-all-button" class="button">⬇️ 4:5 원본 전체 내려받기</button>
+        <button type="button" id="download-redraws-button" class="button">⬇️ 다시 그린 그림 전체 내려받기</button>
         <button type="button" id="redraw-all-button" class="button button-primary">🎨 전체 다시 그리기</button>
         <button type="button" id="stop-button" class="button" hidden>⏹ 멈추기</button>
       </div>
+      <p class="hint">컷 그림을 누르면 크게 볼 수 있어요.</p>
       <p id="cuts-status" class="status" role="status"></p>
       <div id="cut-list" class="cut-list"></div>
       <p id="cuts-empty" class="empty">이미지를 올리면 컷이 여기에 나와요.</p>
     </section>
   </main>
+
+  <!-- 크게 보기 창 -->
+  <div id="viewer" class="viewer" hidden>
+    <div class="viewer-dialog" role="dialog" aria-modal="true" aria-labelledby="viewer-title">
+      <div class="viewer-head">
+        <h2 id="viewer-title" class="viewer-title"></h2>
+        <button type="button" id="viewer-close" class="icon-button" aria-label="크게 보기 닫기">✕</button>
+      </div>
+      <img id="viewer-image" class="viewer-image" alt="">
+      <div class="row viewer-tools">
+        <button type="button" id="viewer-prev" class="button" aria-label="이전 컷 보기">◀ 이전 컷</button>
+        <button type="button" id="viewer-original" class="button" aria-pressed="true">원본</button>
+        <button type="button" id="viewer-redraw" class="button" aria-pressed="false">다시 그린 그림</button>
+        <button type="button" id="viewer-next" class="button" aria-label="다음 컷 보기">다음 컷 ▶</button>
+        <button type="button" id="viewer-save" class="button button-primary" aria-label="지금 보는 그림 저장">⬇️ 저장</button>
+      </div>
+      <p class="hint">← → 키로 컷을 넘기고 Esc로 닫아요. 아이폰은 그림을 길게 눌러 '사진에 저장'할 수도 있어요.</p>
+    </div>
+  </div>
 
   <script type="module" src="js/app.js"></script>
 </body>

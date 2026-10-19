@@ -11,6 +11,8 @@ import { buildRedrawPrompt, buildRevisePrompt } from './redraw-prompt.js';
 import { generateImage, loadTurnaround, dataUrlToBlob } from './image-gen.js';
 import { setupImageSettings } from './image-settings.js';
 import { setupTheme } from './theme.js';
+import { setupViewer, openViewer } from './viewer.js';
+import { originalFileName, redrawFileName, downloadAllOriginals, downloadAllRedraws } from './downloads.js';
 import { loadDraft, saveDraft, emptyCut, loadImageSettings, saveImageSettings } from './store.js';
 
 const state = {
@@ -30,10 +32,6 @@ const el = {
   stopButton: document.getElementById('stop-button'),
   redrawAllButton: document.getElementById('redraw-all-button'),
 };
-
-function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 // ---------- 컷 계산 ----------
 
@@ -179,7 +177,7 @@ async function drawCut(index, mode, apiKey, signal) {
     const sendTurnaround = style === 'kkomjwi' && useTurnaround;
     if (sendTurnaround) references.push(await loadTurnaround());
     prompt = buildRedrawPrompt({
-      index, total, text: cut.text, memo: cut.memo, style, watermark, useTurnaround: sendTurnaround,
+      index, total, text: cut.text, memo: cut.memo, layout: cut.layout, style, watermark, useTurnaround: sendTurnaround,
     });
   }
 
@@ -255,19 +253,13 @@ async function redrawAll() {
   endWork();
 }
 
-async function downloadAll() {
-  if (!state.image) return;
-  el.cutsStatus.textContent = '내려받는 중… 브라우저가 "여러 파일 내려받기"를 물으면 허용해 주세요.';
-  for (let index = 0; index < state.draft.cuts.length; index += 1) {
-    await downloadCanvas(portraitCut(index), `${cutLabel(index)}.png`);
-    await wait(300);
-  }
-  el.cutsStatus.textContent = `${state.draft.cuts.length}장을 내려받았어요. (1080×1350)`;
-}
-
 const cutHandlers = {
   onText(index, field, value) {
     state.draft.cuts[index][field] = value;
+    saveDraft(state.draft);
+  },
+  onLayout(index, layout) {
+    state.draft.cuts[index].layout = layout;
     saveDraft(state.draft);
   },
   onNudge(index, nudge) {
@@ -277,7 +269,7 @@ const cutHandlers = {
     drawGridPreview(state.image, cutRects());
   },
   onDownload(index) {
-    downloadCanvas(portraitCut(index), `${cutLabel(index)}.png`);
+    downloadCanvas(portraitCut(index), originalFileName(index));
   },
   onRedraw(index) {
     redrawOne(index, 'redraw');
@@ -287,8 +279,10 @@ const cutHandlers = {
   },
   onDownloadRedraw(index) {
     const redraw = state.redraws[index];
-    const version = redraw.images.length > 1 ? `_${redraw.current + 1}` : '';
-    downloadUrl(redraw.images[redraw.current], `${cutLabel(index)}_redraw${version}.png`);
+    downloadUrl(redraw.images[redraw.current], redrawFileName(index, redraw));
+  },
+  onView(index, kind, button) {
+    openViewer(index, kind, button);
   },
   onMoveRedraw(index, step) {
     const redraw = state.redraws[index];
@@ -296,6 +290,25 @@ const cutHandlers = {
     showRedraw(index, redraw);
   },
 };
+
+// ---------- 크게 보기 ----------
+
+// 원본 4:5 그림은 캔버스라서, 크게 볼 때 그림 파일 주소(blob:)로 바꿔 씀
+// (<img>여야 아이폰에서 길게 눌러 '사진에 저장'할 수 있음). 이전 주소는 지워서 메모리를 아낌
+let viewerUrl = '';
+
+async function viewerImage(index, kind) {
+  if (!state.image) return null;
+  if (kind === 'redraw') {
+    const redraw = state.redraws[index];
+    if (!redraw || redraw.images.length === 0) return null;
+    return { url: redraw.images[redraw.current], fileName: redrawFileName(index, redraw) };
+  }
+  const blob = await canvasToBlob(portraitCut(index));
+  if (viewerUrl) URL.revokeObjectURL(viewerUrl);
+  viewerUrl = URL.createObjectURL(blob);
+  return { url: viewerUrl, fileName: originalFileName(index) };
+}
 
 // ---------- 시작 ----------
 
@@ -314,7 +327,18 @@ setupImageSettings(state.settings, (settings) => {
   state.settings = settings;
   saveImageSettings(settings);
 });
-document.getElementById('download-all-button').addEventListener('click', downloadAll);
+setupViewer({
+  getCount: () => state.draft.cuts.length,
+  hasRedraw: (index) => Boolean(state.redraws[index] && state.redraws[index].images.length > 0),
+  getImage: viewerImage,
+});
+const setCutsStatus = (text) => { el.cutsStatus.textContent = text; };
+document.getElementById('download-all-button').addEventListener('click', () => {
+  if (state.image) downloadAllOriginals(state.draft.cuts.length, portraitCut, setCutsStatus);
+});
+document.getElementById('download-redraws-button').addEventListener('click', () => {
+  downloadAllRedraws(state.redraws, setCutsStatus);
+});
 el.redrawAllButton.addEventListener('click', redrawAll);
 el.stopButton.addEventListener('click', () => {
   if (state.controller) state.controller.abort();

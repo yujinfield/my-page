@@ -2,6 +2,7 @@
 // 사용자가 쓴 글은 항상 value / textContent로 넣습니다.
 
 import { cutLabel } from './grid.js';
+import { LAYOUTS } from './redraw-prompt.js';
 
 const NUDGE_SIDES = [
   { key: 'top', label: '위' },
@@ -37,6 +38,18 @@ function makeTextarea(labelText, value, rows, onInput) {
   return { label, textarea };
 }
 
+// 다시 그릴 때 쓸 배치(여백) 고르기
+function makeLayoutSelect(index, cut, onLayout) {
+  const label = make('label', 'field', '다시 그릴 배치 (여백)');
+  const select = document.createElement('select');
+  LAYOUTS.forEach((item) => select.append(new Option(item.label, item.value)));
+  select.value = cut.layout;
+  select.setAttribute('aria-label', `${cutLabel(index)}컷 다시 그릴 배치`);
+  select.addEventListener('change', () => onLayout(index, select.value));
+  label.append(select);
+  return label;
+}
+
 function makeNudgeBox(index, cut, onNudge) {
   const details = make('details', 'nudge');
   details.append(make('summary', '', '위치 미세 조정 (px)'));
@@ -69,11 +82,15 @@ function makeCard(index, cut, handlers) {
 
   const pair = make('div', 'cut-pair');
   const original = make('figure', 'cut-figure');
-  const originalBox = make('div', 'cut-frame');
+  // 그림 칸은 버튼: 누르면 크게 보기
+  const originalBox = makeButton('', `${label}컷 원본 크게 보기`, (event) => handlers.onView(index, 'original', event.currentTarget));
+  originalBox.className = 'cut-frame';
   original.append(originalBox, make('figcaption', '', '원본 (4:5)'));
 
   const redraw = make('figure', 'cut-figure');
-  const redrawBox = make('div', 'cut-frame');
+  const redrawBox = makeButton('', `${label}컷 다시 그린 그림 크게 보기`, (event) => handlers.onView(index, 'redraw', event.currentTarget));
+  redrawBox.className = 'cut-frame';
+  redrawBox.disabled = true;
   const redrawImage = make('img', 'cut-image');
   redrawImage.alt = `${label}컷 다시 그린 그림`;
   redrawImage.hidden = true;
@@ -105,10 +122,10 @@ function makeCard(index, cut, handlers) {
   const status = make('p', 'status');
   status.setAttribute('role', 'status');
 
-  card.append(pair, nav, text.label, memo.label, makeNudgeBox(index, cut, handlers.onNudge), actions, status);
+  card.append(pair, nav, text.label, memo.label, makeLayoutSelect(index, cut, handlers.onLayout), makeNudgeBox(index, cut, handlers.onNudge), actions, status);
 
   return {
-    card, originalBox, redrawImage, redrawEmpty, nav, counter, prevButton, nextButton,
+    card, originalBox, redrawBox, redrawImage, redrawEmpty, nav, counter, prevButton, nextButton,
     textArea: text.textarea, redrawButton, reviseButton, downloadRedrawButton, status,
   };
 }
@@ -140,6 +157,7 @@ export function showRedraw(index, redraw) {
   if (!parts) return;
   const hasImage = redraw && redraw.images.length > 0;
   parts.redrawImage.hidden = !hasImage;
+  parts.redrawBox.disabled = !hasImage;
   parts.redrawEmpty.hidden = hasImage;
   parts.reviseButton.hidden = !hasImage;
   parts.downloadRedrawButton.hidden = !hasImage;
