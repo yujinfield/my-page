@@ -69,11 +69,15 @@ function makeCard(index, cut, handlers) {
 
   const pair = make('div', 'cut-pair');
   const original = make('figure', 'cut-figure');
-  const originalBox = make('div', 'cut-frame');
+  // 그림 칸은 버튼: 누르면 크게 보기
+  const originalBox = makeButton('', `${label}컷 원본 크게 보기`, (event) => handlers.onView(index, 'original', event.currentTarget));
+  originalBox.className = 'cut-frame';
   original.append(originalBox, make('figcaption', '', '원본 (4:5)'));
 
   const redraw = make('figure', 'cut-figure');
-  const redrawBox = make('div', 'cut-frame');
+  const redrawBox = makeButton('', `${label}컷 다시 그린 그림 크게 보기`, (event) => handlers.onView(index, 'redraw', event.currentTarget));
+  redrawBox.className = 'cut-frame';
+  redrawBox.disabled = true;
   const redrawImage = make('img', 'cut-image');
   redrawImage.alt = `${label}컷 다시 그린 그림`;
   redrawImage.hidden = true;
@@ -108,7 +112,7 @@ function makeCard(index, cut, handlers) {
   card.append(pair, nav, text.label, memo.label, makeNudgeBox(index, cut, handlers.onNudge), actions, status);
 
   return {
-    card, originalBox, redrawImage, redrawEmpty, nav, counter, prevButton, nextButton,
+    card, originalBox, redrawBox, redrawImage, redrawEmpty, nav, counter, prevButton, nextButton,
     textArea: text.textarea, redrawButton, reviseButton, downloadRedrawButton, status,
   };
 }
@@ -140,6 +144,7 @@ export function showRedraw(index, redraw) {
   if (!parts) return;
   const hasImage = redraw && redraw.images.length > 0;
   parts.redrawImage.hidden = !hasImage;
+  parts.redrawBox.disabled = !hasImage;
   parts.redrawEmpty.hidden = hasImage;
   parts.reviseButton.hidden = !hasImage;
   parts.downloadRedrawButton.hidden = !hasImage;

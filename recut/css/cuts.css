@@ -105,3 +105,92 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* 그림 칸은 누르면 크게 보는 버튼 */
+button.cut-frame {
+  width: 100%;
+  padding: 0;
+  border: none;
+  font: inherit;
+  color: inherit;
+  cursor: zoom-in;
+}
+
+button.cut-frame:disabled {
+  cursor: default;
+}
+
+button.cut-frame:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 크게 보기 창 */
+.viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-m);
+  background: var(--overlay);
+}
+
+.viewer-dialog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-s);
+  width: 100%;
+  max-width: 720px;
+  max-height: 100%;
+  padding: var(--space-m);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  text-align: center;
+}
+
+.viewer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.viewer-title {
+  font-size: 18px;
+}
+
+.viewer-image {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 260px);
+  min-height: 0;
+  border-radius: var(--radius-s);
+  background: var(--surface-soft);
+  object-fit: contain;
+}
+
+.viewer-tools {
+  justify-content: center;
+}
+
+.viewer-tools .button[aria-pressed="true"] {
+  background: var(--pink);
+}
+
+/* 창이 열려 있을 때 뒤 페이지 스크롤 막기 */
+body.is-modal-open {
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .viewer {
+    padding: var(--space-s);
+  }
+
+  .viewer-image {
+    max-height: calc(100vh - 300px);
+  }
+}
