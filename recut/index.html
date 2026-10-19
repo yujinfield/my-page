@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 보안: 이 사이트의 스크립트만 실행하고, 외부 연결은 OpenAI 이미지 API만 허용 -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://api.openai.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>꼼쥐 리컷</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/cuts.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="app-watermark">@꼼쥐</p>
+      <h1 class="app-title">꼼쥐 리컷</h1>
+      <p class="app-subtitle">여러 컷이 모인 이미지를 한 컷씩 잘라 <span class="highlight-pink">4:5 인스타툰</span>으로 다시 그려요.</p>
+    </div>
+    <button type="button" id="theme-button" class="icon-button" aria-label="다크 모드 전환">🌙</button>
+  </header>
+
+  <main class="app-main">
+    <!-- ① 이미지 올리기 -->
+    <section class="card" aria-labelledby="upload-title">
+      <h2 id="upload-title" class="card-title"><span class="step-badge">1</span> 이미지 올리기</h2>
+      <div id="drop-zone" class="drop-zone">
+        <p>여기에 이미지를 끌어다 놓거나</p>
+        <label class="button button-primary">
+          파일 고르기
+          <input type="file" id="file-input" class="visually-hidden" accept="image/png,image/jpeg,image/webp">
+        </label>
+      </div>
+      <div class="row">
+        <button type="button" id="sample-button" class="button">예시 불러오기: 웨딩 촬영 네일 (12컷)</button>
+        <span class="hint">어떤 컷 묶음 이미지든 돼요 (행·열은 2단계에서 바꿔요).</span>
+      </div>
+      <p id="upload-status" class="status" role="status"></p>
+    </section>
+
+    <!-- ② 격자 맞추기 -->
+    <section class="card" aria-labelledby="grid-title">
+      <h2 id="grid-title" class="card-title"><span class="step-badge">2</span> 격자 맞추기</h2>
+      <p class="help">원본 위의 빨간 선이 컷 경계에 맞도록 조정하세요. 컷 번호는 왼쪽 → 오른쪽, 위 → 아래 순서예요.</p>
+      <div class="field-row">
+        <label class="field">행 (가로줄 수)<input type="number" id="grid-rows" min="1" max="10"></label>
+        <label class="field">열 (세로줄 수)<input type="number" id="grid-cols" min="1" max="10"></label>
+        <label class="field">바깥 여백 (px)<input type="number" id="grid-margin" min="0" max="500"></label>
+        <label class="field">컷 사이 간격 (px)<input type="number" id="grid-gap" min="0" max="200"></label>
+      </div>
+      <div class="row">
+        <button type="button" id="auto-grid-button" class="button" aria-label="컷 사이 밝은 간격을 찾아 경계선 자동 맞추기">🔍 자동 맞추기</button>
+        <button type="button" id="even-grid-button" class="button" aria-label="경계선을 균등 분할로 되돌리기">균등 분할로 되돌리기</button>
+        <span id="grid-mode" class="hint"></span>
+      </div>
+      <fieldset class="fit-mode">
+        <legend>4:5로 맞추는 방법</legend>
+        <label><input type="radio" name="fit-mode" value="fit"> 컷 전체 보이기 (남는 곳은 아이보리)</label>
+        <label><input type="radio" name="fit-mode" value="fill"> 꽉 채우기 (넘치는 곳 잘라 냄)</label>
+      </fieldset>
+      <div class="preview-wrap">
+        <canvas id="grid-preview" class="grid-preview" aria-label="원본 이미지와 자르는 선 미리보기"></canvas>
+        <p id="grid-empty" class="empty">이미지를 올리면 여기에 자르는 선이 보여요.</p>
+      </div>
+    </section>
+
+    <!-- ③ GPT 설정 -->
+    <section class="card" aria-labelledby="gpt-title">
+      <h2 id="gpt-title" class="card-title"><span class="step-badge">3</span> GPT 그림 설정</h2>
+      <p class="help">다시 그리기는 OpenAI 이미지 API를 써요 (그림마다 비용). 공용 링크나 내 컴퓨터(localhost)에서 열었을 때 동작해요.</p>
+
+      <div id="key-new" class="key-box" hidden>
+        <label class="field">OpenAI API 키<input type="password" id="key-input" autocomplete="off" placeholder="sk-..."></label>
+        <label class="field">잠금 비밀번호 (이 기기에 암호화해서 저장할 때)<input type="password" id="key-pass" autocomplete="new-password"></label>
+        <div class="row">
+          <button type="button" id="key-save-button" class="button button-primary">🔒 잠가서 저장</button>
+          <button type="button" id="key-once-button" class="button">이번만 쓰기</button>
+        </div>
+      </div>
+      <div id="key-locked" class="key-box" hidden>
+        <label class="field">잠금 비밀번호<input type="password" id="unlock-pass" autocomplete="current-password"></label>
+        <div class="row">
+          <button type="button" id="unlock-button" class="button button-primary">🔓 잠금 풀기</button>
+          <button type="button" id="forget-button" class="button">저장된 키 지우기</button>
+        </div>
+      </div>
+      <div id="key-ready" class="key-box" hidden>
+        <p>사용 중인 키: <strong id="key-masked"></strong> (30분 동안 안 쓰면 자동으로 잠겨요)</p>
+        <div class="row">
+          <button type="button" id="lock-button" class="button">잠그기</button>
+        </div>
+      </div>
+      <p id="key-status" class="status" role="status"></p>
+
+      <div class="field-row">
+        <label class="field">그림 모델<select id="image-model"></select></label>
+        <label class="field" id="custom-model-field">모델 이름 직접 입력<input type="text" id="custom-model" autocomplete="off"></label>
+        <label class="field">크기<select id="image-size"></select></label>
+        <label class="field">품질<select id="image-quality"></select></label>
+      </div>
+      <div class="field-row">
+        <label class="field">그림 스타일<select id="redraw-style"></select></label>
+        <label class="field" id="watermark-field">워터마크 (위쪽 가운데, 비우면 없음)<input type="text" id="watermark" autocomplete="off" placeholder="@내계정"></label>
+      </div>
+      <label class="check" id="turnaround-field"><input type="checkbox" id="use-turnaround"> 꼼쥐 턴어라운드를 참고 이미지로 함께 보내기 (외형 유지)</label>
+    </section>
+
+    <!-- ④ 컷 목록 -->
+    <section class="card" aria-labelledby="cuts-title">
+      <h2 id="cuts-title" class="card-title"><span class="step-badge">4</span> 컷 <span id="cut-total">0</span>장</h2>
+      <div class="row">
+        <button type="button" id="download-all-button" class="button">⬇️ 4:5 전체 내려받기</button>
+        <button type="button" id="redraw-all-button" class="button button-primary">🎨 전체 다시 그리기</button>
+        <button type="button" id="stop-button" class="button" hidden>⏹ 멈추기</button>
+      </div>
+      <p id="cuts-status" class="status" role="status"></p>
+      <div id="cut-list" class="cut-list"></div>
+      <p id="cuts-empty" class="empty">이미지를 올리면 컷이 여기에 나와요.</p>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

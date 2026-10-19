@@ -1,0 +1,107 @@
+/* 컷 카드: 원본 4:5 미리보기 + 다시 그린 그림, 글 칸, 버튼 */
+
+.cut-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-m);
+}
+
+.cut-list:empty {
+  display: none;
+}
+
+.cut-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  padding: var(--space-m);
+  border-radius: var(--radius-m);
+  background: var(--surface-soft);
+}
+
+.cut-card.is-busy {
+  background: var(--yellow);
+}
+
+.cut-title {
+  font-size: 18px;
+}
+
+.cut-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-s);
+}
+
+.cut-figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--text-soft);
+  text-align: center;
+}
+
+/* 4:5 상자 */
+.cut-frame {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--radius-s);
+  background: var(--surface);
+}
+
+.cut-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.cut-placeholder {
+  padding: var(--space-s);
+  font-size: var(--font-size-small);
+}
+
+.redraw-nav {
+  justify-content: center;
+}
+
+.nudge summary {
+  cursor: pointer;
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+}
+
+.nudge-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-s);
+  margin-top: var(--space-s);
+}
+
+.cut-card .field input,
+.cut-card .field textarea {
+  background: var(--surface);
+}
+
+.cut-card .row .button {
+  background: var(--surface);
+}
+
+.cut-card .row .button-primary {
+  background: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .cut-list {
+    grid-template-columns: 1fr;
+  }
+
+  .nudge-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
