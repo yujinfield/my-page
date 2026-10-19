@@ -2,6 +2,7 @@
 // 사용자가 쓴 글은 항상 value / textContent로 넣습니다.
 
 import { cutLabel } from './grid.js';
+import { LAYOUTS } from './redraw-prompt.js';
 
 const NUDGE_SIDES = [
   { key: 'top', label: '위' },
@@ -35,6 +36,18 @@ function makeTextarea(labelText, value, rows, onInput) {
   textarea.addEventListener('input', () => onInput(textarea.value));
   label.append(textarea);
   return { label, textarea };
+}
+
+// 다시 그릴 때 쓸 배치(여백) 고르기
+function makeLayoutSelect(index, cut, onLayout) {
+  const label = make('label', 'field', '다시 그릴 배치 (여백)');
+  const select = document.createElement('select');
+  LAYOUTS.forEach((item) => select.append(new Option(item.label, item.value)));
+  select.value = cut.layout;
+  select.setAttribute('aria-label', `${cutLabel(index)}컷 다시 그릴 배치`);
+  select.addEventListener('change', () => onLayout(index, select.value));
+  label.append(select);
+  return label;
 }
 
 function makeNudgeBox(index, cut, onNudge) {
@@ -109,7 +122,7 @@ function makeCard(index, cut, handlers) {
   const status = make('p', 'status');
   status.setAttribute('role', 'status');
 
-  card.append(pair, nav, text.label, memo.label, makeNudgeBox(index, cut, handlers.onNudge), actions, status);
+  card.append(pair, nav, text.label, memo.label, makeLayoutSelect(index, cut, handlers.onLayout), makeNudgeBox(index, cut, handlers.onNudge), actions, status);
 
   return {
     card, originalBox, redrawBox, redrawImage, redrawEmpty, nav, counter, prevButton, nextButton,

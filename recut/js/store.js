@@ -4,6 +4,7 @@
 
 import { normalizeGrid, normalizeNudge } from './grid.js';
 import { normalizeImageSettings } from './image-gen.js';
+import { LAYOUTS } from './redraw-prompt.js';
 
 const DRAFT_KEY = 'recut-draft';
 const SETTINGS_KEY = 'recut-image-settings';
@@ -34,6 +35,7 @@ function normalizeCut(saved) {
     nudge: normalizeNudge(saved && saved.nudge),
     text: saved && typeof saved.text === 'string' ? saved.text : '',
     memo: saved && typeof saved.memo === 'string' ? saved.memo : '',
+    layout: saved && LAYOUTS.some((item) => item.value === saved.layout) ? saved.layout : 'auto',
   };
 }
 

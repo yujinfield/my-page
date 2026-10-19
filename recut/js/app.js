@@ -177,7 +177,7 @@ async function drawCut(index, mode, apiKey, signal) {
     const sendTurnaround = style === 'kkomjwi' && useTurnaround;
     if (sendTurnaround) references.push(await loadTurnaround());
     prompt = buildRedrawPrompt({
-      index, total, text: cut.text, memo: cut.memo, style, watermark, useTurnaround: sendTurnaround,
+      index, total, text: cut.text, memo: cut.memo, layout: cut.layout, style, watermark, useTurnaround: sendTurnaround,
     });
   }
 
@@ -256,6 +256,10 @@ async function redrawAll() {
 const cutHandlers = {
   onText(index, field, value) {
     state.draft.cuts[index][field] = value;
+    saveDraft(state.draft);
+  },
+  onLayout(index, layout) {
+    state.draft.cuts[index].layout = layout;
     saveDraft(state.draft);
   },
   onNudge(index, nudge) {
