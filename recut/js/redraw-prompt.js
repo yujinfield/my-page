@@ -39,7 +39,7 @@ function fixedRules(watermark) {
 }
 
 // 템플릿별 배치·여백 (1080×1350 기준)
-// @꼼쥐 레퍼런스 5장(1122×1402)에서 잉크(선·글자)가 닿는 범위를 재서 1080×1350으로 줄인 값입니다.
+// @꼼쥐 레퍼런스(1122×1402)에서 잉크(선·글자)가 닿는 범위를 재서 1080×1350으로 줄인 값입니다.
 // 퍼센트는 그림 높이(세로)·폭(가로) 기준. 꼼쥐가 아닌 그림에도 같은 여백을 씁니다.
 export const LAYOUTS = [
   { value: 'auto', label: '자동 (컷 내용의 "컷 유형:" 줄을 보고 고름)' },
@@ -56,13 +56,12 @@ export const LAYOUTS = [
   {
     value: 'info',
     label: '정보형',
-    prompt: `Information page layout (spacing measured from our info reference, 1080x1350):
-- Watermark at 4-6.5% height (about y 55-90px).
-- Small label chip (like "첫째,") and a big bold title from 8% to 22% height.
-- 1-2 lines of explanation from 24% to 31% height, centered.
-- Main illustration from 33% to 69% height.
-- Bottom summary box from 72% to 95% height: rounded pale box, almost full width (side margins about 35px), containing a one-line summary and 2-3 small items.
-- Text and drawings keep about 50px from the left and right edges, and at least 50px from the bottom edge.`,
+    prompt: `Information page layout (spacing measured from our info references, 1080x1350):
+- Watermark at 4-7% height (about y 57-93px). Then empty space until 20%.
+- The key message as big bold plain text (no bubble, no box), centered, 2 short lines from 20% to 38% height. Text width only about 55-60% of the page (about 220px empty on each side).
+- Calm empty gap from 38% to about 45%.
+- Character(s) on a soft ground shadow from about 45% to 95% height, with 1-2 small speech bubbles beside or above them for short dialogue.
+- Keep about 50px empty margin at left and right (up to 95px on the side without a bubble) and 45-80px at the bottom. Lots of calm empty space; nothing touches the edges.`,
   },
   {
     value: 'story',
