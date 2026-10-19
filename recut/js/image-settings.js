@@ -1,4 +1,4 @@
-// ③ GPT 그림 설정 화면: 모델·크기·품질·스타일·워터마크·턴어라운드
+// ③ GPT 그림 설정 화면: 모델·크기·품질·스타일·워터마크·캐릭터 이미지 보내기
 
 import { IMAGE_MODELS, IMAGE_SIZES, IMAGE_QUALITIES } from './image-gen.js';
 import { STYLES } from './redraw-prompt.js';
@@ -15,8 +15,7 @@ export function setupImageSettings(initial, onChange) {
   const customModel = document.getElementById('custom-model');
   const size = document.getElementById('image-size');
   const quality = document.getElementById('image-quality');
-  const turnaround = document.getElementById('use-turnaround');
-  const turnaroundField = document.getElementById('turnaround-field');
+  const useCharacter = document.getElementById('use-character');
   const style = document.getElementById('redraw-style');
   const watermark = document.getElementById('watermark');
   const watermarkField = document.getElementById('watermark-field');
@@ -27,12 +26,11 @@ export function setupImageSettings(initial, onChange) {
   customModel.value = initial.customModel;
   fillSelect(style, STYLES, initial.style);
   watermark.value = initial.watermark;
-  turnaround.checked = initial.useTurnaround;
+  useCharacter.checked = initial.useCharacterImage;
 
   // 고른 값에 따라 필요한 칸만 보이기 (꼼쥐툰 스타일은 워터마크가 '@꼼쥐'로 정해져 있음)
   function updateFields() {
     customField.hidden = model.value !== 'custom';
-    turnaroundField.hidden = style.value !== 'kkomjwi';
     watermarkField.hidden = style.value === 'kkomjwi';
   }
   updateFields();
@@ -45,10 +43,10 @@ export function setupImageSettings(initial, onChange) {
       quality: quality.value,
       style: style.value,
       watermark: watermark.value.trim(),
-      useTurnaround: turnaround.checked,
+      useCharacterImage: useCharacter.checked,
     };
     updateFields();
     onChange(settings);
   }
-  [model, customModel, size, quality, style, watermark, turnaround].forEach((input) => input.addEventListener('change', save));
+  [model, customModel, size, quality, style, watermark, useCharacter].forEach((input) => input.addEventListener('change', save));
 }

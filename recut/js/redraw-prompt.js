@@ -23,8 +23,9 @@ not perfectly symmetric
 
 The squirrel has NO mouth: keep the black dot eyes, pink blush cheeks, round ears, swirl tail and hand-drawn outline.`;
 
-const TURNAROUND_RULE = `The second reference image is the official character sheet (꼼쥐_턴어라운드.png).
-Keep the squirrel exactly like it (same face shape, ears, eyes, blush, body and swirl tail proportions); change only the expression and pose.`;
+// 캐릭터 참고 이미지(올린 캐릭터 시트 또는 기본 꼼쥐 턴어라운드)를 보낼 때
+const CHARACTER_RULE = `The second reference image is the official character sheet.
+Keep every character that appears in it exactly like it (same face shape, ears, eyes, colors, body and tail proportions, outline style); change only the expression and pose.`;
 
 // 공통 고정 조건 (한 장짜리 4:5)
 function fixedRules(watermark) {
@@ -120,9 +121,9 @@ function memoPart(memo) {
 }
 
 // 원본 컷 → 4:5 한 장으로 다시 그리기
-// 참고 이미지: ① 잘라 낸 원본 컷 ② (꼼쥐툰 스타일 + useTurnaround면) 꼼쥐 턴어라운드
+// 참고 이미지: ① 잘라 낸 원본 컷 ② (useCharacterImage면) 캐릭터 참고 이미지
 export function buildRedrawPrompt({
-  index, total, text = '', memo = '', layout = 'auto', style = 'original', watermark = '', useTurnaround = false,
+  index, total, text = '', memo = '', layout = 'auto', style = 'original', watermark = '', useCharacterImage = false,
 }) {
   const isKkomjwi = style === 'kkomjwi';
   const parts = [
@@ -134,7 +135,7 @@ Keep the same content, scene, props, characters, expressions and reading order. 
     layoutPart(resolveLayout(layout, text)),
     textPart(text),
     memoPart(memo),
-    isKkomjwi && useTurnaround ? TURNAROUND_RULE : '',
+    useCharacterImage ? CHARACTER_RULE : '',
     fixedRules(isKkomjwi ? '@꼼쥐' : watermark),
   ];
   return parts.filter(Boolean).join('\n\n');

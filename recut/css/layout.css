@@ -245,3 +245,33 @@ select {
     padding: var(--space-m);
   }
 }
+
+/* ③ 캐릭터 참고 이미지 */
+.character-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  padding: var(--space-m);
+  border-radius: var(--radius-s);
+  background: var(--surface-soft);
+}
+
+.field-title {
+  font-weight: bold;
+}
+
+.character-preview {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  object-fit: contain;
+}
+
+.character-box label.button {
+  cursor: pointer;
+}
+
+.character-box .button {
+  background: var(--surface);
+}

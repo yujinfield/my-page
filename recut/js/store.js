@@ -10,6 +10,7 @@ const DRAFT_KEY = 'recut-draft';
 const SETTINGS_KEY = 'recut-image-settings';
 const LOCKED_KEY = 'recut-image-key-locked';
 const THEME_KEY = 'recut-theme';
+const CHARACTER_KEY = 'recut-character-image';
 
 const DRAFT_VERSION = 1;
 
@@ -22,11 +23,13 @@ function readJson(key) {
   }
 }
 
+// 저장되면 true. 저장 공간이 없거나 비공개 모드면 false (화면은 그대로 동작)
 function writeJson(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    return true;
   } catch (error) {
-    // 저장 공간이 없거나 비공개 모드면 저장만 건너뜀 (화면은 그대로 동작)
+    return false;
   }
 }
 
@@ -79,6 +82,24 @@ export function saveLockedKey(record) {
 export function clearLockedKey() {
   try {
     localStorage.removeItem(LOCKED_KEY);
+  } catch (error) {
+    // 지울 수 없으면 그냥 둠
+  }
+}
+
+// 캐릭터 참고 이미지 ('data:image/jpeg;base64,...', 긴 쪽 1024px로 줄인 것)
+export function loadCharacterImage() {
+  const saved = readJson(CHARACTER_KEY);
+  return typeof saved === 'string' && saved.startsWith('data:image/') ? saved : '';
+}
+
+export function saveCharacterImage(dataUrl) {
+  return writeJson(CHARACTER_KEY, dataUrl);
+}
+
+export function clearCharacterImage() {
+  try {
+    localStorage.removeItem(CHARACTER_KEY);
   } catch (error) {
     // 지울 수 없으면 그냥 둠
   }
