@@ -1,0 +1,138 @@
+/* 색상·간격·폰트 변수, 리셋, 다크 모드 */
+
+:root {
+  --bg: #f6f5f2;
+  --surface: #ffffff;
+  --surface-soft: #efede8;
+  --text: #2a2826;
+  --text-soft: #7a756f;
+  --line: #e4e1db;
+
+  --accent: #dd4c4f;
+  --accent-text: #ffffff;
+  --good: #2e8b57;
+  --bad: #dd4c4f;
+  --highlight: #fbeaea;
+
+  /* 그래프 색 (색약도 구분되도록 검증한 순서, 바꾸지 않기) */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #6250d6;
+  --series-plan: #b9b4ad;
+
+  --space-xs: 4px;
+  --space-s: 8px;
+  --space-m: 16px;
+  --space-l: 24px;
+  --space-xl: 40px;
+
+  --radius-s: 8px;
+  --radius-m: 16px;
+  --radius-l: 24px;
+
+  --font: "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --font-size: 16px;
+  --font-size-small: 14px;
+  --font-size-title: 26px;
+
+  --content-width: 1180px;
+}
+
+/* 시스템이 다크 모드이고, 직접 라이트로 고르지 않았을 때 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1c1b1a;
+    --surface: #262524;
+    --surface-soft: #31302e;
+    --text: #eeebe6;
+    --text-soft: #a8a29b;
+    --line: #3d3b38;
+
+    --accent: #ec6f71;
+    --accent-text: #1c1b1a;
+    --good: #5cc28a;
+    --bad: #ec6f71;
+    --highlight: #3a2a2a;
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-plan: #6b6762;
+  }
+}
+
+/* 직접 다크 모드로 바꿨을 때 */
+:root[data-theme="dark"] {
+  --bg: #1c1b1a;
+  --surface: #262524;
+  --surface-soft: #31302e;
+  --text: #eeebe6;
+  --text-soft: #a8a29b;
+  --line: #3d3b38;
+
+  --accent: #ec6f71;
+  --accent-text: #1c1b1a;
+  --good: #5cc28a;
+  --bad: #ec6f71;
+  --highlight: #3a2a2a;
+
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-plan: #6b6762;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--font-size);
+  line-height: 1.6;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+/* 화면에는 안 보이고 스크린 리더만 읽는 것 */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* hidden 속성이 display 지정보다 항상 이기도록 */
+[hidden] {
+  display: none !important;
+}

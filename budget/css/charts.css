@@ -1,0 +1,150 @@
+/* 그래프: 원형(도넛), 가로 막대, 범례 */
+
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-m);
+}
+
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-m);
+  border-radius: var(--radius-s);
+  background: var(--surface-soft);
+}
+
+.chart-wide {
+  grid-column: 1 / -1;
+}
+
+.chart-title {
+  font-weight: 700;
+}
+
+.chart-empty {
+  justify-content: center;
+  min-height: 160px;
+  color: var(--text-soft);
+  text-align: center;
+}
+
+.chart-warning {
+  grid-column: 1 / -1;
+}
+
+/* 도넛 */
+.donut-ring {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  margin: 0 auto;
+}
+
+.donut-ring svg {
+  width: 100%;
+  height: 100%;
+}
+
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-center span {
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+}
+
+/* 범례: 색 / 이름 / 금액 / 비율 */
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-small);
+}
+
+.legend li {
+  display: grid;
+  grid-template-columns: 12px 1fr auto 3em;
+  align-items: center;
+  gap: var(--space-s);
+}
+
+.legend-value,
+.legend-percent {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.legend-percent {
+  color: var(--text-soft);
+}
+
+.legend-inline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-m);
+}
+
+.legend-inline li {
+  display: flex;
+}
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* 가로 막대 */
+.bar-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 5.5em 1fr;
+  align-items: center;
+  gap: var(--space-s);
+  font-size: var(--font-size-small);
+}
+
+.bar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bar-line {
+  display: grid;
+  grid-template-columns: 1fr 4.5em;
+  align-items: center;
+  gap: var(--space-s);
+}
+
+.bar-track {
+  height: 10px;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+}
+
+.bar-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
