@@ -174,28 +174,142 @@ select.cell-input {
   outline-offset: 2px;
 }
 
-/* ── 휴대폰: 월 가계부 표를 항목마다 카드로 ──
-   ┌ 구분   공동 ☐   ✕ ┐
-   │ 항목 이름          │
-   │ 유진  남편         │  ← 개인 항목만 (공동이면 줄 없음)
-   │ 예상  실제  차이   │
-   └ 메모              ┘ */
+/* ── 휴대폰: 표를 줄마다 카드로 (월 가계부·공동통장·큰돈 캘린더) ──
+   칸마다 data-area(자리 이름)와 data-label(이름표)을 붙여 두고 (cells.js의 areaCell)
+   표마다 grid-template-areas로 카드 안 배치를 정합니다. */
 @media (max-width: 768px) {
-  /* 평소엔 입력칸을 숨기고, "수정하기"를 눌렀을 때만 보여 줌 */
+  /* 월 가계부: 평소엔 입력칸을 숨기고, "수정하기"를 눌렀을 때만 보여 줌 */
   .plan-editor:not(.is-open) {
     display: none;
   }
 
-  .plan-table {
+  /* ── 카드 공통 ── */
+  .card-table {
     min-width: 0;
   }
 
-  .plan-table,
-  .plan-table thead,
-  .plan-table tbody,
-  .plan-table tfoot {
+  .card-table,
+  .card-table thead,
+  .card-table tbody,
+  .card-table tfoot {
     display: block;
   }
+
+  .card-table thead th {
+    display: none;
+  }
+
+  .card-table tbody tr,
+  .card-table tfoot tr {
+    display: grid;
+    gap: 2px var(--space-s);
+    margin-bottom: var(--space-s);
+    padding: var(--space-s);
+    border-radius: var(--radius-s);
+    background: var(--surface-soft);
+  }
+
+  .card-table tr.kind-income,
+  .card-table tr.kind-saving,
+  .card-table tr.current-month,
+  .card-table tfoot tr.total-row {
+    background: var(--highlight);
+  }
+
+  /* 카드 안 칸은 배경·선 없이 (표의 구분선·줄 배경 규칙보다 우선하도록 길게 씀) */
+  .budget-table.card-table tbody tr td,
+  .budget-table.card-table tbody tr.group-start td,
+  .budget-table.card-table tfoot tr td {
+    padding: 0;
+    border-top: none;
+    background: transparent;
+  }
+
+  .card-table td {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .card-table td[data-area="rest"] {
+    display: none;
+  }
+
+  .card-table td[data-area="delete"] {
+    align-items: flex-end;
+  }
+
+  /* 칸 이름표 (유진, 예상, 총 입금 …) */
+  .card-table td[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    color: var(--text-soft);
+    font-size: 12px;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .card-table td.num {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .card-table .cell-amount {
+    width: 100%;
+    background: var(--surface);
+  }
+
+  .card-table .cell-amount:disabled {
+    background: transparent;
+  }
+
+  .card-table td[data-area="name"] .cell-input {
+    font-weight: 700;
+  }
+
+  .card-table .computed {
+    padding: var(--space-xs) var(--space-s);
+  }
+
+  .card-table tfoot td.num {
+    padding-right: var(--space-s);
+  }
+
+  /* 글 입력칸(메모 등)은 이름표 옆에 한 줄로 */
+  .card-table td[data-area="note"],
+  .card-table td[data-area="method"] {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  /* 자리 이름 → 카드 안 위치 */
+  .card-table td[data-area="group"] { grid-area: group; }
+  .card-table td[data-area="name"] { grid-area: name; }
+  .card-table td[data-area="a"] { grid-area: a; }
+  .card-table td[data-area="b"] { grid-area: b; }
+  .card-table td[data-area="joint"] { grid-area: joint; }
+  .card-table td[data-area="plan"] { grid-area: plan; }
+  .card-table td[data-area="actual"] { grid-area: actual; }
+  .card-table td[data-area="diff"] { grid-area: diff; }
+  .card-table td[data-area="note"] { grid-area: note; }
+  .card-table td[data-area="delete"] { grid-area: delete; }
+  .card-table td[data-area="month"] { grid-area: month; }
+  .card-table td[data-area="budget"] { grid-area: budget; }
+  .card-table td[data-area="total"] { grid-area: total; }
+  .card-table td[data-area="spent"] { grid-area: spent; }
+  .card-table td[data-area="balance"] { grid-area: balance; }
+  .card-table td[data-area="carry"] { grid-area: carry; }
+  .card-table td[data-area="expected"] { grid-area: expected; }
+  .card-table td[data-area="confirmed"] { grid-area: confirmed; }
+  .card-table td[data-area="method"] { grid-area: method; }
+
+  /* ── ① 월 가계부 ──
+     ┌ 구분   공동 ☐   ✕ ┐
+     │ 항목 이름          │
+     │ 유진  남편         │  ← 개인 항목만 (공동이면 줄 없음)
+     │ 예상  실제  차이   │
+     └ 메모              ┘ */
 
   /* 머리줄은 ＋ 버튼만 오른쪽 위에 */
   .plan-table thead tr {
@@ -203,17 +317,11 @@ select.cell-input {
     justify-content: flex-end;
   }
 
-  .plan-table thead th {
-    display: none;
-  }
-
   .plan-table thead th:last-child {
     display: block;
   }
 
-  .plan-table tbody tr,
-  .plan-table tfoot tr {
-    display: grid;
+  .plan-table tbody tr {
     grid-template-columns: repeat(3, 1fr);
     grid-template-areas:
       "group joint delete"
@@ -221,11 +329,6 @@ select.cell-input {
       "a b ."
       "plan actual diff"
       "note note note";
-    gap: 2px var(--space-s);
-    margin-bottom: var(--space-s);
-    padding: var(--space-s);
-    border-radius: var(--radius-s);
-    background: var(--surface-soft);
   }
 
   .plan-table tbody tr.is-joint {
@@ -237,56 +340,16 @@ select.cell-input {
   }
 
   .plan-table tr.is-joint td[data-area="a"],
-  .plan-table tr.is-joint td[data-area="b"],
-  .plan-table td[data-area="rest"] {
+  .plan-table tr.is-joint td[data-area="b"] {
     display: none;
   }
 
-  .plan-table tr.kind-income,
-  .plan-table tr.kind-saving,
-  .plan-table tfoot tr.total-row {
-    background: var(--highlight);
-  }
-
-  /* 카드 안 칸은 배경·선 없이 (표의 구분선·줄 배경 규칙보다 우선하도록 길게 씀) */
-  .budget-table.plan-table tbody tr td,
-  .budget-table.plan-table tbody tr.group-start td,
-  .budget-table.plan-table tfoot tr td {
-    padding: 0;
-    border-top: none;
-    background: transparent;
-  }
-
-  .plan-table td {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-  }
-
-  .plan-table td[data-area="group"] { grid-area: group; }
-  .plan-table td[data-area="name"] { grid-area: name; }
-  .plan-table td[data-area="a"] { grid-area: a; }
-  .plan-table td[data-area="b"] { grid-area: b; }
-  .plan-table td[data-area="joint"] { grid-area: joint; }
-  .plan-table td[data-area="plan"] { grid-area: plan; }
-  .plan-table td[data-area="actual"] { grid-area: actual; }
-  .plan-table td[data-area="diff"] { grid-area: diff; }
-  .plan-table td[data-area="note"] { grid-area: note; }
-  .plan-table td[data-area="delete"] { grid-area: delete; align-items: flex-end; }
-
-  /* 칸 이름표 (유진, 남편, 예상 …) */
-  .plan-table td[data-label]::before {
-    content: attr(data-label);
-    flex-shrink: 0;
-    color: var(--text-soft);
-    font-size: 12px;
-    font-weight: 400;
-    white-space: nowrap;
-  }
-
-  .plan-table td.num {
-    align-items: flex-end;
-    text-align: right;
+  /* 합계 카드는 이름 + 숫자 한 줄 */
+  .plan-table tfoot tr {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-areas:
+      "name name name"
+      "plan actual diff";
   }
 
   /* 공동: 이름표와 체크칸을 한 줄로 */
@@ -297,38 +360,49 @@ select.cell-input {
     gap: var(--space-xs);
   }
 
-  .plan-table .cell-amount {
-    width: 100%;
-    background: var(--surface);
+  /* ── ② 공동통장 ──
+     ┌ 2026.10      누적 이월 ┐
+     │ 유진 입금  남편 입금  총 입금 │
+     └ 공동 예산  실제 지출  잔액   ┘ */
+  .joint-table tbody tr {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-areas:
+      "month month carry"
+      "a b total"
+      "budget spent balance";
   }
 
-  .plan-table .cell-amount:disabled {
-    background: transparent;
-  }
-
-  .plan-table td[data-area="name"] .cell-input {
+  .joint-table td[data-area="month"] {
+    justify-content: center;
+    font-size: 18px;
     font-weight: 700;
   }
 
-  /* 메모는 이름표 옆에 한 줄로 */
-  .plan-table td[data-area="note"] {
-    flex-direction: row;
-    align-items: center;
-    gap: var(--space-xs);
-  }
-
-  .plan-table .computed {
-    padding: var(--space-xs) var(--space-s);
-  }
-
-  /* 합계 카드는 이름 + 숫자 한 줄 */
-  .plan-table tfoot tr {
+  /* ── ③ 큰돈 캘린더 ──
+     ┌ 월            ✕ ┐
+     │ 이벤트          │
+     │ 예상  확정       │
+     │ 마련 방법        │
+     └ 잔액/비고        ┘ */
+  .events-table tbody tr {
+    grid-template-columns: 1fr 1fr;
     grid-template-areas:
-      "name name name"
-      "plan actual diff";
+      "month delete"
+      "name name"
+      "expected confirmed"
+      "method method"
+      "note note";
   }
 
-  .plan-table tfoot td.num {
-    padding-right: var(--space-s);
+  .events-table tfoot tr {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "name name"
+      "expected confirmed";
+  }
+
+  .events-table td[data-area="month"] .cell-input {
+    width: 9em;
+    color: var(--text-soft);
   }
 }

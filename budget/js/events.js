@@ -2,7 +2,7 @@
 
 import { parseAmount, formatMoney } from './calc.js';
 import { newEvent } from './store.js';
-import { cell, textInput, amountInput, deleteButton, renderHeadRow } from './cells.js';
+import { cell, areaCell, textInput, amountInput, deleteButton, renderHeadRow } from './cells.js';
 import { addHistory, watchEdits, shown } from './history.js';
 
 const LABELS = { month: '월', name: '이벤트', expected: '예상 지출', confirmed: '확정 지출', method: '마련 방법', note: '잔액/비고' };
@@ -39,14 +39,15 @@ export function renderEvents() {
   const rows = sortByMonth(state.data.events).map((event) => {
     const tr = document.createElement('tr');
     tr.dataset.id = event.id;
+    // 휴대폰에서는 카드로 보임 (자리 이름·이름표는 table.css)
     tr.append(
-      cell(textInput('month', event.month, '월', '2027.01 / 상시')),
-      cell(textInput('name', event.name, '이벤트', '이벤트')),
-      cell(amountInput('expected', event.expected, '예상 지출'), 'num'),
-      cell(amountInput('confirmed', event.confirmed, '확정 지출'), 'num'),
-      cell(textInput('method', event.method, '마련 방법', '현금/성과급/적립금')),
-      cell(textInput('note', event.note, '잔액/비고')),
-      cell(deleteButton('이벤트 지우기')),
+      areaCell('month', '', textInput('month', event.month, '월', '2027.01 / 상시')),
+      areaCell('name', '', textInput('name', event.name, '이벤트', '이벤트')),
+      areaCell('expected', '예상 지출', amountInput('expected', event.expected, '예상 지출'), 'num'),
+      areaCell('confirmed', '확정 지출', amountInput('confirmed', event.confirmed, '확정 지출'), 'num'),
+      areaCell('method', '마련 방법', textInput('method', event.method, '마련 방법', '현금/성과급/적립금')),
+      areaCell('note', '잔액/비고', textInput('note', event.note, '잔액/비고')),
+      areaCell('delete', '', deleteButton('이벤트 지우기')),
     );
     return tr;
   });
@@ -107,10 +108,15 @@ function renderFoot() {
   }
   const tr = document.createElement('tr');
   tr.className = 'total-row';
-  const label = cell('합계');
+  const label = areaCell('name', '', '합계');
   label.colSpan = 2;
-  const rest = cell();
+  const rest = areaCell('rest', '', '');
   rest.colSpan = 3;
-  tr.append(label, cell(formatMoney(expected), 'num'), cell(formatMoney(confirmed), 'num'), rest);
+  tr.append(
+    label,
+    areaCell('expected', '예상 지출', formatMoney(expected), 'num'),
+    areaCell('confirmed', '확정 지출', formatMoney(confirmed), 'num'),
+    rest,
+  );
   tfoot.replaceChildren(tr);
 }

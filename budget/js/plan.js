@@ -5,7 +5,7 @@ import {
   diffOf, isGoodDiff, sortByGroup, summarize, monthRecord, ensureMonth, groupTotals,
 } from './calc.js';
 import { newItem } from './store.js';
-import { cell, textInput, amountInput, computed, setMoney, deleteButton, renderHeadRow } from './cells.js';
+import { cell, areaCell, textInput, amountInput, computed, setMoney, deleteButton, renderHeadRow } from './cells.js';
 import { donutChart, barChart, seriesColor } from './charts.js';
 import { forecastLines } from './forecast.js';
 import { addHistory, watchEdits, shown } from './history.js';
@@ -140,13 +140,6 @@ function buildRow(item, isGroupStart) {
     tr.append(areaCell(area, label, content, className));
   }
   return tr;
-}
-
-function areaCell(area, label, content, className) {
-  const td = cell(content, className);
-  td.dataset.area = area;
-  if (label) td.dataset.label = label;
-  return td;
 }
 
 function findItem(element) {
