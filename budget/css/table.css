@@ -95,6 +95,12 @@
   min-width: 9em;
 }
 
+/* 두 사람 결제 수단 고르는 칸 [유진 ▾] [남편 ▾] */
+.payment-pair {
+  display: flex;
+  gap: var(--space-xs);
+}
+
 select.cell-input {
   width: auto;
   cursor: pointer;
@@ -150,6 +156,32 @@ select.cell-input {
   outline-offset: 2px;
 }
 
+/* 큰돈 캘린더: 완료 버튼, 완료한 줄은 흐리게 */
+.done-button {
+  padding: var(--space-xs) var(--space-s);
+  border: none;
+  border-radius: var(--radius-l);
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.done-button:hover,
+.done-button:focus-visible {
+  color: var(--good);
+}
+
+.done-button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.budget-table tr.is-done td {
+  opacity: 0.55;
+}
+
 /* 머리줄의 ＋ (항목 추가) */
 .add-button {
   width: 32px;
@@ -174,7 +206,7 @@ select.cell-input {
   outline-offset: 2px;
 }
 
-/* ── 휴대폰: 표를 줄마다 카드로 (월 가계부·공동통장·큰돈 캘린더) ──
+/* ── 휴대폰: 표를 줄마다 카드로 (월 가계부·큰돈 캘린더) ──
    칸마다 data-area(자리 이름)와 data-label(이름표)을 붙여 두고 (cells.js의 areaCell)
    표마다 grid-template-areas로 카드 안 배치를 정합니다. */
 @media (max-width: 768px) {
@@ -229,6 +261,19 @@ select.cell-input {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
+    min-width: 0; /* 칸 내용이 길어도 카드 밖으로 넘치지 않게 */
+  }
+
+  /* 결제 수단 두 칸은 자기 자리 너비를 반씩 */
+  .card-table .payment-pair {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .card-table .payment-pair select {
+    flex: 1;
+    width: 0;
+    min-width: 0;
   }
 
   .card-table td[data-area="rest"] {
@@ -276,6 +321,7 @@ select.cell-input {
   }
 
   /* 글 입력칸(메모 등)은 이름표 옆에 한 줄로 */
+  .card-table td[data-area="payment"],
   .card-table td[data-area="note"],
   .card-table td[data-area="method"] {
     flex-direction: row;
@@ -293,13 +339,10 @@ select.cell-input {
   .card-table td[data-area="actual"] { grid-area: actual; }
   .card-table td[data-area="diff"] { grid-area: diff; }
   .card-table td[data-area="note"] { grid-area: note; }
+  .card-table td[data-area="payment"] { grid-area: payment; }
+  .card-table td[data-area="done"] { grid-area: done; align-items: flex-end; }
   .card-table td[data-area="delete"] { grid-area: delete; }
   .card-table td[data-area="month"] { grid-area: month; }
-  .card-table td[data-area="budget"] { grid-area: budget; }
-  .card-table td[data-area="total"] { grid-area: total; }
-  .card-table td[data-area="spent"] { grid-area: spent; }
-  .card-table td[data-area="balance"] { grid-area: balance; }
-  .card-table td[data-area="carry"] { grid-area: carry; }
   .card-table td[data-area="expected"] { grid-area: expected; }
   .card-table td[data-area="confirmed"] { grid-area: confirmed; }
   .card-table td[data-area="method"] { grid-area: method; }
@@ -309,6 +352,7 @@ select.cell-input {
      │ 항목 이름          │
      │ 유진  남편         │  ← 개인 항목만 (공동이면 줄 없음)
      │ 예상  실제  차이   │
+     │ 결제 수단          │
      └ 메모              ┘ */
 
   /* 머리줄은 ＋ 버튼만 오른쪽 위에 */
@@ -328,6 +372,7 @@ select.cell-input {
       "name name name"
       "a b ."
       "plan actual diff"
+      "payment payment payment"
       "note note note";
   }
 
@@ -336,6 +381,7 @@ select.cell-input {
       "group joint delete"
       "name name name"
       "plan actual diff"
+      "payment payment payment"
       "note note note";
   }
 
@@ -360,38 +406,20 @@ select.cell-input {
     gap: var(--space-xs);
   }
 
-  /* ── ② 공동통장 ──
-     ┌ 2026.10      누적 이월 ┐
-     │ 유진 입금  남편 입금  총 입금 │
-     └ 공동 예산  실제 지출  잔액   ┘ */
-  .joint-table tbody tr {
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-areas:
-      "month month carry"
-      "a b total"
-      "budget spent balance";
-  }
-
-  .joint-table td[data-area="month"] {
-    justify-content: center;
-    font-size: 18px;
-    font-weight: 700;
-  }
-
-  /* ── ③ 큰돈 캘린더 ──
-     ┌ 월            ✕ ┐
+  /* ── ④ 큰돈 캘린더 ──
+     ┌ 월      ✓ 완료  ✕ ┐
      │ 이벤트          │
      │ 예상  확정       │
      │ 마련 방법        │
      └ 잔액/비고        ┘ */
   .events-table tbody tr {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr auto;
     grid-template-areas:
-      "month delete"
-      "name name"
-      "expected confirmed"
-      "method method"
-      "note note";
+      "month done delete"
+      "name name name"
+      "expected confirmed confirmed"
+      "method method method"
+      "note note note";
   }
 
   .events-table tfoot tr {

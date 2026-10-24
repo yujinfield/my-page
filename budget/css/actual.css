@@ -1,0 +1,139 @@
+/* ② 실제 사용: 구분별 목록, 한 줄에 [이름·예산] [실제 입력칸·차이] */
+
+.actual-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-l);
+  max-width: 720px;
+}
+
+.actual-group-title {
+  margin: 0 0 var(--space-xs);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  font-weight: 700;
+}
+
+.actual-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.actual-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-m);
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-s);
+  background: var(--surface-soft);
+}
+
+.actual-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.actual-input {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.actual-input .cell-input {
+  width: 7em;
+  background: var(--surface);
+}
+
+.actual-diff {
+  min-height: 1.4em;
+  font-size: var(--font-size-small);
+}
+
+/* ── ③ 카드 실적 ──
+   [카드 이름 / 쓴 항목들]      [사용액]
+   [목표 실적 ___ 만원]
+   [■■■■■■■□□□□   N만원 남음] */
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-l);
+  max-width: 720px;
+}
+
+.card-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "info amount"
+    "goal goal"
+    "progress progress";
+  gap: var(--space-s) var(--space-m);
+}
+
+.card-item .actual-info { grid-area: info; }
+.card-goal { grid-area: goal; }
+.card-progress { grid-area: progress; }
+
+.card-amount {
+  grid-area: amount;
+  align-self: start;
+  font-size: 18px;
+  white-space: nowrap;
+}
+
+.card-goal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  white-space: nowrap;
+}
+
+.card-goal .cell-input {
+  width: 5em;
+  background: var(--surface);
+  font-size: var(--font-size); /* 16px 이상: 아이폰에서 누를 때 화면이 확대되지 않게 */
+}
+
+.card-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  min-width: 0;
+}
+
+.card-progress:empty {
+  display: none;
+}
+
+.progress-track {
+  flex: 1;
+  min-width: 60px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--series-1);
+}
+
+.progress-fill.is-done {
+  background: var(--good);
+}
+
+.progress-text {
+  font-size: var(--font-size-small);
+  white-space: nowrap;
+}

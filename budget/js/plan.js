@@ -1,11 +1,13 @@
-// ① 월 가계부: 예산(월 예상액)은 한 번 정해 두고, 달마다 실제액과 차이를 봅니다.
+// ① 월 가계부: 예산(월 예상액)을 정하고, 그 달 실제액(② 실제 사용에서 입력)과 차이를 봅니다.
 
 import {
-  GROUPS, itemKind, parseAmount, formatMoney, formatDiff, formatMonth, planAmount,
-  diffOf, isGoodDiff, sortByGroup, summarize, monthRecord, ensureMonth, groupTotals,
+  GROUPS, itemKind, parseAmount, formatMoney, formatMonth, planAmount,
+  diffOf, sortByGroup, summarize, monthRecord, groupTotals,
 } from './calc.js';
 import { newItem } from './store.js';
-import { cell, areaCell, textInput, amountInput, computed, setMoney, deleteButton, renderHeadRow } from './cells.js';
+import {
+  areaCell, textInput, amountInput, computed, setMoney, showDiff, deleteButton, renderHeadRow,
+} from './cells.js';
 import { donutChart, barChart, seriesColor } from './charts.js';
 import { forecastLines } from './forecast.js';
 import { addHistory, watchEdits, shown } from './history.js';
@@ -42,16 +44,21 @@ function toggleEditor() {
   if (open) editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// 이력에 남길 글. 예: "[월 가계부] 식비·배달·장보기 실제액(2026.10): 100 → 130"
+// 이력에 남길 글. 예: "[월 가계부] 식비·배달·장보기 예상액: 100 → 130"
 function describeEdit(input, before, after) {
   const item = findItem(input);
   if (!item) return null;
   const { names } = state.data;
   const labels = {
     group: '구분', name: '항목 이름', a: `${names.a} 금액`, b: `${names.b} 금액`, joint: '공동',
-    amount: '예상액', actual: `실제액(${formatMonth(state.month)})`, note: '메모',
+    amount: '예상액', paymentA: `${names.a} 결제 수단`, paymentB: `${names.b} 결제 수단`, note: '메모',
   };
   const itemName = (input.dataset.field === 'name' ? before : item.name) || '이름 없는 항목';
+  // 결제 수단은 "＋ 새로 추가…"를 고를 수도 있어서, 고른 칸 값 대신 실제로 저장된 값을 남김
+  if (input.dataset.field in PAYMENT_FIELDS) {
+    after = item[input.dataset.field];
+    if (before === after) return null;
+  }
   return `[월 가계부] ${itemName} ${labels[input.dataset.field]}: ${shown(before)} → ${shown(after)}`;
 }
 
@@ -59,7 +66,7 @@ export function renderPlan() {
   const { names } = state.data;
   renderHeadRow(thead, [
     ['구분'], ['항목'], [names.a, true], [names.b, true], ['공동'],
-    ['월 예상액', true], [`실제액 (${formatMonth(state.month)})`, true], ['차이', true], ['결제일/메모'], [''],
+    ['월 예상액', true], [`실제액 (${formatMonth(state.month)})`, true], ['차이', true], ['결제 수단'], ['결제일/메모'], [''],
   ]);
   // 머리줄 맨 오른쪽(✕ 칸 위)에 ＋ 버튼
   thead.querySelector('th:last-child').append(headerAddButton());
@@ -90,7 +97,6 @@ function headerAddButton() {
 
 function buildRow(item, isGroupStart) {
   const { names } = state.data;
-  const actual = monthRecord(state.data, state.month).actual[item.id];
   const tr = document.createElement('tr');
   tr.dataset.id = item.id;
   tr.className = `kind-${itemKind(item)}`;
@@ -131,8 +137,10 @@ function buildRow(item, isGroupStart) {
     ['b', names.b, inputB, 'num'],
     ['joint', '공동', jointBox, 'center'],
     ['plan', '예상', planCell, 'num'],
-    ['actual', `실제 (${formatMonth(state.month)})`, amountInput('actual', actual, '실제액'), 'num'],
+    // 실제액은 ② 실제 사용에서 적고, 여기서는 보기만 함
+    ['actual', `실제 (${formatMonth(state.month)})`, computed('actual'), 'num'],
     ['diff', '차이', computed('diff'), 'num'],
+    ['payment', '결제', paymentPair(item), ''],
     ['note', '메모', textInput('note', item.note, '결제일/메모')],
     ['delete', '', deleteButton('항목 지우기')],
   ];
@@ -151,15 +159,10 @@ function findItem(element) {
 function handleInput(event) {
   const field = event.target.dataset.field;
   const item = findItem(event.target);
-  if (!item || field === 'group' || field === 'joint') return;
+  if (!item || field === 'group' || field === 'joint' || field in PAYMENT_FIELDS) return;
 
   if (field === 'name' || field === 'note') {
     item[field] = event.target.value;
-  } else if (field === 'actual') {
-    const record = ensureMonth(state.data, state.month);
-    const value = parseAmount(event.target.value);
-    if (value === null) delete record.actual[item.id];
-    else record.actual[item.id] = value;
   } else {
     item[field] = parseAmount(event.target.value);
   }
@@ -171,13 +174,76 @@ function handleInput(event) {
 function handleChange(event) {
   const field = event.target.dataset.field;
   const item = findItem(event.target);
-  if (!item || (field !== 'group' && field !== 'joint')) return;
+  if (!item) return;
+  if (field in PAYMENT_FIELDS) {
+    choosePayment(item, field, event.target.value);
+    return;
+  }
+  if (field !== 'group' && field !== 'joint') return;
 
   if (field === 'group') item.group = event.target.value;
   if (field === 'joint') item.joint = event.target.checked;
   renderPlan(); // 다시 그리면서 구분 순서로 정렬됨
   save();
   focusField(item.id, field);
+}
+
+/* ── 결제 수단 (사람마다 따로) ── */
+
+const ADD_PAYMENT = '__add__'; // "＋ 새로 추가…" 칸의 값
+const PAYMENT_FIELDS = { paymentA: 'a', paymentB: 'b' }; // 칸 이름 → 사람
+
+// 두 사람의 결제 수단 고르는 칸을 나란히: [유진 ▾] [남편 ▾]
+function paymentPair(item) {
+  const pair = document.createElement('div');
+  pair.className = 'payment-pair';
+  pair.append(paymentSelect(item, 'paymentA'), paymentSelect(item, 'paymentB'));
+  return pair;
+}
+
+// 한 사람의 결제 수단 고르는 칸: 선택 안 함 / 그 사람 목록 / ＋ 새로 추가…
+function paymentSelect(item, field) {
+  const person = PAYMENT_FIELDS[field];
+  const personName = state.data.names[person];
+  const select = document.createElement('select');
+  select.className = 'cell-input';
+  select.dataset.field = field;
+  select.setAttribute('aria-label', `${personName} 결제 수단`);
+
+  const names = state.data.payments[person].slice();
+  // 설정에서 목록에서 지웠어도 이 항목에 이미 고른 값은 보여 줌
+  if (item[field] && !names.includes(item[field])) names.push(item[field]);
+  const options = [
+    ['', `${personName} —`],
+    ...names.map((name) => [name, `${personName} ${name}`]),
+    [ADD_PAYMENT, '＋ 새로 추가…'],
+  ];
+  for (const [value, text] of options) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = text;
+    select.append(option);
+  }
+  select.value = item[field];
+  return select;
+}
+
+function choosePayment(item, field, value) {
+  const person = PAYMENT_FIELDS[field];
+  if (value === ADD_PAYMENT) {
+    const name = (window.prompt(`${state.data.names[person]}의 새 결제 수단 이름 (예: 현대카드)`) || '').trim();
+    if (name) {
+      const list = state.data.payments[person];
+      if (!list.includes(name)) list.push(name);
+      item[field] = name;
+    }
+    // 새 이름이 모든 칸의 목록에 들어가도록 다시 그림 (취소했으면 원래 값으로 돌아감)
+    renderPlan();
+    focusField(item.id, field);
+  } else {
+    item[field] = value;
+  }
+  save();
 }
 
 function handleClick(event) {
@@ -215,6 +281,7 @@ function refreshNumbers() {
     const item = state.data.items.find((other) => other.id === row.dataset.id);
     const plan = planAmount(item);
     setMoney(row, 'plan', plan);
+    setMoney(row, 'actual', actualMap[item.id]);
     showDiff(row.querySelector('[data-cell="diff"]'), itemKind(item), diffOf(plan, actualMap[item.id]));
   }
 
@@ -224,14 +291,8 @@ function refreshNumbers() {
   renderForecast(totals);
   renderCharts(totals, actualMap);
   missingNote.textContent = totals.missing > 0
-    ? `${formatMonth(state.month)} 실제액을 아직 안 적은 항목이 ${totals.missing}개 있어요. 다 적어야 실제 합계가 정확해요.`
+    ? `${formatMonth(state.month)} 실제액을 아직 안 적은 항목이 ${totals.missing}개 있어요. ② 실제 사용에서 적어 주세요.`
     : `${formatMonth(state.month)} 실제액을 모두 적었어요.`;
-}
-
-function showDiff(span, kind, diff) {
-  span.textContent = formatDiff(diff);
-  span.classList.toggle('good', diff !== null && diff !== 0 && isGoodDiff(kind, diff));
-  span.classList.toggle('bad', diff !== null && !isGoodDiff(kind, diff));
 }
 
 const FOOT_ROWS = [
@@ -251,7 +312,7 @@ function renderFoot(totals) {
     const diffSpan = document.createElement('span');
     showDiff(diffSpan, kind, diffOf(totals.plan[key], actual));
     const rest = areaCell('rest', '', '');
-    rest.colSpan = 2;
+    rest.colSpan = 3;
     tr.append(
       labelCell,
       areaCell('plan', '예상', formatMoney(totals.plan[key]), 'num'),
@@ -315,7 +376,7 @@ function renderForecast(totals) {
   });
   const more = document.createElement('p');
   more.className = 'hint';
-  more.textContent = '예산 기준이에요. 현재 자산·목표·수익률은 ④ 연간 요약에서 바꿀 수 있어요.';
+  more.textContent = '예산 기준이에요. 현재 자산·목표·수익률은 ⑤ 연간 요약에서 바꿀 수 있어요.';
   forecastBox.replaceChildren(...items, more);
 }
 

@@ -1,4 +1,4 @@
-// ④ 연간 요약: 한 해 12달 실적, 월별 그래프, "이대로 가면 N년 뒤 M억"
+// ⑤ 연간 요약: 한 해 12달 실적, 월별 그래프, "이대로 가면 N년 뒤 M억"
 
 import {
   parseAmount, formatMoney, formatMonth, shiftMonth, summarize, yearRows, actualAverage,

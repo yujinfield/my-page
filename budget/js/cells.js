@@ -1,6 +1,6 @@
 // 표 칸을 만드는 작은 도우미 (세 화면이 함께 씀)
 
-import { formatMoney } from './calc.js';
+import { formatMoney, formatDiff, isGoodDiff } from './calc.js';
 
 // <td> 하나. className이 "num"이면 숫자 칸(오른쪽 정렬)
 export function cell(content, className) {
@@ -50,6 +50,13 @@ export function computed(name) {
 export function setMoney(row, name, value) {
   const span = row.querySelector(`[data-cell="${name}"]`);
   if (span) span.textContent = formatMoney(value);
+}
+
+// 차이 글자와 색: 좋으면 초록(good), 나쁘면 빨강(bad)
+export function showDiff(span, kind, diff) {
+  span.textContent = formatDiff(diff);
+  span.classList.toggle('good', diff !== null && diff !== 0 && isGoodDiff(kind, diff));
+  span.classList.toggle('bad', diff !== null && !isGoodDiff(kind, diff));
 }
 
 export function deleteButton(label) {

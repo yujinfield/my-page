@@ -13,6 +13,7 @@
   --good: #2e8b57;
   --bad: #dd4c4f;
   --highlight: #fbeaea;
+  --overlay: rgba(0, 0, 0, 0.4);
 
   /* 그래프 색 (색약도 구분되도록 검증한 순서, 바꾸지 않기) */
   --series-1: #2a78d6;
@@ -57,6 +58,7 @@
     --good: #5cc28a;
     --bad: #ec6f71;
     --highlight: #3a2a2a;
+    --overlay: rgba(0, 0, 0, 0.6);
 
     --series-1: #3987e5;
     --series-2: #d95926;
@@ -83,6 +85,7 @@
   --good: #5cc28a;
   --bad: #ec6f71;
   --highlight: #3a2a2a;
+  --overlay: rgba(0, 0, 0, 0.6);
 
   --series-1: #3987e5;
   --series-2: #d95926;

@@ -9,7 +9,12 @@ const THEME_KEY = 'budget-theme';
 
 // 데이터 형식을 바꾸면 이 숫자를 올리고 loadData()에 옮기는 코드를 추가합니다.
 // 1 → 2: 목표(goal), 변경 이력(history), 마지막 백업 시각(lastBackupAt) 추가
-const DATA_VERSION = 2;
+// 2 → 3: 사람별 결제 수단 목록(payments.a·b), 항목의 사람별 결제 수단(item.paymentA·B), 큰돈 완료 표시(event.done),
+//        카드별 목표 실적(cardGoals.a·b) 추가
+const DATA_VERSION = 3;
+
+// 결제 수단 기본 목록 (두 사람 모두 이걸로 시작, 설정에서 사람마다 바꿀 수 있음)
+const DEFAULT_PAYMENTS = ['신한카드', '삼성카드', '현금', '계좌이체'];
 
 // 이력은 최근 것만 남김 (너무 커지지 않게)
 export const HISTORY_LIMIT = 300;
@@ -42,11 +47,11 @@ export function newId(prefix) {
 }
 
 export function newItem(group, name, joint, note) {
-  return { id: newId('i'), group, name, a: null, b: null, joint, amount: null, note: note || '' };
+  return { id: newId('i'), group, name, a: null, b: null, joint, amount: null, paymentA: '', paymentB: '', note: note || '' };
 }
 
 export function newEvent(month, name, method) {
-  return { id: newId('e'), month, name, expected: null, confirmed: null, method: method || '', note: '' };
+  return { id: newId('e'), month, name, expected: null, confirmed: null, method: method || '', note: '', done: false };
 }
 
 // 처음 열었을 때 보여 줄 기본 표 (금액은 비워 둠)
@@ -54,6 +59,8 @@ function defaultData() {
   return {
     version: DATA_VERSION,
     names: { a: '유진', b: '남편' },
+    payments: { a: DEFAULT_PAYMENTS.slice(), b: DEFAULT_PAYMENTS.slice() },
+    cardGoals: { a: {}, b: {} },
     items: [
       newItem('수입', '월급', false, '실수령 기준'),
       newItem('고정지출', '주담대 이자', true),
@@ -104,10 +111,13 @@ function normalizeItem(saved) {
     b: toAmount(saved.b),
     joint: saved.joint === true,
     amount: toAmount(saved.amount),
+    paymentA: toText(saved.paymentA),
+    paymentB: toText(saved.paymentB),
     note: toText(saved.note),
   };
 }
 
+// depositA·depositB는 예전 "공동통장" 화면의 입금 기록. 화면은 없어졌지만 기록이 사라지지 않게 그대로 둠
 function normalizeMonth(saved) {
   const month = emptyMonth();
   if (!saved || typeof saved !== 'object') return month;
@@ -131,6 +141,7 @@ function normalizeEvent(saved) {
     confirmed: toAmount(saved.confirmed),
     method: toText(saved.method),
     note: toText(saved.note),
+    done: saved.done === true,
   };
 }
 
@@ -157,7 +168,38 @@ export function loadData() {
   return normalizeData(saved);
 }
 
-// 저장된 값(또는 백업 파일)을 지금 형식으로 다듬음. 버전 1 데이터는 goal·history가 없으므로 기본값을 채움
+// 결제 수단 이름 목록 하나 다듬기: 빈 이름·중복은 빼고, 목록이 없으면 기본 목록
+export function normalizePaymentList(saved) {
+  if (!Array.isArray(saved)) return DEFAULT_PAYMENTS.slice();
+  const list = [];
+  for (const name of saved) {
+    const text = toText(name).trim();
+    if (text && !list.includes(text)) list.push(text);
+  }
+  return list;
+}
+
+// 사람별 결제 수단 목록 { a: [...], b: [...] } (예전 데이터에 없으면 둘 다 기본 목록)
+function normalizePayments(saved) {
+  const payments = isObject(saved) ? saved : {};
+  return { a: normalizePaymentList(payments.a), b: normalizePaymentList(payments.b) };
+}
+
+// 카드별 목표 실적 { a: { 신한카드: 30 }, b: {...} } (숫자가 아닌 값은 버림)
+function normalizeCardGoals(saved) {
+  const goals = { a: {}, b: {} };
+  if (!isObject(saved)) return goals;
+  for (const person of ['a', 'b']) {
+    const list = isObject(saved[person]) ? saved[person] : {};
+    for (const card of Object.keys(list)) {
+      const value = toAmount(list[card]);
+      if (value !== null) goals[person][card] = value;
+    }
+  }
+  return goals;
+}
+
+// 저장된 값(또는 백업 파일)을 지금 형식으로 다듬음. 예전 버전 데이터에 없는 값은 기본값을 채움
 export function normalizeData(saved) {
   const months = {};
   if (saved.months && typeof saved.months === 'object') {
@@ -170,6 +212,8 @@ export function normalizeData(saved) {
   return {
     version: DATA_VERSION,
     names: { a: toText(names.a) || '유진', b: toText(names.b) || '남편' },
+    payments: normalizePayments(saved.payments),
+    cardGoals: normalizeCardGoals(saved.cardGoals),
     items: Array.isArray(saved.items) ? saved.items.filter(isObject).map(normalizeItem) : [],
     months,
     events: Array.isArray(saved.events) ? saved.events.filter(isObject).map(normalizeEvent) : [],
