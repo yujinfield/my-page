@@ -9,7 +9,11 @@ const THEME_KEY = 'budget-theme';
 
 // 데이터 형식을 바꾸면 이 숫자를 올리고 loadData()에 옮기는 코드를 추가합니다.
 // 1 → 2: 목표(goal), 변경 이력(history), 마지막 백업 시각(lastBackupAt) 추가
-const DATA_VERSION = 2;
+// 2 → 3: 항목의 결제 수단(item.payment), 결제 수단 목록(payments) 추가
+const DATA_VERSION = 3;
+
+// 결제 수단 기본 목록 (설정에서 바꿀 수 있음)
+const DEFAULT_PAYMENTS = ['신한카드', '삼성카드', '현금', '계좌이체'];
 
 // 이력은 최근 것만 남김 (너무 커지지 않게)
 export const HISTORY_LIMIT = 300;
@@ -42,7 +46,7 @@ export function newId(prefix) {
 }
 
 export function newItem(group, name, joint, note) {
-  return { id: newId('i'), group, name, a: null, b: null, joint, amount: null, note: note || '' };
+  return { id: newId('i'), group, name, a: null, b: null, joint, amount: null, payment: '', note: note || '' };
 }
 
 export function newEvent(month, name, method) {
@@ -54,6 +58,7 @@ function defaultData() {
   return {
     version: DATA_VERSION,
     names: { a: '유진', b: '남편' },
+    payments: DEFAULT_PAYMENTS.slice(),
     items: [
       newItem('수입', '월급', false, '실수령 기준'),
       newItem('고정지출', '주담대 이자', true),
@@ -104,6 +109,7 @@ function normalizeItem(saved) {
     b: toAmount(saved.b),
     joint: saved.joint === true,
     amount: toAmount(saved.amount),
+    payment: toText(saved.payment),
     note: toText(saved.note),
   };
 }
@@ -158,7 +164,18 @@ export function loadData() {
   return normalizeData(saved);
 }
 
-// 저장된 값(또는 백업 파일)을 지금 형식으로 다듬음. 버전 1 데이터는 goal·history가 없으므로 기본값을 채움
+// 결제 수단 목록: 빈 이름·중복은 빼고, 저장된 목록이 없으면(버전 2 이하) 기본 목록
+export function normalizePayments(saved) {
+  if (!Array.isArray(saved)) return DEFAULT_PAYMENTS.slice();
+  const list = [];
+  for (const name of saved) {
+    const text = toText(name).trim();
+    if (text && !list.includes(text)) list.push(text);
+  }
+  return list;
+}
+
+// 저장된 값(또는 백업 파일)을 지금 형식으로 다듬음. 예전 버전 데이터에 없는 값은 기본값을 채움
 export function normalizeData(saved) {
   const months = {};
   if (saved.months && typeof saved.months === 'object') {
@@ -171,6 +188,7 @@ export function normalizeData(saved) {
   return {
     version: DATA_VERSION,
     names: { a: toText(names.a) || '유진', b: toText(names.b) || '남편' },
+    payments: normalizePayments(saved.payments),
     items: Array.isArray(saved.items) ? saved.items.filter(isObject).map(normalizeItem) : [],
     months,
     events: Array.isArray(saved.events) ? saved.events.filter(isObject).map(normalizeEvent) : [],

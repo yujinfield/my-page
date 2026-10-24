@@ -77,8 +77,9 @@ function buildRow(item, actual) {
   name.textContent = item.name || '이름 없는 항목';
   const plan = document.createElement('span');
   plan.className = 'hint';
-  const planText = `예산 ${formatMoney(planAmount(item)) || '—'}`;
-  plan.textContent = item.note ? `${planText} · ${item.note}` : planText;
+  // "예산 100 · 신한카드 · 메모" (결제 수단·메모는 있을 때만)
+  const parts = [`예산 ${formatMoney(planAmount(item)) || '—'}`, item.payment, item.note].filter(Boolean);
+  plan.textContent = parts.join(' · ');
   info.append(name, plan);
 
   const inputBox = document.createElement('div');

@@ -137,11 +137,15 @@
 
     <!-- 설정 -->
     <details class="card settings">
-      <summary>설정 · 두 사람 이름</summary>
+      <summary>설정 · 이름 · 결제 수단</summary>
       <div class="row">
         <label>첫 번째 사람 <input type="text" id="name-a" class="text-input" maxlength="10"></label>
         <label>두 번째 사람 <input type="text" id="name-b" class="text-input" maxlength="10"></label>
       </div>
+      <div class="row">
+        <label class="wide-label">결제 수단 목록 <input type="text" id="payments-input" class="text-input text-input-wide" placeholder="신한카드, 삼성카드, 현금"></label>
+      </div>
+      <p class="hint">쉼표(,)로 나눠 적어요. ① 월 가계부의 "결제 수단" 칸에서 고를 수 있어요.</p>
     </details>
   </main>
 

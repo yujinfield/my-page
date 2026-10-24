@@ -229,6 +229,14 @@ select.cell-input {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
+    min-width: 0; /* 칸 내용이 길어도 카드 밖으로 넘치지 않게 */
+  }
+
+  /* 결제 수단 고르는 칸은 자기 자리 너비에 맞춤 */
+  .card-table td[data-area="payment"] select {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
   }
 
   .card-table td[data-area="rest"] {
@@ -276,6 +284,7 @@ select.cell-input {
   }
 
   /* 글 입력칸(메모 등)은 이름표 옆에 한 줄로 */
+  .card-table td[data-area="payment"],
   .card-table td[data-area="note"],
   .card-table td[data-area="method"] {
     flex-direction: row;
@@ -293,6 +302,7 @@ select.cell-input {
   .card-table td[data-area="actual"] { grid-area: actual; }
   .card-table td[data-area="diff"] { grid-area: diff; }
   .card-table td[data-area="note"] { grid-area: note; }
+  .card-table td[data-area="payment"] { grid-area: payment; }
   .card-table td[data-area="delete"] { grid-area: delete; }
   .card-table td[data-area="month"] { grid-area: month; }
   .card-table td[data-area="expected"] { grid-area: expected; }
@@ -304,6 +314,7 @@ select.cell-input {
      │ 항목 이름          │
      │ 유진  남편         │  ← 개인 항목만 (공동이면 줄 없음)
      │ 예상  실제  차이   │
+     │ 결제 수단          │
      └ 메모              ┘ */
 
   /* 머리줄은 ＋ 버튼만 오른쪽 위에 */
@@ -323,6 +334,7 @@ select.cell-input {
       "name name name"
       "a b ."
       "plan actual diff"
+      "payment payment payment"
       "note note note";
   }
 
@@ -331,6 +343,7 @@ select.cell-input {
       "group joint delete"
       "name name name"
       "plan actual diff"
+      "payment payment payment"
       "note note note";
   }
 

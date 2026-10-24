@@ -43,9 +43,10 @@
 ```js
 // localStorage 키: "budget-data" (금액 단위: 만원, 빈칸은 null)
 {
-  version: 2,
+  version: 3,
   names: { a: "유진", b: "남편" },
-  items: [{ id, group, name, a, b, joint, amount, note }],   // 예산 (모든 달 공통)
+  payments: ["신한카드", "삼성카드", "현금", "계좌이체"],      // 결제 수단 목록 (설정에서 고침)
+  items: [{ id, group, name, a, b, joint, amount, payment, note }],   // 예산 (모든 달 공통), payment는 결제 수단 이름
   months: { "2026-11": { actual: { [itemId]: 금액 }, depositA, depositB } },  // deposit은 예전 공동통장 기록(화면 없음, 보존만)
   events: [{ id, month, name, expected, confirmed, method, note }],
   goal: { current, target, rate },      // 현재 자산·목표(만원), 연 수익률(%)
@@ -56,6 +57,7 @@
 
 - 월 예상액은 저장하지 않고 계산합니다: 공동이면 `amount`, 아니면 `a + b`.
 - 버전 1 → 2: `goal`·`history`·`lastBackupAt`이 없으면 기본값을 채웁니다 (`normalizeData`). 백업 파일을 불러올 때도 같은 함수를 씁니다.
+- 버전 2 → 3: `payments`가 없으면 기본 목록, `item.payment`가 없으면 빈칸(선택 안 함)으로 채웁니다.
 - 그래프 색 `--series-1~7`은 색약 검증을 거친 순서입니다. 순서를 바꾸지 말고, 원형 그래프 구분마다 고정 색을 씁니다.
 - 데이터 형식을 바꾸면 `version`을 올리고 `store.js`의 `loadData()`에 옮기는 코드를 추가해 **기존 기록이 사라지지 않게** 합니다.
 

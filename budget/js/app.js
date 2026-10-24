@@ -1,6 +1,6 @@
 // 진입점: 상태를 들고 다섯 화면(월 가계부 / 실제 사용 / 큰돈 캘린더 / 연간 요약 / 백업·이력)을 연결합니다.
 
-import { loadData, saveData } from './store.js';
+import { loadData, saveData, normalizePayments } from './store.js';
 import { monthKeyOf, formatMonth, shiftMonth } from './calc.js';
 import { setupTheme } from './theme.js';
 import { setupPlan, renderPlan } from './plan.js';
@@ -70,10 +70,21 @@ document.getElementById('month-next').addEventListener('click', () => {
 
 /* ── 두 사람 이름 ── */
 
+/* ── 결제 수단 목록 (쉼표로 나눠 적음) ── */
+
+const paymentsInput = document.getElementById('payments-input');
+paymentsInput.addEventListener('change', () => {
+  state.data.payments = normalizePayments(paymentsInput.value.split(','));
+  paymentsInput.value = state.data.payments.join(', ');
+  save();
+  render();
+});
+
 const nameInputs = { a: document.getElementById('name-a'), b: document.getElementById('name-b') };
 function fillNames() {
   nameInputs.a.value = state.data.names.a;
   nameInputs.b.value = state.data.names.b;
+  paymentsInput.value = state.data.payments.join(', ');
 }
 for (const key of ['a', 'b']) {
   nameInputs[key].addEventListener('input', () => {
