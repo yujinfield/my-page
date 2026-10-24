@@ -149,3 +149,27 @@ select.cell-input {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* 머리줄의 ＋ (항목 추가) */
+.add-button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--accent);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.add-button:hover,
+.add-button:focus-visible {
+  background: var(--highlight);
+}
+
+.add-button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
