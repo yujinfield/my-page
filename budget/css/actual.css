@@ -55,3 +55,85 @@
   min-height: 1.4em;
   font-size: var(--font-size-small);
 }
+
+/* ── ③ 카드 실적 ──
+   [카드 이름 / 쓴 항목들]      [사용액]
+   [목표 실적 ___ 만원]
+   [■■■■■■■□□□□   N만원 남음] */
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-l);
+  max-width: 720px;
+}
+
+.card-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "info amount"
+    "goal goal"
+    "progress progress";
+  gap: var(--space-s) var(--space-m);
+}
+
+.card-item .actual-info { grid-area: info; }
+.card-goal { grid-area: goal; }
+.card-progress { grid-area: progress; }
+
+.card-amount {
+  grid-area: amount;
+  align-self: start;
+  font-size: 18px;
+  white-space: nowrap;
+}
+
+.card-goal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  white-space: nowrap;
+}
+
+.card-goal .cell-input {
+  width: 5em;
+  background: var(--surface);
+  font-size: var(--font-size); /* 16px 이상: 아이폰에서 누를 때 화면이 확대되지 않게 */
+}
+
+.card-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  min-width: 0;
+}
+
+.card-progress:empty {
+  display: none;
+}
+
+.progress-track {
+  flex: 1;
+  min-width: 60px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--series-1);
+}
+
+.progress-fill.is-done {
+  background: var(--good);
+}
+
+.progress-text {
+  font-size: var(--font-size-small);
+  white-space: nowrap;
+}

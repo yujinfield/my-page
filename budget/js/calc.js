@@ -170,3 +170,46 @@ export function actualAverage(data, untilKey) {
   }
   return { months: totals.length, saving: saving / totals.length, asset: asset / totals.length };
 }
+
+/* ── 카드(결제 수단)별 실적 ── */
+
+// 한 항목의 금액 중 유진(a) 몫의 비율
+// - 결제 수단을 한 사람만 골랐으면 그 사람이 전부
+// - 둘 다 골랐으면: 개인 항목은 예산의 유진·남편 금액 비율, 공동 항목(또는 금액이 없으면)은 반반
+function paymentShareA(item) {
+  if (item.paymentA && !item.paymentB) return 1;
+  if (!item.paymentA && item.paymentB) return 0;
+  if (!item.joint && (item.a || 0) + (item.b || 0) > 0) return (item.a || 0) / ((item.a || 0) + (item.b || 0));
+  return 0.5;
+}
+
+// 사람마다 카드별 합계. 수입 항목은 빼고 지출·저축만 셈
+// → { a: { 신한카드: { plan, actual, items: [{ name, actual }] } }, b: {...}, none: { plan, actual } }
+export function cardTotals(items, actualMap) {
+  const result = { a: {}, b: {}, none: { plan: 0, actual: 0 } };
+
+  for (const item of items) {
+    if (itemKind(item) === 'income') continue;
+    const plan = planAmount(item) || 0;
+    const actual = actualMap[item.id];
+
+    if (!item.paymentA && !item.paymentB) {
+      result.none.plan += plan;
+      result.none.actual += actual || 0;
+      continue;
+    }
+
+    const shareA = paymentShareA(item);
+    for (const [person, card, share] of [['a', item.paymentA, shareA], ['b', item.paymentB, 1 - shareA]]) {
+      if (!card || share === 0) continue;
+      if (!result[person][card]) result[person][card] = { plan: 0, actual: 0, items: [] };
+      const total = result[person][card];
+      total.plan += plan * share;
+      if (actual !== undefined && actual !== null) {
+        total.actual += actual * share;
+        total.items.push({ name: item.name || '이름 없는 항목', actual: actual * share });
+      }
+    }
+  }
+  return result;
+}

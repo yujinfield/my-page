@@ -18,13 +18,13 @@
 
 | 파일 | 역할 |
 | --- | --- |
-| `index.html` | 마크업 뼈대 (달 이동, 탭 5개, ⚙️ 설정 창) |
+| `index.html` | 마크업 뼈대 (달 이동, 탭 6개, ⚙️ 설정 창) |
 | `css/base.css` | CSS 변수(색상·간격·폰트), 리셋, 다크 모드 |
 | `css/layout.css` | 머리말, 탭, 카드, 요약 카드, 버튼, 반응형 |
 | `css/table.css` | 가계부 표, 입력칸, 합계 줄, 휴대폰(768px 이하) 카드 배치 |
 | `css/charts.css` | 원형·막대 그래프, 범례 |
-| `css/actual.css` | ② 실제 사용 목록 |
-| `js/calc.js` | 금액 계산·월 계산·연간 합계 (순수 함수, DOM 사용 안 함) |
+| `css/actual.css` | ② 실제 사용 목록, ③ 카드 실적 |
+| `js/calc.js` | 금액 계산·월 계산·연간 합계·카드별 합계 `cardTotals` (순수 함수, DOM 사용 안 함) |
 | `js/forecast.js` | "이대로 가면 N년 뒤 M억" 계산·코멘트, 억 단위 표시 (순수 함수) |
 | `js/charts.js` | 원형(SVG)·가로 막대(HTML) 그래프. 색은 `--series-*` 변수 |
 | `js/history.js` | 변경 이력 남기기 (`addHistory`, 칸을 벗어날 때 기록하는 `watchEdits`) |
@@ -32,9 +32,10 @@
 | `js/cells.js` | 표 칸·입력칸 만드는 도우미. `areaCell`은 휴대폰 카드용 자리 이름·이름표, `showDiff`는 차이 색 |
 | `js/plan.js` | ① 월 가계부 (예산 입력, 실제액은 보기만) |
 | `js/actual.js` | ② 실제 사용 (그 달 실제액 입력) |
-| `js/events.js` | ③ 큰돈 캘린더 |
-| `js/annual.js` | ④ 연간 요약, 목표·예측 |
-| `js/backup.js` | ⑤ 백업 파일 내려받기·불러오기, 이력 보기 |
+| `js/cards.js` | ③ 카드 실적 (카드별 사용액, 목표 실적) |
+| `js/events.js` | ④ 큰돈 캘린더 |
+| `js/annual.js` | ⑤ 연간 요약, 목표·예측 |
+| `js/backup.js` | ⑥ 백업 파일 내려받기·불러오기, 이력 보기 |
 | `js/settings.js` | ⚙️ 설정 창: 두 사람 이름, 사람마다 결제 수단 목록 |
 | `js/theme.js` | 라이트·다크 전환 |
 | `js/app.js` | 진입점. 상태(데이터, 보고 있는 달, 탭)를 들고 화면을 연결 |
@@ -47,6 +48,7 @@
   version: 3,
   names: { a: "유진", b: "남편" },
   payments: { a: ["신한카드", …], b: ["삼성카드", …] },      // 사람마다 결제 수단 목록 (⚙️ 설정에서 고침)
+  cardGoals: { a: { 신한카드: 30 }, b: {} },                 // 카드별 목표 실적(만원)
   items: [{ id, group, name, a, b, joint, amount, paymentA, paymentB, note }],   // 예산 (모든 달 공통), paymentA·B는 사람마다 결제 수단 이름
   months: { "2026-11": { actual: { [itemId]: 금액 }, depositA, depositB } },  // deposit은 예전 공동통장 기록(화면 없음, 보존만)
   events: [{ id, month, name, expected, confirmed, method, note, done }],   // done: 완료해서 숨김
@@ -58,7 +60,8 @@
 
 - 월 예상액은 저장하지 않고 계산합니다: 공동이면 `amount`, 아니면 `a + b`.
 - 버전 1 → 2: `goal`·`history`·`lastBackupAt`이 없으면 기본값을 채웁니다 (`normalizeData`). 백업 파일을 불러올 때도 같은 함수를 씁니다.
-- 버전 2 → 3: `payments`가 없으면 두 사람 모두 기본 목록, `paymentA·B`는 빈칸(선택 안 함), `event.done`은 false로 채웁니다.
+- 버전 2 → 3: `payments`가 없으면 두 사람 모두 기본 목록, `paymentA·B`는 빈칸(선택 안 함), `event.done`은 false, `cardGoals`는 빈 목표로 채웁니다.
+- 카드 실적: 한 항목에 두 사람 결제 수단을 다 고르면 개인 항목은 예산의 a·b 비율, 공동 항목은 반반으로 나눕니다. 수입 항목은 빼고 셉니다.
 - 큰돈 캘린더는 "상시"처럼 날짜가 아닌 것이 맨 위, 그 아래는 날짜순입니다.
 - 그래프 색 `--series-1~7`은 색약 검증을 거친 순서입니다. 순서를 바꾸지 말고, 원형 그래프 구분마다 고정 색을 씁니다.
 - 데이터 형식을 바꾸면 `version`을 올리고 `store.js`의 `loadData()`에 옮기는 코드를 추가해 **기존 기록이 사라지지 않게** 합니다.

@@ -1,10 +1,11 @@
-// 진입점: 상태를 들고 다섯 화면(월 가계부 / 실제 사용 / 큰돈 캘린더 / 연간 요약 / 백업·이력)을 연결합니다.
+// 진입점: 상태를 들고 여섯 화면(월 가계부 / 실제 사용 / 카드 실적 / 큰돈 캘린더 / 연간 요약 / 백업·이력)을 연결합니다.
 
 import { loadData, saveData } from './store.js';
 import { monthKeyOf, formatMonth, shiftMonth } from './calc.js';
 import { setupTheme } from './theme.js';
 import { setupPlan, renderPlan } from './plan.js';
 import { setupActual, renderActual } from './actual.js';
+import { setupCards, renderCards } from './cards.js';
 import { setupEvents, renderEvents } from './events.js';
 import { setupAnnual, renderAnnual } from './annual.js';
 import { setupBackup, renderBackup } from './backup.js';
@@ -14,7 +15,7 @@ import { setupSettings, fillSettings } from './settings.js';
 const state = { data: loadData(), month: monthKeyOf(new Date()), tab: 'plan' };
 
 const RENDER = {
-  plan: renderPlan, actual: renderActual, events: renderEvents, annual: renderAnnual, backup: renderBackup,
+  plan: renderPlan, actual: renderActual, cards: renderCards, events: renderEvents, annual: renderAnnual, backup: renderBackup,
 };
 
 const saveStatus = document.getElementById('save-status');
@@ -72,6 +73,7 @@ document.getElementById('month-next').addEventListener('click', () => {
 setupTheme();
 setupPlan(state, save);
 setupActual(state, save);
+setupCards(state, save);
 setupEvents(state, save);
 setupAnnual(state, save, render);
 setupSettings(state, save, render);

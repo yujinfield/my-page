@@ -1,4 +1,4 @@
-// ③ 연간 큰돈 캘린더: 월 가계부에 섞으면 안 되는 큰돈(결혼, 여행, 보험, 성과급 등)
+// ④ 연간 큰돈 캘린더: 월 가계부에 섞으면 안 되는 큰돈(결혼, 여행, 보험, 성과급 등)
 
 import { parseAmount, formatMoney } from './calc.js';
 import { newEvent } from './store.js';

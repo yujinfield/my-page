@@ -9,7 +9,8 @@ const THEME_KEY = 'budget-theme';
 
 // 데이터 형식을 바꾸면 이 숫자를 올리고 loadData()에 옮기는 코드를 추가합니다.
 // 1 → 2: 목표(goal), 변경 이력(history), 마지막 백업 시각(lastBackupAt) 추가
-// 2 → 3: 사람별 결제 수단 목록(payments.a·b), 항목의 사람별 결제 수단(item.paymentA·B), 큰돈 완료 표시(event.done) 추가
+// 2 → 3: 사람별 결제 수단 목록(payments.a·b), 항목의 사람별 결제 수단(item.paymentA·B), 큰돈 완료 표시(event.done),
+//        카드별 목표 실적(cardGoals.a·b) 추가
 const DATA_VERSION = 3;
 
 // 결제 수단 기본 목록 (두 사람 모두 이걸로 시작, 설정에서 사람마다 바꿀 수 있음)
@@ -59,6 +60,7 @@ function defaultData() {
     version: DATA_VERSION,
     names: { a: '유진', b: '남편' },
     payments: { a: DEFAULT_PAYMENTS.slice(), b: DEFAULT_PAYMENTS.slice() },
+    cardGoals: { a: {}, b: {} },
     items: [
       newItem('수입', '월급', false, '실수령 기준'),
       newItem('고정지출', '주담대 이자', true),
@@ -183,6 +185,20 @@ function normalizePayments(saved) {
   return { a: normalizePaymentList(payments.a), b: normalizePaymentList(payments.b) };
 }
 
+// 카드별 목표 실적 { a: { 신한카드: 30 }, b: {...} } (숫자가 아닌 값은 버림)
+function normalizeCardGoals(saved) {
+  const goals = { a: {}, b: {} };
+  if (!isObject(saved)) return goals;
+  for (const person of ['a', 'b']) {
+    const list = isObject(saved[person]) ? saved[person] : {};
+    for (const card of Object.keys(list)) {
+      const value = toAmount(list[card]);
+      if (value !== null) goals[person][card] = value;
+    }
+  }
+  return goals;
+}
+
 // 저장된 값(또는 백업 파일)을 지금 형식으로 다듬음. 예전 버전 데이터에 없는 값은 기본값을 채움
 export function normalizeData(saved) {
   const months = {};
@@ -197,6 +213,7 @@ export function normalizeData(saved) {
     version: DATA_VERSION,
     names: { a: toText(names.a) || '유진', b: toText(names.b) || '남편' },
     payments: normalizePayments(saved.payments),
+    cardGoals: normalizeCardGoals(saved.cardGoals),
     items: Array.isArray(saved.items) ? saved.items.filter(isObject).map(normalizeItem) : [],
     months,
     events: Array.isArray(saved.events) ? saved.events.filter(isObject).map(normalizeEvent) : [],
