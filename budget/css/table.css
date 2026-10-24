@@ -95,6 +95,12 @@
   min-width: 9em;
 }
 
+/* 두 사람 결제 수단 고르는 칸 [유진 ▾] [남편 ▾] */
+.payment-pair {
+  display: flex;
+  gap: var(--space-xs);
+}
+
 select.cell-input {
   width: auto;
   cursor: pointer;
@@ -148,6 +154,32 @@ select.cell-input {
 .delete-button:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* 큰돈 캘린더: 완료 버튼, 완료한 줄은 흐리게 */
+.done-button {
+  padding: var(--space-xs) var(--space-s);
+  border: none;
+  border-radius: var(--radius-l);
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.done-button:hover,
+.done-button:focus-visible {
+  color: var(--good);
+}
+
+.done-button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.budget-table tr.is-done td {
+  opacity: 0.55;
 }
 
 /* 머리줄의 ＋ (항목 추가) */
@@ -232,10 +264,15 @@ select.cell-input {
     min-width: 0; /* 칸 내용이 길어도 카드 밖으로 넘치지 않게 */
   }
 
-  /* 결제 수단 고르는 칸은 자기 자리 너비에 맞춤 */
-  .card-table td[data-area="payment"] select {
+  /* 결제 수단 두 칸은 자기 자리 너비를 반씩 */
+  .card-table .payment-pair {
     flex: 1;
-    width: 100%;
+    min-width: 0;
+  }
+
+  .card-table .payment-pair select {
+    flex: 1;
+    width: 0;
     min-width: 0;
   }
 
@@ -303,6 +340,7 @@ select.cell-input {
   .card-table td[data-area="diff"] { grid-area: diff; }
   .card-table td[data-area="note"] { grid-area: note; }
   .card-table td[data-area="payment"] { grid-area: payment; }
+  .card-table td[data-area="done"] { grid-area: done; align-items: flex-end; }
   .card-table td[data-area="delete"] { grid-area: delete; }
   .card-table td[data-area="month"] { grid-area: month; }
   .card-table td[data-area="expected"] { grid-area: expected; }
@@ -369,19 +407,19 @@ select.cell-input {
   }
 
   /* ── ③ 큰돈 캘린더 ──
-     ┌ 월            ✕ ┐
+     ┌ 월      ✓ 완료  ✕ ┐
      │ 이벤트          │
      │ 예상  확정       │
      │ 마련 방법        │
      └ 잔액/비고        ┘ */
   .events-table tbody tr {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr auto;
     grid-template-areas:
-      "month delete"
-      "name name"
-      "expected confirmed"
-      "method method"
-      "note note";
+      "month done delete"
+      "name name name"
+      "expected confirmed confirmed"
+      "method method method"
+      "note note note";
   }
 
   .events-table tfoot tr {

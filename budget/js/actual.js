@@ -77,8 +77,14 @@ function buildRow(item, actual) {
   name.textContent = item.name || '이름 없는 항목';
   const plan = document.createElement('span');
   plan.className = 'hint';
-  // "예산 100 · 신한카드 · 메모" (결제 수단·메모는 있을 때만)
-  const parts = [`예산 ${formatMoney(planAmount(item)) || '—'}`, item.payment, item.note].filter(Boolean);
+  // "예산 100 · 유진 신한카드 · 남편 삼성카드 · 메모" (결제 수단·메모는 있을 때만)
+  const { names } = state.data;
+  const parts = [
+    `예산 ${formatMoney(planAmount(item)) || '—'}`,
+    item.paymentA && `${names.a} ${item.paymentA}`,
+    item.paymentB && `${names.b} ${item.paymentB}`,
+    item.note,
+  ].filter(Boolean);
   plan.textContent = parts.join(' · ');
   info.append(name, plan);
 

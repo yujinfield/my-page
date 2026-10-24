@@ -9,10 +9,10 @@ const THEME_KEY = 'budget-theme';
 
 // 데이터 형식을 바꾸면 이 숫자를 올리고 loadData()에 옮기는 코드를 추가합니다.
 // 1 → 2: 목표(goal), 변경 이력(history), 마지막 백업 시각(lastBackupAt) 추가
-// 2 → 3: 항목의 결제 수단(item.payment), 결제 수단 목록(payments) 추가
+// 2 → 3: 사람별 결제 수단 목록(payments.a·b), 항목의 사람별 결제 수단(item.paymentA·B), 큰돈 완료 표시(event.done) 추가
 const DATA_VERSION = 3;
 
-// 결제 수단 기본 목록 (설정에서 바꿀 수 있음)
+// 결제 수단 기본 목록 (두 사람 모두 이걸로 시작, 설정에서 사람마다 바꿀 수 있음)
 const DEFAULT_PAYMENTS = ['신한카드', '삼성카드', '현금', '계좌이체'];
 
 // 이력은 최근 것만 남김 (너무 커지지 않게)
@@ -46,11 +46,11 @@ export function newId(prefix) {
 }
 
 export function newItem(group, name, joint, note) {
-  return { id: newId('i'), group, name, a: null, b: null, joint, amount: null, payment: '', note: note || '' };
+  return { id: newId('i'), group, name, a: null, b: null, joint, amount: null, paymentA: '', paymentB: '', note: note || '' };
 }
 
 export function newEvent(month, name, method) {
-  return { id: newId('e'), month, name, expected: null, confirmed: null, method: method || '', note: '' };
+  return { id: newId('e'), month, name, expected: null, confirmed: null, method: method || '', note: '', done: false };
 }
 
 // 처음 열었을 때 보여 줄 기본 표 (금액은 비워 둠)
@@ -58,7 +58,7 @@ function defaultData() {
   return {
     version: DATA_VERSION,
     names: { a: '유진', b: '남편' },
-    payments: DEFAULT_PAYMENTS.slice(),
+    payments: { a: DEFAULT_PAYMENTS.slice(), b: DEFAULT_PAYMENTS.slice() },
     items: [
       newItem('수입', '월급', false, '실수령 기준'),
       newItem('고정지출', '주담대 이자', true),
@@ -109,7 +109,8 @@ function normalizeItem(saved) {
     b: toAmount(saved.b),
     joint: saved.joint === true,
     amount: toAmount(saved.amount),
-    payment: toText(saved.payment),
+    paymentA: toText(saved.paymentA),
+    paymentB: toText(saved.paymentB),
     note: toText(saved.note),
   };
 }
@@ -138,6 +139,7 @@ function normalizeEvent(saved) {
     confirmed: toAmount(saved.confirmed),
     method: toText(saved.method),
     note: toText(saved.note),
+    done: saved.done === true,
   };
 }
 
@@ -164,8 +166,8 @@ export function loadData() {
   return normalizeData(saved);
 }
 
-// 결제 수단 목록: 빈 이름·중복은 빼고, 저장된 목록이 없으면(버전 2 이하) 기본 목록
-export function normalizePayments(saved) {
+// 결제 수단 이름 목록 하나 다듬기: 빈 이름·중복은 빼고, 목록이 없으면 기본 목록
+export function normalizePaymentList(saved) {
   if (!Array.isArray(saved)) return DEFAULT_PAYMENTS.slice();
   const list = [];
   for (const name of saved) {
@@ -173,6 +175,12 @@ export function normalizePayments(saved) {
     if (text && !list.includes(text)) list.push(text);
   }
   return list;
+}
+
+// 사람별 결제 수단 목록 { a: [...], b: [...] } (예전 데이터에 없으면 둘 다 기본 목록)
+function normalizePayments(saved) {
+  const payments = isObject(saved) ? saved : {};
+  return { a: normalizePaymentList(payments.a), b: normalizePaymentList(payments.b) };
 }
 
 // 저장된 값(또는 백업 파일)을 지금 형식으로 다듬음. 예전 버전 데이터에 없는 값은 기본값을 채움
