@@ -51,6 +51,8 @@ export function renderPlan() {
     ['구분'], ['항목'], [names.a, true], [names.b, true], ['공동'],
     ['월 예상액', true], [`실제액 (${formatMonth(state.month)})`, true], ['차이', true], ['결제일/메모'], [''],
   ]);
+  // 머리줄 맨 오른쪽(✕ 칸 위)에 ＋ 버튼
+  thead.querySelector('th:last-child').append(headerAddButton());
 
   let lastGroup = null;
   const rows = sortByGroup(state.data.items).map((item) => {
@@ -60,6 +62,17 @@ export function renderPlan() {
   });
   tbody.replaceChildren(...rows);
   refreshNumbers();
+}
+
+function headerAddButton() {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'add-button';
+  button.textContent = '＋';
+  button.setAttribute('aria-label', '항목 추가');
+  button.title = '항목 추가';
+  button.addEventListener('click', addItem);
+  return button;
 }
 
 function buildRow(item, isGroupStart) {
