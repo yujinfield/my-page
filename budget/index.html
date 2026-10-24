@@ -45,7 +45,10 @@
       <div id="plan-summary" class="summary"></div>
       <div id="plan-forecast" class="forecast"></div>
       <p class="formula">월 수입 − 고정지출 − 생활비 − 각자 용돈 − 특별비 적립 − 저축·투자 = <strong>남는 돈</strong></p>
-      <p class="hint">예산(월 예상액)은 한 번 정해 두고, 달마다 실제액만 적어요. 공동 항목은 예상액을 직접, 개인 항목은 두 사람 금액을 적으면 합이 예상액이 돼요.</p>
+      <div class="table-toolbar">
+        <p class="hint">예산(월 예상액)은 한 번 정해 두고, 달마다 실제액만 적어요. 공동 항목은 예상액을 직접, 개인 항목은 두 사람 금액을 적으면 합이 예상액이 돼요. 표는 구분 순서로 자동 정렬돼요.</p>
+        <button type="button" id="plan-add" class="button button-primary">＋ 항목 추가</button>
+      </div>
 
       <div class="table-wrap">
         <table class="budget-table">
@@ -55,7 +58,6 @@
         </table>
       </div>
       <p id="plan-missing" class="hint"></p>
-      <div><button type="button" id="plan-add" class="button">＋ 항목 추가</button></div>
 
       <h2 class="section-title">그래프</h2>
       <div id="plan-charts" class="charts"></div>

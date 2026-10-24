@@ -54,8 +54,11 @@ export function renderPlan() {
   // 머리줄 맨 오른쪽(✕ 칸 위)에 ＋ 버튼
   thead.querySelector('th:last-child').append(headerAddButton());
 
+  // 저장 순서도 구분 순서로 맞춤 (화면·백업 파일이 같은 순서가 되게)
+  state.data.items = sortByGroup(state.data.items);
+
   let lastGroup = null;
-  const rows = sortByGroup(state.data.items).map((item) => {
+  const rows = state.data.items.map((item) => {
     const row = buildRow(item, item.group !== lastGroup);
     lastGroup = item.group;
     return row;
@@ -156,8 +159,8 @@ function handleChange(event) {
 
   if (field === 'group') item.group = event.target.value;
   if (field === 'joint') item.joint = event.target.checked;
+  renderPlan(); // 다시 그리면서 구분 순서로 정렬됨
   save();
-  renderPlan();
   focusField(item.id, field);
 }
 
@@ -177,8 +180,8 @@ function handleClick(event) {
 function addItem() {
   const item = newItem('생활비', '', true);
   state.data.items.push(item);
+  renderPlan(); // 다시 그리면서 구분 순서로 정렬됨
   save();
-  renderPlan();
   focusField(item.id, 'name');
 }
 

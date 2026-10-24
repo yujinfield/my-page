@@ -1,5 +1,17 @@
 /* 가계부 표: 입력칸, 숫자 정렬, 구분 묶음, 합계 줄 */
 
+/* 표 위: 설명(왼쪽) + 항목 추가 버튼(오른쪽 위) */
+.table-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-m);
+}
+
+.table-toolbar .button {
+  flex-shrink: 0;
+}
+
 /* 표가 넓으면 표만 옆으로 밀어서 봄 (화면 전체는 안 밀림) */
 .table-wrap {
   overflow-x: auto;
