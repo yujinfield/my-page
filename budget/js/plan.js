@@ -33,12 +33,12 @@ export function setupPlan(appState, onSave) {
   editToggle.addEventListener('click', toggleEditor);
 }
 
-// 휴대폰: 평소엔 요약·그래프만, "입력하기"를 누르면 입력칸을 엶 (CSS가 768px 이하에서만 숨김)
+// 휴대폰: 평소엔 요약·그래프만, "수정하기"를 누르면 입력칸을 엶 (CSS가 768px 이하에서만 숨김)
 function toggleEditor() {
   const open = !editor.classList.contains('is-open');
   editor.classList.toggle('is-open', open);
   editToggle.setAttribute('aria-expanded', String(open));
-  editToggle.textContent = open ? '✔️ 입력 닫기' : '✏️ 입력하기';
+  editToggle.textContent = open ? '✔️ 수정 완료' : '✏️ 수정하기';
   if (open) editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 

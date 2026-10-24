@@ -225,7 +225,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* 월 가계부 입력칸 묶음과 휴대폰용 "입력하기" 버튼 (컴퓨터에서는 버튼 숨김) */
+/* 월 가계부 입력칸 묶음과 휴대폰용 "수정하기" 버튼 (컴퓨터에서는 버튼 숨김) */
 .plan-editor {
   display: flex;
   flex-direction: column;
