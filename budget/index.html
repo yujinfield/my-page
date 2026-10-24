@@ -45,16 +45,21 @@
       <div id="plan-summary" class="summary"></div>
       <div id="plan-forecast" class="forecast"></div>
       <p class="formula">월 수입 − 고정지출 − 생활비 − 각자 용돈 − 특별비 적립 − 저축·투자 = <strong>남는 돈</strong></p>
-      <p class="hint">예산(월 예상액)은 한 번 정해 두고, 달마다 실제액만 적어요. 공동 항목은 예상액을 직접, 개인 항목은 두 사람 금액을 적으면 합이 예상액이 돼요. 표 오른쪽 위 ＋로 항목을 추가하고, 표는 구분 순서로 자동 정렬돼요.</p>
-
-      <div class="table-wrap">
-        <table class="budget-table plan-table">
-          <thead id="plan-head"></thead>
-          <tbody id="plan-body"></tbody>
-          <tfoot id="plan-foot"></tfoot>
-        </table>
-      </div>
       <p id="plan-missing" class="hint"></p>
+      <!-- 휴대폰에서만 보이는 버튼: 누르면 아래 입력칸이 열림 (컴퓨터에서는 항상 열려 있음) -->
+      <button type="button" id="plan-edit-toggle" class="button button-primary edit-toggle" aria-expanded="false" aria-controls="plan-editor">✏️ 입력하기</button>
+
+      <div id="plan-editor" class="plan-editor">
+        <p class="hint">예산(월 예상액)은 한 번 정해 두고, 달마다 실제액만 적어요. 공동 항목은 예상액을 직접, 개인 항목은 두 사람 금액을 적으면 합이 예상액이 돼요. 표 오른쪽 위 ＋로 항목을 추가하고, 표는 구분 순서로 자동 정렬돼요.</p>
+
+        <div class="table-wrap">
+          <table class="budget-table plan-table">
+            <thead id="plan-head"></thead>
+            <tbody id="plan-body"></tbody>
+            <tfoot id="plan-foot"></tfoot>
+          </table>
+        </div>
+      </div>
 
       <h2 class="section-title">그래프</h2>
       <div id="plan-charts" class="charts"></div>

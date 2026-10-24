@@ -13,6 +13,8 @@ import { addHistory, watchEdits, shown } from './history.js';
 const summaryBox = document.getElementById('plan-summary');
 const missingNote = document.getElementById('plan-missing');
 const forecastBox = document.getElementById('plan-forecast');
+const editor = document.getElementById('plan-editor');
+const editToggle = document.getElementById('plan-edit-toggle');
 const chartsBox = document.getElementById('plan-charts');
 const thead = document.getElementById('plan-head');
 const tbody = document.getElementById('plan-body');
@@ -28,6 +30,16 @@ export function setupPlan(appState, onSave) {
   tbody.addEventListener('change', handleChange);
   tbody.addEventListener('click', handleClick);
   watchEdits(tbody, () => state.data, describeEdit, save);
+  editToggle.addEventListener('click', toggleEditor);
+}
+
+// 휴대폰: 평소엔 요약·그래프만, "입력하기"를 누르면 입력칸을 엶 (CSS가 768px 이하에서만 숨김)
+function toggleEditor() {
+  const open = !editor.classList.contains('is-open');
+  editor.classList.toggle('is-open', open);
+  editToggle.setAttribute('aria-expanded', String(open));
+  editToggle.textContent = open ? '✔️ 입력 닫기' : '✏️ 입력하기';
+  if (open) editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // 이력에 남길 글. 예: "[월 가계부] 식비·배달·장보기 실제액(2026.10): 100 → 130"

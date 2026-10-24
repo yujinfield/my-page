@@ -34,7 +34,7 @@ export function donutChart(title, slices, centerText, centerLabel) {
   const svg = document.createElementNS(SVG, 'svg');
   svg.setAttribute('viewBox', '0 0 42 42');
   svg.setAttribute('aria-hidden', 'true');
-  svg.append(circle('var(--surface-soft)', 100, 0));
+  svg.append(circle('var(--line)', 100, 0));
 
   const GAP = shown.length > 1 ? 0.6 : 0; // 조각 사이 틈
   let start = 0;

@@ -225,6 +225,27 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* 월 가계부 입력칸 묶음과 휴대폰용 "입력하기" 버튼 (컴퓨터에서는 버튼 숨김) */
+.plan-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+  scroll-margin-top: var(--space-m);
+}
+
+.edit-toggle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .edit-toggle {
+    display: block;
+    width: 100%;
+    padding: var(--space-m);
+    font-weight: 700;
+  }
+}
+
 /* 차이 색: 좋으면 초록, 나쁘면 빨강 */
 .good {
   color: var(--good);

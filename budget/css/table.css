@@ -181,6 +181,11 @@ select.cell-input {
    │ 예상  실제  차이   │
    └ 메모              ┘ */
 @media (max-width: 768px) {
+  /* 평소엔 입력칸을 숨기고, "입력하기"를 눌렀을 때만 보여 줌 */
+  .plan-editor:not(.is-open) {
+    display: none;
+  }
+
   .plan-table {
     min-width: 0;
   }
