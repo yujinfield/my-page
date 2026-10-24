@@ -23,14 +23,15 @@
 | `css/layout.css` | 머리말, 탭, 카드, 요약 카드, 버튼, 반응형 |
 | `css/table.css` | 가계부 표, 입력칸, 합계 줄, 휴대폰(768px 이하) 카드 배치 |
 | `css/charts.css` | 원형·막대 그래프, 범례 |
+| `css/actual.css` | ② 실제 사용 목록 |
 | `js/calc.js` | 금액 계산·월 계산·연간 합계 (순수 함수, DOM 사용 안 함) |
 | `js/forecast.js` | "이대로 가면 N년 뒤 M억" 계산·코멘트, 억 단위 표시 (순수 함수) |
 | `js/charts.js` | 원형(SVG)·가로 막대(HTML) 그래프. 색은 `--series-*` 변수 |
 | `js/history.js` | 변경 이력 남기기 (`addHistory`, 칸을 벗어날 때 기록하는 `watchEdits`) |
 | `js/store.js` | 데이터 계층. `localStorage` 읽기/쓰기는 **이 파일에서만** |
-| `js/cells.js` | 표 칸·입력칸 만드는 도우미. `areaCell`은 휴대폰 카드용 자리 이름·이름표를 붙임 |
-| `js/plan.js` | ① 월 가계부 |
-| `js/joint.js` | ② 공동통장 |
+| `js/cells.js` | 표 칸·입력칸 만드는 도우미. `areaCell`은 휴대폰 카드용 자리 이름·이름표, `showDiff`는 차이 색 |
+| `js/plan.js` | ① 월 가계부 (예산 입력, 실제액은 보기만) |
+| `js/actual.js` | ② 실제 사용 (그 달 실제액 입력) |
 | `js/events.js` | ③ 큰돈 캘린더 |
 | `js/annual.js` | ④ 연간 요약, 목표·예측 |
 | `js/backup.js` | ⑤ 백업 파일 내려받기·불러오기, 이력 보기 |
@@ -45,7 +46,7 @@
   version: 2,
   names: { a: "유진", b: "남편" },
   items: [{ id, group, name, a, b, joint, amount, note }],   // 예산 (모든 달 공통)
-  months: { "2026-11": { actual: { [itemId]: 금액 }, depositA, depositB } },
+  months: { "2026-11": { actual: { [itemId]: 금액 }, depositA, depositB } },  // deposit은 예전 공동통장 기록(화면 없음, 보존만)
   events: [{ id, month, name, expected, confirmed, method, note }],
   goal: { current, target, rate },      // 현재 자산·목표(만원), 연 수익률(%)
   history: [{ time, text }],            // 변경 이력, 최근 300개
@@ -67,5 +68,5 @@ python3 -m http.server 8000   # http://localhost:8000/budget/
 - [ ] 금액 입력 → 새로고침해도 남아 있는가
 - [ ] 요약 카드·합계 줄·차이 색(지출은 적을수록, 수입·저축은 많을수록 초록)이 맞는가
 - [ ] 달을 바꾸면 실제액이 그 달 것으로 바뀌는가
-- [ ] 다크 모드와 모바일 폭(375px)에서 화면 전체가 옆으로 밀리지 않는가 (월 가계부·공동통장·큰돈 캘린더는 카드, 연간 요약 표만 가로 스크롤)
+- [ ] 다크 모드와 모바일 폭(375px)에서 화면 전체가 옆으로 밀리지 않는가 (월 가계부·큰돈 캘린더는 카드, 연간 요약 표만 가로 스크롤)
 - [ ] 브라우저 콘솔에 에러가 없는가

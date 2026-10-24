@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/table.css">
   <link rel="stylesheet" href="css/charts.css">
+  <link rel="stylesheet" href="css/actual.css">
 </head>
 <body>
   <header class="app-header">
@@ -34,7 +35,7 @@
 
     <div class="tabs" role="tablist" aria-label="가계부 화면">
       <button type="button" role="tab" id="tab-plan" data-tab="plan" aria-controls="panel-plan">① 월 가계부</button>
-      <button type="button" role="tab" id="tab-joint" data-tab="joint" aria-controls="panel-joint">② 공동통장</button>
+      <button type="button" role="tab" id="tab-actual" data-tab="actual" aria-controls="panel-actual">② 실제 사용</button>
       <button type="button" role="tab" id="tab-events" data-tab="events" aria-controls="panel-events">③ 큰돈 캘린더</button>
       <button type="button" role="tab" id="tab-annual" data-tab="annual" aria-controls="panel-annual">④ 연간 요약</button>
       <button type="button" role="tab" id="tab-backup" data-tab="backup" aria-controls="panel-backup">⑤ 백업·이력</button>
@@ -50,7 +51,7 @@
       <button type="button" id="plan-edit-toggle" class="button button-primary edit-toggle" aria-expanded="false" aria-controls="plan-editor">✏️ 수정하기</button>
 
       <div id="plan-editor" class="plan-editor">
-        <p class="hint">예산(월 예상액)은 한 번 정해 두고, 달마다 실제액만 적어요. 공동 항목은 예상액을 직접, 개인 항목은 두 사람 금액을 적으면 합이 예상액이 돼요. 표 오른쪽 위 ＋로 항목을 추가하고, 표는 구분 순서로 자동 정렬돼요.</p>
+        <p class="hint">예산(월 예상액)은 한 번 정해 두고, 달마다 실제액은 ② 실제 사용에서 적어요. 공동 항목은 예상액을 직접, 개인 항목은 두 사람 금액을 적으면 합이 예상액이 돼요. 표 오른쪽 위 ＋로 항목을 추가하고, 표는 구분 순서로 자동 정렬돼요.</p>
 
         <div class="table-wrap">
           <table class="budget-table card-table plan-table">
@@ -65,18 +66,12 @@
       <div id="plan-charts" class="charts"></div>
     </section>
 
-    <!-- ② 공동통장 -->
-    <section id="panel-joint" class="card" role="tabpanel" aria-labelledby="tab-joint" hidden>
-      <div id="joint-info" class="info-box"></div>
-      <p class="hint">공동비는 50:50보다 소득 비율로 나누는 게 현실적이고, 용돈은 똑같이 잡는 게 깔끔해요. 실제 공동지출은 ① 월 가계부의 공동 항목 실제액 합계예요.</p>
-
-      <div class="table-wrap">
-        <table class="budget-table card-table joint-table">
-          <thead id="joint-head"></thead>
-          <tbody id="joint-body"></tbody>
-        </table>
-      </div>
-      <p class="hint">위의 ◀ ▶로 달을 바꾸면 그 달 줄이 생겨요. 입금이나 실제액을 적은 달은 계속 남아요.</p>
+    <!-- ② 실제 사용 -->
+    <section id="panel-actual" class="card" role="tabpanel" aria-labelledby="tab-actual" hidden>
+      <div id="actual-summary" class="summary"></div>
+      <p class="hint">이 달에 실제로 받은·쓴 금액을 항목마다 적어요. 예산과 항목은 ① 월 가계부에서 바꿔요.</p>
+      <p id="actual-progress" class="hint" aria-live="polite"></p>
+      <div id="actual-list" class="actual-list"></div>
     </section>
 
     <!-- ③ 큰돈 캘린더 -->
@@ -110,7 +105,7 @@
           <tfoot id="annual-foot"></tfoot>
         </table>
       </div>
-      <p class="hint">① 월 가계부에 적은 실제액으로 계산해요. 실제액을 일부만 적은 달은 적은 만큼만 더해져요.</p>
+      <p class="hint">② 실제 사용에 적은 실제액으로 계산해요. 실제액을 일부만 적은 달은 적은 만큼만 더해져요.</p>
       <p id="annual-events" class="hint"></p>
 
       <h2 class="section-title">이대로 가면?</h2>

@@ -174,7 +174,7 @@ select.cell-input {
   outline-offset: 2px;
 }
 
-/* ── 휴대폰: 표를 줄마다 카드로 (월 가계부·공동통장·큰돈 캘린더) ──
+/* ── 휴대폰: 표를 줄마다 카드로 (월 가계부·큰돈 캘린더) ──
    칸마다 data-area(자리 이름)와 data-label(이름표)을 붙여 두고 (cells.js의 areaCell)
    표마다 grid-template-areas로 카드 안 배치를 정합니다. */
 @media (max-width: 768px) {
@@ -295,11 +295,6 @@ select.cell-input {
   .card-table td[data-area="note"] { grid-area: note; }
   .card-table td[data-area="delete"] { grid-area: delete; }
   .card-table td[data-area="month"] { grid-area: month; }
-  .card-table td[data-area="budget"] { grid-area: budget; }
-  .card-table td[data-area="total"] { grid-area: total; }
-  .card-table td[data-area="spent"] { grid-area: spent; }
-  .card-table td[data-area="balance"] { grid-area: balance; }
-  .card-table td[data-area="carry"] { grid-area: carry; }
   .card-table td[data-area="expected"] { grid-area: expected; }
   .card-table td[data-area="confirmed"] { grid-area: confirmed; }
   .card-table td[data-area="method"] { grid-area: method; }
@@ -358,24 +353,6 @@ select.cell-input {
     align-items: center;
     justify-content: center;
     gap: var(--space-xs);
-  }
-
-  /* ── ② 공동통장 ──
-     ┌ 2026.10      누적 이월 ┐
-     │ 유진 입금  남편 입금  총 입금 │
-     └ 공동 예산  실제 지출  잔액   ┘ */
-  .joint-table tbody tr {
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-areas:
-      "month month carry"
-      "a b total"
-      "budget spent balance";
-  }
-
-  .joint-table td[data-area="month"] {
-    justify-content: center;
-    font-size: 18px;
-    font-weight: 700;
   }
 
   /* ── ③ 큰돈 캘린더 ──

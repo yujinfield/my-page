@@ -1,10 +1,10 @@
-// 진입점: 상태를 들고 다섯 화면(월 가계부 / 공동통장 / 큰돈 캘린더 / 연간 요약 / 백업·이력)을 연결합니다.
+// 진입점: 상태를 들고 다섯 화면(월 가계부 / 실제 사용 / 큰돈 캘린더 / 연간 요약 / 백업·이력)을 연결합니다.
 
 import { loadData, saveData } from './store.js';
 import { monthKeyOf, formatMonth, shiftMonth } from './calc.js';
 import { setupTheme } from './theme.js';
 import { setupPlan, renderPlan } from './plan.js';
-import { setupJoint, renderJoint } from './joint.js';
+import { setupActual, renderActual } from './actual.js';
 import { setupEvents, renderEvents } from './events.js';
 import { setupAnnual, renderAnnual } from './annual.js';
 import { setupBackup, renderBackup } from './backup.js';
@@ -13,7 +13,7 @@ import { setupBackup, renderBackup } from './backup.js';
 const state = { data: loadData(), month: monthKeyOf(new Date()), tab: 'plan' };
 
 const RENDER = {
-  plan: renderPlan, joint: renderJoint, events: renderEvents, annual: renderAnnual, backup: renderBackup,
+  plan: renderPlan, actual: renderActual, events: renderEvents, annual: renderAnnual, backup: renderBackup,
 };
 
 const saveStatus = document.getElementById('save-status');
@@ -86,7 +86,7 @@ for (const key of ['a', 'b']) {
 
 setupTheme();
 setupPlan(state, save);
-setupJoint(state, save);
+setupActual(state, save);
 setupEvents(state, save);
 setupAnnual(state, save, render);
 // 백업 파일을 불러와 데이터가 통째로 바뀌면 이름 칸과 화면을 새로 고침

@@ -108,6 +108,7 @@ function normalizeItem(saved) {
   };
 }
 
+// depositA·depositB는 예전 "공동통장" 화면의 입금 기록. 화면은 없어졌지만 기록이 사라지지 않게 그대로 둠
 function normalizeMonth(saved) {
   const month = emptyMonth();
   if (!saved || typeof saved !== 'object') return month;

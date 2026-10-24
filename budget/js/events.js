@@ -2,7 +2,7 @@
 
 import { parseAmount, formatMoney } from './calc.js';
 import { newEvent } from './store.js';
-import { cell, areaCell, textInput, amountInput, deleteButton, renderHeadRow } from './cells.js';
+import { areaCell, textInput, amountInput, deleteButton, renderHeadRow } from './cells.js';
 import { addHistory, watchEdits, shown } from './history.js';
 
 const LABELS = { month: '월', name: '이벤트', expected: '예상 지출', confirmed: '확정 지출', method: '마련 방법', note: '잔액/비고' };

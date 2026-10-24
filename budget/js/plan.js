@@ -1,11 +1,13 @@
-// ① 월 가계부: 예산(월 예상액)은 한 번 정해 두고, 달마다 실제액과 차이를 봅니다.
+// ① 월 가계부: 예산(월 예상액)을 정하고, 그 달 실제액(② 실제 사용에서 입력)과 차이를 봅니다.
 
 import {
-  GROUPS, itemKind, parseAmount, formatMoney, formatDiff, formatMonth, planAmount,
-  diffOf, isGoodDiff, sortByGroup, summarize, monthRecord, ensureMonth, groupTotals,
+  GROUPS, itemKind, parseAmount, formatMoney, formatMonth, planAmount,
+  diffOf, sortByGroup, summarize, monthRecord, groupTotals,
 } from './calc.js';
 import { newItem } from './store.js';
-import { cell, areaCell, textInput, amountInput, computed, setMoney, deleteButton, renderHeadRow } from './cells.js';
+import {
+  areaCell, textInput, amountInput, computed, setMoney, showDiff, deleteButton, renderHeadRow,
+} from './cells.js';
 import { donutChart, barChart, seriesColor } from './charts.js';
 import { forecastLines } from './forecast.js';
 import { addHistory, watchEdits, shown } from './history.js';
@@ -42,14 +44,14 @@ function toggleEditor() {
   if (open) editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// 이력에 남길 글. 예: "[월 가계부] 식비·배달·장보기 실제액(2026.10): 100 → 130"
+// 이력에 남길 글. 예: "[월 가계부] 식비·배달·장보기 예상액: 100 → 130"
 function describeEdit(input, before, after) {
   const item = findItem(input);
   if (!item) return null;
   const { names } = state.data;
   const labels = {
     group: '구분', name: '항목 이름', a: `${names.a} 금액`, b: `${names.b} 금액`, joint: '공동',
-    amount: '예상액', actual: `실제액(${formatMonth(state.month)})`, note: '메모',
+    amount: '예상액', note: '메모',
   };
   const itemName = (input.dataset.field === 'name' ? before : item.name) || '이름 없는 항목';
   return `[월 가계부] ${itemName} ${labels[input.dataset.field]}: ${shown(before)} → ${shown(after)}`;
@@ -90,7 +92,6 @@ function headerAddButton() {
 
 function buildRow(item, isGroupStart) {
   const { names } = state.data;
-  const actual = monthRecord(state.data, state.month).actual[item.id];
   const tr = document.createElement('tr');
   tr.dataset.id = item.id;
   tr.className = `kind-${itemKind(item)}`;
@@ -131,7 +132,8 @@ function buildRow(item, isGroupStart) {
     ['b', names.b, inputB, 'num'],
     ['joint', '공동', jointBox, 'center'],
     ['plan', '예상', planCell, 'num'],
-    ['actual', `실제 (${formatMonth(state.month)})`, amountInput('actual', actual, '실제액'), 'num'],
+    // 실제액은 ② 실제 사용에서 적고, 여기서는 보기만 함
+    ['actual', `실제 (${formatMonth(state.month)})`, computed('actual'), 'num'],
     ['diff', '차이', computed('diff'), 'num'],
     ['note', '메모', textInput('note', item.note, '결제일/메모')],
     ['delete', '', deleteButton('항목 지우기')],
@@ -155,11 +157,6 @@ function handleInput(event) {
 
   if (field === 'name' || field === 'note') {
     item[field] = event.target.value;
-  } else if (field === 'actual') {
-    const record = ensureMonth(state.data, state.month);
-    const value = parseAmount(event.target.value);
-    if (value === null) delete record.actual[item.id];
-    else record.actual[item.id] = value;
   } else {
     item[field] = parseAmount(event.target.value);
   }
@@ -215,6 +212,7 @@ function refreshNumbers() {
     const item = state.data.items.find((other) => other.id === row.dataset.id);
     const plan = planAmount(item);
     setMoney(row, 'plan', plan);
+    setMoney(row, 'actual', actualMap[item.id]);
     showDiff(row.querySelector('[data-cell="diff"]'), itemKind(item), diffOf(plan, actualMap[item.id]));
   }
 
@@ -224,14 +222,8 @@ function refreshNumbers() {
   renderForecast(totals);
   renderCharts(totals, actualMap);
   missingNote.textContent = totals.missing > 0
-    ? `${formatMonth(state.month)} 실제액을 아직 안 적은 항목이 ${totals.missing}개 있어요. 다 적어야 실제 합계가 정확해요.`
+    ? `${formatMonth(state.month)} 실제액을 아직 안 적은 항목이 ${totals.missing}개 있어요. ② 실제 사용에서 적어 주세요.`
     : `${formatMonth(state.month)} 실제액을 모두 적었어요.`;
-}
-
-function showDiff(span, kind, diff) {
-  span.textContent = formatDiff(diff);
-  span.classList.toggle('good', diff !== null && diff !== 0 && isGoodDiff(kind, diff));
-  span.classList.toggle('bad', diff !== null && !isGoodDiff(kind, diff));
 }
 
 const FOOT_ROWS = [

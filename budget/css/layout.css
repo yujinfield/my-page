@@ -153,15 +153,6 @@
   font-size: var(--font-size-small);
 }
 
-.info-box {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  padding: var(--space-m);
-  border-radius: var(--radius-s);
-  background: var(--highlight);
-}
-
 /* "이대로 가면?" 코멘트 */
 .forecast {
   display: flex;

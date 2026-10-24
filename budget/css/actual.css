@@ -1,0 +1,57 @@
+/* ② 실제 사용: 구분별 목록, 한 줄에 [이름·예산] [실제 입력칸·차이] */
+
+.actual-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-l);
+  max-width: 720px;
+}
+
+.actual-group-title {
+  margin: 0 0 var(--space-xs);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  font-weight: 700;
+}
+
+.actual-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.actual-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-m);
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-s);
+  background: var(--surface-soft);
+}
+
+.actual-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.actual-input {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.actual-input .cell-input {
+  width: 7em;
+  background: var(--surface);
+}
+
+.actual-diff {
+  min-height: 1.4em;
+  font-size: var(--font-size-small);
+}
