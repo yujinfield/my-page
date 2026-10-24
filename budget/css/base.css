@@ -1,0 +1,100 @@
+/* 색상·간격·폰트 변수, 리셋, 다크 모드 */
+
+:root {
+  --bg: #f6f5f2;
+  --surface: #ffffff;
+  --surface-soft: #efede8;
+  --text: #2a2826;
+  --text-soft: #7a756f;
+  --line: #e4e1db;
+
+  --accent: #dd4c4f;
+  --accent-text: #ffffff;
+  --good: #2e8b57;
+  --bad: #dd4c4f;
+  --highlight: #fbeaea;
+
+  --space-xs: 4px;
+  --space-s: 8px;
+  --space-m: 16px;
+  --space-l: 24px;
+  --space-xl: 40px;
+
+  --radius-s: 8px;
+  --radius-m: 16px;
+  --radius-l: 24px;
+
+  --font: "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --font-size: 16px;
+  --font-size-small: 14px;
+  --font-size-title: 26px;
+
+  --content-width: 1180px;
+}
+
+/* 시스템이 다크 모드이고, 직접 라이트로 고르지 않았을 때 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1c1b1a;
+    --surface: #262524;
+    --surface-soft: #31302e;
+    --text: #eeebe6;
+    --text-soft: #a8a29b;
+    --line: #3d3b38;
+
+    --accent: #ec6f71;
+    --accent-text: #1c1b1a;
+    --good: #5cc28a;
+    --bad: #ec6f71;
+    --highlight: #3a2a2a;
+  }
+}
+
+/* 직접 다크 모드로 바꿨을 때 */
+:root[data-theme="dark"] {
+  --bg: #1c1b1a;
+  --surface: #262524;
+  --surface-soft: #31302e;
+  --text: #eeebe6;
+  --text-soft: #a8a29b;
+  --line: #3d3b38;
+
+  --accent: #ec6f71;
+  --accent-text: #1c1b1a;
+  --good: #5cc28a;
+  --bad: #ec6f71;
+  --highlight: #3a2a2a;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--font-size);
+  line-height: 1.6;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+/* hidden 속성이 display 지정보다 항상 이기도록 */
+[hidden] {
+  display: none !important;
+}
