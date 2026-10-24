@@ -3,7 +3,7 @@
 import {
   parseAmount, formatMoney, formatMonth, jointBudget, incomeShare, jointLedger, jointMonthKeys, ensureMonth,
 } from './calc.js';
-import { cell, amountInput, computed, setMoney, renderHeadRow } from './cells.js';
+import { areaCell, amountInput, computed, setMoney, renderHeadRow } from './cells.js';
 import { watchEdits, shown } from './history.js';
 
 const infoBox = document.getElementById('joint-info');
@@ -42,15 +42,16 @@ export function renderJoint() {
     const tr = document.createElement('tr');
     tr.dataset.month = line.key;
     if (line.key === state.month) tr.className = 'current-month';
+    // 휴대폰에서는 카드로 보임 (자리 이름·이름표는 table.css)
     tr.append(
-      cell(formatMonth(line.key)),
-      cell(computed('budget'), 'num'),
-      cell(amountInput('depositA', line.depositA, `${formatMonth(line.key)} ${names.a} 입금`, recommended.a), 'num'),
-      cell(amountInput('depositB', line.depositB, `${formatMonth(line.key)} ${names.b} 입금`, recommended.b), 'num'),
-      cell(computed('total'), 'num'),
-      cell(computed('spent'), 'num'),
-      cell(computed('balance'), 'num'),
-      cell(computed('carry'), 'num'),
+      areaCell('month', '', formatMonth(line.key)),
+      areaCell('budget', '공동 예산', computed('budget'), 'num'),
+      areaCell('a', `${names.a} 입금`, amountInput('depositA', line.depositA, `${formatMonth(line.key)} ${names.a} 입금`, recommended.a), 'num'),
+      areaCell('b', `${names.b} 입금`, amountInput('depositB', line.depositB, `${formatMonth(line.key)} ${names.b} 입금`, recommended.b), 'num'),
+      areaCell('total', '총 입금', computed('total'), 'num'),
+      areaCell('spent', '실제 공동지출', computed('spent'), 'num'),
+      areaCell('balance', '잔액', computed('balance'), 'num'),
+      areaCell('carry', '누적 이월', computed('carry'), 'num'),
     );
     return tr;
   });

@@ -11,6 +11,14 @@ export function cell(content, className) {
   return td;
 }
 
+// 휴대폰 카드용 칸: area는 카드 안 자리 이름(table.css), label은 카드에서 보일 이름표
+export function areaCell(area, label, content, className) {
+  const td = cell(content, className);
+  td.dataset.area = area;
+  if (label) td.dataset.label = label;
+  return td;
+}
+
 // 글자 입력칸. field는 어느 값을 고치는지 알려 주는 이름
 export function textInput(field, value, label, placeholder) {
   const input = document.createElement('input');
