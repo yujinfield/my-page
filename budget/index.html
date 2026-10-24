@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/table.css">
+  <link rel="stylesheet" href="css/charts.css">
 </head>
 <body>
   <header class="app-header">
@@ -35,11 +36,14 @@
       <button type="button" role="tab" id="tab-plan" data-tab="plan" aria-controls="panel-plan">① 월 가계부</button>
       <button type="button" role="tab" id="tab-joint" data-tab="joint" aria-controls="panel-joint">② 공동통장</button>
       <button type="button" role="tab" id="tab-events" data-tab="events" aria-controls="panel-events">③ 큰돈 캘린더</button>
+      <button type="button" role="tab" id="tab-annual" data-tab="annual" aria-controls="panel-annual">④ 연간 요약</button>
+      <button type="button" role="tab" id="tab-backup" data-tab="backup" aria-controls="panel-backup">⑤ 백업·이력</button>
     </div>
 
     <!-- ① 월 가계부 -->
     <section id="panel-plan" class="card" role="tabpanel" aria-labelledby="tab-plan">
       <div id="plan-summary" class="summary"></div>
+      <div id="plan-forecast" class="forecast"></div>
       <p class="formula">월 수입 − 고정지출 − 생활비 − 각자 용돈 − 특별비 적립 − 저축·투자 = <strong>남는 돈</strong></p>
       <p class="hint">예산(월 예상액)은 한 번 정해 두고, 달마다 실제액만 적어요. 공동 항목은 예상액을 직접, 개인 항목은 두 사람 금액을 적으면 합이 예상액이 돼요.</p>
 
@@ -52,6 +56,9 @@
       </div>
       <p id="plan-missing" class="hint"></p>
       <div><button type="button" id="plan-add" class="button">＋ 항목 추가</button></div>
+
+      <h2 class="section-title">그래프</h2>
+      <div id="plan-charts" class="charts"></div>
     </section>
 
     <!-- ② 공동통장 -->
@@ -80,6 +87,53 @@
         </table>
       </div>
       <div><button type="button" id="events-add" class="button">＋ 이벤트 추가</button></div>
+    </section>
+
+    <!-- ④ 연간 요약 -->
+    <section id="panel-annual" class="card" role="tabpanel" aria-labelledby="tab-annual" hidden>
+      <div class="month-switch">
+        <button type="button" id="year-prev" class="icon-button" aria-label="지난해 보기">◀</button>
+        <p id="year-label" class="month-label" aria-live="polite"></p>
+        <button type="button" id="year-next" class="icon-button" aria-label="다음 해 보기">▶</button>
+      </div>
+      <div id="annual-summary" class="summary"></div>
+      <div id="annual-chart" class="charts"></div>
+
+      <div class="table-wrap">
+        <table class="budget-table annual-table">
+          <thead id="annual-head"></thead>
+          <tbody id="annual-body"></tbody>
+          <tfoot id="annual-foot"></tfoot>
+        </table>
+      </div>
+      <p class="hint">① 월 가계부에 적은 실제액으로 계산해요. 실제액을 일부만 적은 달은 적은 만큼만 더해져요.</p>
+      <p id="annual-events" class="hint"></p>
+
+      <h2 class="section-title">이대로 가면?</h2>
+      <form id="goal-form" class="row goal-form">
+        <label>현재 자산 <input type="text" inputmode="decimal" class="text-input" data-field="current" placeholder="0"> 만원</label>
+        <label>목표 <input type="text" inputmode="decimal" class="text-input" data-field="target"> 만원 <span id="goal-target-text" class="hint"></span></label>
+        <label>연 수익률 <input type="text" inputmode="decimal" class="text-input text-input-short" data-field="rate"> %</label>
+      </form>
+      <div id="annual-forecast" class="forecast-list"></div>
+      <p class="hint">매달 같은 금액을 넣고 연 수익률이 그대로라고 가정한 어림값이에요. 물가·세금·큰돈 지출은 빼고 계산해요.</p>
+    </section>
+
+    <!-- ⑤ 백업·이력 -->
+    <section id="panel-backup" class="card" role="tabpanel" aria-labelledby="tab-backup" hidden>
+      <h2 class="section-title">백업</h2>
+      <p id="backup-status"></p>
+      <div class="row">
+        <button type="button" id="backup-export" class="button button-primary">⬇️ 백업 파일 내려받기</button>
+        <label class="button">📂 백업 파일 불러오기<input type="file" id="backup-import" class="visually-hidden" accept=".json,application/json"></label>
+      </div>
+      <p id="backup-message" class="hint" role="status"></p>
+      <p class="hint">기록은 이 브라우저에만 저장돼요. 백업 파일(.json)을 내려받아 두면 다른 기기나 브라우저에서 불러올 수 있어요.</p>
+
+      <h2 class="section-title">변경 이력</h2>
+      <p class="hint">금액·항목을 고치거나 지우면 언제 무엇이 바뀌었는지 최근 300개까지 남아요.</p>
+      <ol id="history-list" class="history-list"></ol>
+      <div><button type="button" id="history-clear" class="button">이력 지우기</button></div>
     </section>
 
     <!-- 설정 -->

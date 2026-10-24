@@ -162,6 +162,69 @@
   background: var(--highlight);
 }
 
+/* "이대로 가면?" 코멘트 */
+.forecast {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-m);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-s);
+  background: var(--surface-soft);
+}
+
+.forecast-title {
+  font-weight: 700;
+}
+
+.forecast-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-s);
+}
+
+.section-title {
+  margin-top: var(--space-s);
+  font-size: 18px;
+}
+
+.goal-form .text-input {
+  text-align: right;
+}
+
+.text-input-short {
+  width: 4em;
+}
+
+.muted {
+  color: var(--text-soft);
+}
+
+/* 변경 이력 */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 420px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.history-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-m);
+  padding: var(--space-s) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.history-list time {
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  font-variant-numeric: tabular-nums;
+}
+
 /* 차이 색: 좋으면 초록, 나쁘면 빨강 */
 .good {
   color: var(--good);
@@ -189,7 +252,13 @@
   font-size: 18px;
 }
 
+.button-primary {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
 .button:focus-visible,
+.button:focus-within,
 .icon-button:focus-visible,
 .tabs [role="tab"]:focus-visible,
 input:focus-visible,

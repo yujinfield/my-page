@@ -18,16 +18,22 @@
 
 | 파일 | 역할 |
 | --- | --- |
-| `index.html` | 마크업 뼈대 (달 이동, 탭 3개, 설정) |
+| `index.html` | 마크업 뼈대 (달 이동, 탭 5개, 설정) |
 | `css/base.css` | CSS 변수(색상·간격·폰트), 리셋, 다크 모드 |
 | `css/layout.css` | 머리말, 탭, 카드, 요약 카드, 버튼, 반응형 |
 | `css/table.css` | 가계부 표, 입력칸, 합계 줄 |
-| `js/calc.js` | 금액 계산·월 계산 (순수 함수, DOM 사용 안 함) |
+| `css/charts.css` | 원형·막대 그래프, 범례 |
+| `js/calc.js` | 금액 계산·월 계산·연간 합계 (순수 함수, DOM 사용 안 함) |
+| `js/forecast.js` | "이대로 가면 N년 뒤 M억" 계산·코멘트, 억 단위 표시 (순수 함수) |
+| `js/charts.js` | 원형(SVG)·가로 막대(HTML) 그래프. 색은 `--series-*` 변수 |
+| `js/history.js` | 변경 이력 남기기 (`addHistory`, 칸을 벗어날 때 기록하는 `watchEdits`) |
 | `js/store.js` | 데이터 계층. `localStorage` 읽기/쓰기는 **이 파일에서만** |
 | `js/cells.js` | 표 칸·입력칸 만드는 도우미 |
 | `js/plan.js` | ① 월 가계부 |
 | `js/joint.js` | ② 공동통장 |
 | `js/events.js` | ③ 큰돈 캘린더 |
+| `js/annual.js` | ④ 연간 요약, 목표·예측 |
+| `js/backup.js` | ⑤ 백업 파일 내려받기·불러오기, 이력 보기 |
 | `js/theme.js` | 라이트·다크 전환 |
 | `js/app.js` | 진입점. 상태(데이터, 보고 있는 달, 탭)를 들고 화면을 연결 |
 
@@ -36,15 +42,20 @@
 ```js
 // localStorage 키: "budget-data" (금액 단위: 만원, 빈칸은 null)
 {
-  version: 1,
+  version: 2,
   names: { a: "유진", b: "남편" },
   items: [{ id, group, name, a, b, joint, amount, note }],   // 예산 (모든 달 공통)
   months: { "2026-11": { actual: { [itemId]: 금액 }, depositA, depositB } },
-  events: [{ id, month, name, expected, confirmed, method, note }]
+  events: [{ id, month, name, expected, confirmed, method, note }],
+  goal: { current, target, rate },      // 현재 자산·목표(만원), 연 수익률(%)
+  history: [{ time, text }],            // 변경 이력, 최근 300개
+  lastBackupAt: null                    // 마지막 백업 시각(ms)
 }
 ```
 
 - 월 예상액은 저장하지 않고 계산합니다: 공동이면 `amount`, 아니면 `a + b`.
+- 버전 1 → 2: `goal`·`history`·`lastBackupAt`이 없으면 기본값을 채웁니다 (`normalizeData`). 백업 파일을 불러올 때도 같은 함수를 씁니다.
+- 그래프 색 `--series-1~7`은 색약 검증을 거친 순서입니다. 순서를 바꾸지 말고, 원형 그래프 구분마다 고정 색을 씁니다.
 - 데이터 형식을 바꾸면 `version`을 올리고 `store.js`의 `loadData()`에 옮기는 코드를 추가해 **기존 기록이 사라지지 않게** 합니다.
 
 ## 실행 & 확인

@@ -8,7 +8,11 @@ const DATA_KEY = 'budget-data';
 const THEME_KEY = 'budget-theme';
 
 // 데이터 형식을 바꾸면 이 숫자를 올리고 loadData()에 옮기는 코드를 추가합니다.
-const DATA_VERSION = 1;
+// 1 → 2: 목표(goal), 변경 이력(history), 마지막 백업 시각(lastBackupAt) 추가
+const DATA_VERSION = 2;
+
+// 이력은 최근 것만 남김 (너무 커지지 않게)
+export const HISTORY_LIMIT = 300;
 
 function readJson(key) {
   try {
@@ -64,6 +68,9 @@ function defaultData() {
       newItem('저축·투자', 'ISA·연금·ETF 등', true),
     ],
     months: {},
+    goal: defaultGoal(),
+    history: [],
+    lastBackupAt: null,
     events: [
       newEvent('2026.11', '결혼 준비', '기존 예산'),
       newEvent('2027.01', '본식·신혼여행', '현금/성과급'),
@@ -71,6 +78,11 @@ function defaultData() {
       newEvent('상시', '가전 교체·집 수리', '특별비 통장'),
     ],
   };
+}
+
+// 목표: 현재 자산, 목표 금액(만원), 연 수익률(%)
+function defaultGoal() {
+  return { current: null, target: 50000, rate: 4 };
 }
 
 /* ── 저장된 값 다듬기 (빠지거나 잘못된 값은 기본값으로) ── */
@@ -122,10 +134,31 @@ function normalizeEvent(saved) {
   };
 }
 
+function normalizeGoal(saved) {
+  const goal = defaultGoal();
+  if (!isObject(saved)) return goal;
+  goal.current = toAmount(saved.current);
+  if (toAmount(saved.target) !== null) goal.target = saved.target;
+  if (toAmount(saved.rate) !== null) goal.rate = saved.rate;
+  return goal;
+}
+
+function normalizeHistory(saved) {
+  if (!Array.isArray(saved)) return [];
+  return saved
+    .filter((entry) => isObject(entry) && typeof entry.time === 'number' && typeof entry.text === 'string')
+    .slice(-HISTORY_LIMIT)
+    .map((entry) => ({ time: entry.time, text: entry.text }));
+}
+
 export function loadData() {
   const saved = readJson(DATA_KEY);
-  if (!saved || typeof saved !== 'object') return defaultData();
+  if (!isObject(saved)) return defaultData();
+  return normalizeData(saved);
+}
 
+// 저장된 값(또는 백업 파일)을 지금 형식으로 다듬음. 버전 1 데이터는 goal·history가 없으므로 기본값을 채움
+export function normalizeData(saved) {
   const months = {};
   if (saved.months && typeof saved.months === 'object') {
     for (const key of Object.keys(saved.months)) {
@@ -140,7 +173,15 @@ export function loadData() {
     items: Array.isArray(saved.items) ? saved.items.filter(isObject).map(normalizeItem) : [],
     months,
     events: Array.isArray(saved.events) ? saved.events.filter(isObject).map(normalizeEvent) : [],
+    goal: normalizeGoal(saved.goal),
+    history: normalizeHistory(saved.history),
+    lastBackupAt: typeof saved.lastBackupAt === 'number' ? saved.lastBackupAt : null,
   };
+}
+
+// 백업 파일인지 대충 확인 (가계부 데이터의 모양을 갖췄는지)
+export function looksLikeBackup(saved) {
+  return isObject(saved) && Array.isArray(saved.items) && isObject(saved.months);
 }
 
 function isObject(value) {

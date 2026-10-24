@@ -3,6 +3,9 @@
 import { parseAmount, formatMoney } from './calc.js';
 import { newEvent } from './store.js';
 import { cell, textInput, amountInput, deleteButton, renderHeadRow } from './cells.js';
+import { addHistory, watchEdits, shown } from './history.js';
+
+const LABELS = { month: '월', name: '이벤트', expected: '예상 지출', confirmed: '확정 지출', method: '마련 방법', note: '잔액/비고' };
 
 const thead = document.getElementById('events-head');
 const tbody = document.getElementById('events-body');
@@ -18,6 +21,15 @@ export function setupEvents(appState, onSave) {
   tbody.addEventListener('input', handleInput);
   tbody.addEventListener('click', handleClick);
   addButton.addEventListener('click', addEvent);
+  watchEdits(tbody, () => state.data, describeEdit, save);
+}
+
+// 예: "[큰돈 캘린더] 결혼 준비 예상 지출: (빈칸) → 1500"
+function describeEdit(input, before, after) {
+  const item = findEvent(input);
+  if (!item) return null;
+  const eventName = (input.dataset.field === 'name' ? before : item.name) || '이름 없는 이벤트';
+  return `[큰돈 캘린더] ${eventName} ${LABELS[input.dataset.field]}: ${shown(before)} → ${shown(after)}`;
 }
 
 export function renderEvents() {
@@ -72,6 +84,7 @@ function handleClick(event) {
   const item = findEvent(button);
   if (!item || !window.confirm(`"${item.name || '이름 없는 이벤트'}"을(를) 지울까요?`)) return;
   state.data.events = state.data.events.filter((other) => other !== item);
+  addHistory(state.data, `[큰돈 캘린더] "${item.name || '이름 없는 이벤트'}" 지움`);
   save();
   renderEvents();
 }

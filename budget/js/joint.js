@@ -4,6 +4,7 @@ import {
   parseAmount, formatMoney, formatMonth, jointBudget, incomeShare, jointLedger, jointMonthKeys, ensureMonth,
 } from './calc.js';
 import { cell, amountInput, computed, setMoney, renderHeadRow } from './cells.js';
+import { watchEdits, shown } from './history.js';
 
 const infoBox = document.getElementById('joint-info');
 const thead = document.getElementById('joint-head');
@@ -17,6 +18,14 @@ export function setupJoint(appState, onSave) {
   state = appState;
   save = onSave;
   tbody.addEventListener('input', handleInput);
+  watchEdits(tbody, () => state.data, describeEdit, save);
+}
+
+// 예: "[공동통장] 2026.10 유진 입금: (빈칸) → 260"
+function describeEdit(input, before, after) {
+  const row = input.closest('tr');
+  const name = input.dataset.field === 'depositA' ? state.data.names.a : state.data.names.b;
+  return `[공동통장] ${formatMonth(row.dataset.month)} ${name} 입금: ${shown(before)} → ${shown(after)}`;
 }
 
 export function renderJoint() {

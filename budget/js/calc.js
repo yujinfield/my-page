@@ -181,3 +181,51 @@ export function shiftMonth(key, delta) {
   const [year, month] = key.split('-').map(Number);
   return monthKeyOf(new Date(year, month - 1 + delta, 1));
 }
+
+/* ── 그래프·연간 요약 ── */
+
+// 구분별 합계: { 고정지출: { plan, actual, hasActual }, ... }
+export function groupTotals(items, actualMap) {
+  const totals = {};
+  for (const group of GROUPS) totals[group] = { plan: 0, actual: 0, hasActual: false };
+  for (const item of items) {
+    const total = totals[item.group];
+    total.plan += planAmount(item) || 0;
+    const value = actualMap[item.id];
+    if (value !== undefined && value !== null) {
+      total.actual += value;
+      total.hasActual = true;
+    }
+  }
+  return totals;
+}
+
+// 한 해 12달의 합계. year: 2026 → [{ key: "2026-01", plan, actual, missing, hasActual }, ...]
+export function yearRows(data, year) {
+  const rows = [];
+  for (let month = 1; month <= 12; month += 1) {
+    const key = `${year}-${String(month).padStart(2, '0')}`;
+    rows.push({ key, ...summarize(data.items, monthRecord(data, key).actual) });
+  }
+  return rows;
+}
+
+// 실적 평균: untilKey까지 실제액을 "모두" 적은 달 중 최근 12달의 평균. 그런 달이 없으면 null
+// (일부만 적은 달을 섞으면 평균이 틀어지므로 뺌)
+export function actualAverage(data, untilKey) {
+  const totals = Object.keys(data.months)
+    .filter((key) => key <= untilKey)
+    .sort()
+    .map((key) => summarize(data.items, data.months[key].actual))
+    .filter((total) => total.missing === 0 && data.items.length > 0)
+    .slice(-12);
+  if (totals.length === 0) return null;
+
+  let saving = 0;
+  let asset = 0;
+  for (const total of totals) {
+    saving += total.actual.saving;
+    asset += total.actual.asset;
+  }
+  return { months: totals.length, saving: saving / totals.length, asset: asset / totals.length };
+}

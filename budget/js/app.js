@@ -1,4 +1,4 @@
-// 진입점: 상태를 들고 세 화면(월 가계부 / 공동통장 / 큰돈 캘린더)을 연결합니다.
+// 진입점: 상태를 들고 다섯 화면(월 가계부 / 공동통장 / 큰돈 캘린더 / 연간 요약 / 백업·이력)을 연결합니다.
 
 import { loadData, saveData } from './store.js';
 import { monthKeyOf, formatMonth, shiftMonth } from './calc.js';
@@ -6,11 +6,15 @@ import { setupTheme } from './theme.js';
 import { setupPlan, renderPlan } from './plan.js';
 import { setupJoint, renderJoint } from './joint.js';
 import { setupEvents, renderEvents } from './events.js';
+import { setupAnnual, renderAnnual } from './annual.js';
+import { setupBackup, renderBackup } from './backup.js';
 
 // month: 지금 보고 있는 달 ("2026-11"), tab: 지금 보이는 화면
 const state = { data: loadData(), month: monthKeyOf(new Date()), tab: 'plan' };
 
-const RENDER = { plan: renderPlan, joint: renderJoint, events: renderEvents };
+const RENDER = {
+  plan: renderPlan, joint: renderJoint, events: renderEvents, annual: renderAnnual, backup: renderBackup,
+};
 
 const saveStatus = document.getElementById('save-status');
 const monthLabel = document.getElementById('month-label');
@@ -67,8 +71,11 @@ document.getElementById('month-next').addEventListener('click', () => {
 /* ── 두 사람 이름 ── */
 
 const nameInputs = { a: document.getElementById('name-a'), b: document.getElementById('name-b') };
+function fillNames() {
+  nameInputs.a.value = state.data.names.a;
+  nameInputs.b.value = state.data.names.b;
+}
 for (const key of ['a', 'b']) {
-  nameInputs[key].value = state.data.names[key];
   nameInputs[key].addEventListener('input', () => {
     state.data.names[key] = nameInputs[key].value.trim() || (key === 'a' ? '유진' : '남편');
     save();
@@ -81,4 +88,11 @@ setupTheme();
 setupPlan(state, save);
 setupJoint(state, save);
 setupEvents(state, save);
+setupAnnual(state, save, render);
+// 백업 파일을 불러와 데이터가 통째로 바뀌면 이름 칸과 화면을 새로 고침
+setupBackup(state, save, () => {
+  fillNames();
+  render();
+});
+fillNames();
 showTab('plan');

@@ -2,13 +2,18 @@
 
 import {
   GROUPS, itemKind, parseAmount, formatMoney, formatDiff, formatMonth, planAmount,
-  diffOf, isGoodDiff, sortByGroup, summarize, monthRecord, ensureMonth,
+  diffOf, isGoodDiff, sortByGroup, summarize, monthRecord, ensureMonth, groupTotals,
 } from './calc.js';
 import { newItem } from './store.js';
 import { cell, textInput, amountInput, computed, setMoney, deleteButton, renderHeadRow } from './cells.js';
+import { donutChart, barChart, seriesColor } from './charts.js';
+import { forecastLines } from './forecast.js';
+import { addHistory, watchEdits, shown } from './history.js';
 
 const summaryBox = document.getElementById('plan-summary');
 const missingNote = document.getElementById('plan-missing');
+const forecastBox = document.getElementById('plan-forecast');
+const chartsBox = document.getElementById('plan-charts');
 const thead = document.getElementById('plan-head');
 const tbody = document.getElementById('plan-body');
 const tfoot = document.getElementById('plan-foot');
@@ -24,6 +29,20 @@ export function setupPlan(appState, onSave) {
   tbody.addEventListener('change', handleChange);
   tbody.addEventListener('click', handleClick);
   addButton.addEventListener('click', addItem);
+  watchEdits(tbody, () => state.data, describeEdit, save);
+}
+
+// 이력에 남길 글. 예: "[월 가계부] 식비·배달·장보기 실제액(2026.10): 100 → 130"
+function describeEdit(input, before, after) {
+  const item = findItem(input);
+  if (!item) return null;
+  const { names } = state.data;
+  const labels = {
+    group: '구분', name: '항목 이름', a: `${names.a} 금액`, b: `${names.b} 금액`, joint: '공동',
+    amount: '예상액', actual: `실제액(${formatMonth(state.month)})`, note: '메모',
+  };
+  const itemName = (input.dataset.field === 'name' ? before : item.name) || '이름 없는 항목';
+  return `[월 가계부] ${itemName} ${labels[input.dataset.field]}: ${shown(before)} → ${shown(after)}`;
 }
 
 export function renderPlan() {
@@ -137,6 +156,7 @@ function handleClick(event) {
 
   state.data.items = state.data.items.filter((other) => other !== item);
   for (const record of Object.values(state.data.months)) delete record.actual[item.id];
+  addHistory(state.data, `[월 가계부] "${item.name || '이름 없는 항목'}" 항목 지움`);
   save();
   renderPlan();
 }
@@ -169,6 +189,8 @@ function refreshNumbers() {
   const totals = summarize(state.data.items, actualMap);
   renderFoot(totals);
   renderSummary(totals);
+  renderForecast(totals);
+  renderCharts(totals, actualMap);
   missingNote.textContent = totals.missing > 0
     ? `${formatMonth(state.month)} 실제액을 아직 안 적은 항목이 ${totals.missing}개 있어요. 다 적어야 실제 합계가 정확해요.`
     : `${formatMonth(state.month)} 실제액을 모두 적었어요.`;
@@ -242,4 +264,76 @@ function renderSummary(totals) {
     return card;
   });
   summaryBox.replaceChildren(...cards);
+}
+
+/* ── 이대로 가면? (예산 기준) ── */
+
+function renderForecast(totals) {
+  const lines = forecastLines(state.data.goal, totals.plan.saving, totals.plan.asset, state.month);
+  const items = lines.map((text) => {
+    const p = document.createElement('p');
+    p.textContent = text;
+    return p;
+  });
+  const more = document.createElement('p');
+  more.className = 'hint';
+  more.textContent = '예산 기준이에요. 현재 자산·목표·수익률은 ④ 연간 요약에서 바꿀 수 있어요.';
+  forecastBox.replaceChildren(...items, more);
+}
+
+/* ── 그래프 ── */
+
+// 원형 그래프 조각: 구분마다 색을 고정 (예산·실제 그래프에서 같은 색)
+const SLICES = [
+  ['고정지출', 1], ['개인지출', 2], ['가족', 3], ['생활비', 4], ['특별지출', 5], ['저축·투자', 6],
+];
+const LEFT_SLOT = 7; // 남는 돈
+
+function allocation(groups, key, left) {
+  const slices = SLICES.map(([group, slot]) => ({ label: group, value: groups[group][key], color: seriesColor(slot) }));
+  slices.push({ label: '남는 돈', value: left, color: seriesColor(LEFT_SLOT) });
+  return slices;
+}
+
+function renderCharts(totals, actualMap) {
+  const groups = groupTotals(state.data.items, actualMap);
+  const month = formatMonth(state.month);
+  const charts = [
+    donutChart('예산: 수입이 어디로 가나', allocation(groups, 'plan', totals.plan.left),
+      `${formatMoney(totals.plan.income)}만원`, '월 수입'),
+  ];
+
+  if (totals.hasActual) {
+    charts.push(donutChart(`실제 (${month}): 수입이 어디로 갔나`, allocation(groups, 'actual', totals.actual.left),
+      `${formatMoney(totals.actual.income)}만원`, '실제 수입'));
+  } else {
+    const empty = document.createElement('figure');
+    empty.className = 'chart chart-empty';
+    empty.textContent = `${month} 실제액을 적으면 실제 원형 그래프가 나와요.`;
+    charts.push(empty);
+  }
+
+  const rows = SLICES.map(([group]) => ({
+    label: group,
+    values: [groups[group].plan, groups[group].hasActual ? groups[group].actual : null],
+  }));
+  const bars = barChart(`구분별 예산 vs 실제 (${month})`, rows, [
+    { name: '예산', color: 'var(--series-plan)' },
+    { name: '실제', color: seriesColor(1) },
+  ]);
+  bars.classList.add('chart-wide');
+  charts.push(bars);
+
+  const warnings = [];
+  if (totals.plan.left < 0) warnings.push(`예산이 수입보다 ${formatMoney(-totals.plan.left)}만원 많아요.`);
+  if (totals.hasActual && totals.missing === 0 && totals.actual.left < 0) {
+    warnings.push(`${month}에는 수입보다 ${formatMoney(-totals.actual.left)}만원 더 썼어요.`);
+  }
+  for (const text of warnings) {
+    const p = document.createElement('p');
+    p.className = 'chart-warning bad';
+    p.textContent = text;
+    charts.push(p);
+  }
+  chartsBox.replaceChildren(...charts);
 }
