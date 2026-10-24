@@ -81,6 +81,11 @@
   gap: var(--space-s);
 }
 
+/* 금액이 없을 때 안내 글은 한 줄로 */
+.legend li.hint {
+  display: block;
+}
+
 .legend-value,
 .legend-percent {
   text-align: right;

@@ -13,11 +13,12 @@ import { addHistory, watchEdits, shown } from './history.js';
 const summaryBox = document.getElementById('plan-summary');
 const missingNote = document.getElementById('plan-missing');
 const forecastBox = document.getElementById('plan-forecast');
+const editor = document.getElementById('plan-editor');
+const editToggle = document.getElementById('plan-edit-toggle');
 const chartsBox = document.getElementById('plan-charts');
 const thead = document.getElementById('plan-head');
 const tbody = document.getElementById('plan-body');
 const tfoot = document.getElementById('plan-foot');
-const addButton = document.getElementById('plan-add');
 
 let state = null; // app.js의 상태 { data, month }
 let save = null;
@@ -28,8 +29,17 @@ export function setupPlan(appState, onSave) {
   tbody.addEventListener('input', handleInput);
   tbody.addEventListener('change', handleChange);
   tbody.addEventListener('click', handleClick);
-  addButton.addEventListener('click', addItem);
   watchEdits(tbody, () => state.data, describeEdit, save);
+  editToggle.addEventListener('click', toggleEditor);
+}
+
+// 휴대폰: 평소엔 요약·그래프만, "수정하기"를 누르면 입력칸을 엶 (CSS가 768px 이하에서만 숨김)
+function toggleEditor() {
+  const open = !editor.classList.contains('is-open');
+  editor.classList.toggle('is-open', open);
+  editToggle.setAttribute('aria-expanded', String(open));
+  editToggle.textContent = open ? '✔️ 수정 완료' : '✏️ 수정하기';
+  if (open) editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // 이력에 남길 글. 예: "[월 가계부] 식비·배달·장보기 실제액(2026.10): 100 → 130"
@@ -84,6 +94,7 @@ function buildRow(item, isGroupStart) {
   const tr = document.createElement('tr');
   tr.dataset.id = item.id;
   tr.className = `kind-${itemKind(item)}`;
+  if (item.joint) tr.classList.add('is-joint');
   if (isGroupStart) tr.classList.add('group-start');
 
   const groupSelect = document.createElement('select');
@@ -111,19 +122,31 @@ function buildRow(item, isGroupStart) {
   inputB.disabled = item.joint;
   const planCell = item.joint ? amountInput('amount', item.amount, '월 예상액') : computed('plan');
 
-  tr.append(
-    cell(groupSelect),
-    cell(textInput('name', item.name, '항목 이름', '항목 이름')),
-    cell(inputA, 'num'),
-    cell(inputB, 'num'),
-    cell(jointBox, 'center'),
-    cell(planCell, 'num'),
-    cell(amountInput('actual', actual, '실제액'), 'num'),
-    cell(computed('diff'), 'num'),
-    cell(textInput('note', item.note, '결제일/메모')),
-    cell(deleteButton('항목 지우기')),
-  );
+  // [자리 이름, 휴대폰 카드에서 보일 이름표, 내용, 클래스]
+  // 휴대폰에서는 표 대신 카드로 보여서, 자리 이름(data-area)으로 칸 위치를 정함 (table.css)
+  const cells = [
+    ['group', '', groupSelect],
+    ['name', '', textInput('name', item.name, '항목 이름', '항목 이름')],
+    ['a', names.a, inputA, 'num'],
+    ['b', names.b, inputB, 'num'],
+    ['joint', '공동', jointBox, 'center'],
+    ['plan', '예상', planCell, 'num'],
+    ['actual', `실제 (${formatMonth(state.month)})`, amountInput('actual', actual, '실제액'), 'num'],
+    ['diff', '차이', computed('diff'), 'num'],
+    ['note', '메모', textInput('note', item.note, '결제일/메모')],
+    ['delete', '', deleteButton('항목 지우기')],
+  ];
+  for (const [area, label, content, className] of cells) {
+    tr.append(areaCell(area, label, content, className));
+  }
   return tr;
+}
+
+function areaCell(area, label, content, className) {
+  const td = cell(content, className);
+  td.dataset.area = area;
+  if (label) td.dataset.label = label;
+  return td;
 }
 
 function findItem(element) {
@@ -229,14 +252,20 @@ function renderFoot(totals) {
   const rows = FOOT_ROWS.map(([label, key, kind]) => {
     const tr = document.createElement('tr');
     if (key === 'left') tr.className = 'total-row';
-    const labelCell = cell(label);
+    const labelCell = areaCell('name', '', label);
     labelCell.colSpan = 5;
     const actual = totals.hasActual ? totals.actual[key] : null;
     const diffSpan = document.createElement('span');
     showDiff(diffSpan, kind, diffOf(totals.plan[key], actual));
-    const rest = cell();
+    const rest = areaCell('rest', '', '');
     rest.colSpan = 2;
-    tr.append(labelCell, cell(formatMoney(totals.plan[key]), 'num'), cell(formatMoney(actual), 'num'), cell(diffSpan, 'num'), rest);
+    tr.append(
+      labelCell,
+      areaCell('plan', '예상', formatMoney(totals.plan[key]), 'num'),
+      areaCell('actual', '실제', formatMoney(actual), 'num'),
+      areaCell('diff', '차이', diffSpan, 'num'),
+      rest,
+    );
     return tr;
   });
   tfoot.replaceChildren(...rows);
