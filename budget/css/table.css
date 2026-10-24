@@ -1,17 +1,5 @@
 /* 가계부 표: 입력칸, 숫자 정렬, 구분 묶음, 합계 줄 */
 
-/* 표 위: 설명(왼쪽) + 항목 추가 버튼(오른쪽 위) */
-.table-toolbar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-m);
-}
-
-.table-toolbar .button {
-  flex-shrink: 0;
-}
-
 /* 표가 넓으면 표만 옆으로 밀어서 봄 (화면 전체는 안 밀림) */
 .table-wrap {
   overflow-x: auto;
@@ -184,4 +172,158 @@ select.cell-input {
 .add-button:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* ── 휴대폰: 월 가계부 표를 항목마다 카드로 ──
+   ┌ 구분   공동 ☐   ✕ ┐
+   │ 항목 이름          │
+   │ 유진  남편         │  ← 개인 항목만 (공동이면 줄 없음)
+   │ 예상  실제  차이   │
+   └ 메모              ┘ */
+@media (max-width: 768px) {
+  .plan-table {
+    min-width: 0;
+  }
+
+  .plan-table,
+  .plan-table thead,
+  .plan-table tbody,
+  .plan-table tfoot {
+    display: block;
+  }
+
+  /* 머리줄은 ＋ 버튼만 오른쪽 위에 */
+  .plan-table thead tr {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .plan-table thead th {
+    display: none;
+  }
+
+  .plan-table thead th:last-child {
+    display: block;
+  }
+
+  .plan-table tbody tr,
+  .plan-table tfoot tr {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-areas:
+      "group joint delete"
+      "name name name"
+      "a b ."
+      "plan actual diff"
+      "note note note";
+    gap: 2px var(--space-s);
+    margin-bottom: var(--space-s);
+    padding: var(--space-s);
+    border-radius: var(--radius-s);
+    background: var(--surface-soft);
+  }
+
+  .plan-table tbody tr.is-joint {
+    grid-template-areas:
+      "group joint delete"
+      "name name name"
+      "plan actual diff"
+      "note note note";
+  }
+
+  .plan-table tr.is-joint td[data-area="a"],
+  .plan-table tr.is-joint td[data-area="b"],
+  .plan-table td[data-area="rest"] {
+    display: none;
+  }
+
+  .plan-table tr.kind-income,
+  .plan-table tr.kind-saving,
+  .plan-table tfoot tr.total-row {
+    background: var(--highlight);
+  }
+
+  /* 카드 안 칸은 배경·선 없이 (표의 구분선·줄 배경 규칙보다 우선하도록 길게 씀) */
+  .budget-table.plan-table tbody tr td,
+  .budget-table.plan-table tbody tr.group-start td,
+  .budget-table.plan-table tfoot tr td {
+    padding: 0;
+    border-top: none;
+    background: transparent;
+  }
+
+  .plan-table td {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .plan-table td[data-area="group"] { grid-area: group; }
+  .plan-table td[data-area="name"] { grid-area: name; }
+  .plan-table td[data-area="a"] { grid-area: a; }
+  .plan-table td[data-area="b"] { grid-area: b; }
+  .plan-table td[data-area="joint"] { grid-area: joint; }
+  .plan-table td[data-area="plan"] { grid-area: plan; }
+  .plan-table td[data-area="actual"] { grid-area: actual; }
+  .plan-table td[data-area="diff"] { grid-area: diff; }
+  .plan-table td[data-area="note"] { grid-area: note; }
+  .plan-table td[data-area="delete"] { grid-area: delete; align-items: flex-end; }
+
+  /* 칸 이름표 (유진, 남편, 예상 …) */
+  .plan-table td[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    color: var(--text-soft);
+    font-size: 12px;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .plan-table td.num {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  /* 공동: 이름표와 체크칸을 한 줄로 */
+  .plan-table td[data-area="joint"] {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+  }
+
+  .plan-table .cell-amount {
+    width: 100%;
+    background: var(--surface);
+  }
+
+  .plan-table .cell-amount:disabled {
+    background: transparent;
+  }
+
+  .plan-table td[data-area="name"] .cell-input {
+    font-weight: 700;
+  }
+
+  /* 메모는 이름표 옆에 한 줄로 */
+  .plan-table td[data-area="note"] {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  .plan-table .computed {
+    padding: var(--space-xs) var(--space-s);
+  }
+
+  /* 합계 카드는 이름 + 숫자 한 줄 */
+  .plan-table tfoot tr {
+    grid-template-areas:
+      "name name name"
+      "plan actual diff";
+  }
+
+  .plan-table tfoot td.num {
+    padding-right: var(--space-s);
+  }
 }
