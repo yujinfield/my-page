@@ -77,6 +77,10 @@
       <div id="plan-editor" class="plan-editor">
         <p class="hint">예산(월 예상액)은 한 번 정해 두고, 달마다 실제액은 ② 실제 사용에서 적어요. 공동 항목은 예상액을 직접, 개인 항목은 두 사람 금액을 적으면 합이 예상액이 돼요. 표 오른쪽 위 ＋로 항목을 추가하고, 표는 구분 순서로 자동 정렬돼요.</p>
 
+        <!-- 항목 추가: 표가 넓어 옆으로 밀려도 항상 보이게 표 바깥 오른쪽 위에 둠 -->
+        <div class="table-actions">
+          <button type="button" id="plan-add" class="add-button" aria-label="항목 추가" title="항목 추가">＋</button>
+        </div>
         <div class="table-wrap">
           <table class="budget-table card-table plan-table">
             <thead id="plan-head"></thead>
