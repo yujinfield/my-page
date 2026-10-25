@@ -2,12 +2,13 @@
 
 import {
   parseAmount, formatMoney, formatMonth, shiftMonth, summarize, yearRows, actualAverage, eventTotals,
-  assetSpendByMonth,
+  assetSpendByMonth, savingsTrack, monthKeyOf,
 } from './calc.js';
 import { cell, renderHeadRow } from './cells.js';
 import { columnChart, seriesColor } from './charts.js';
 import { forecastLines, formatEok } from './forecast.js';
 import { watchEdits, shown } from './history.js';
+import { setupWealth, renderWealth } from './wealth.js';
 
 const yearLabel = document.getElementById('year-label');
 const summaryBox = document.getElementById('annual-summary');
@@ -24,7 +25,7 @@ let state = null;
 let save = null;
 let render = null; // app.js의 화면 다시 그리기 (해를 바꿀 때)
 
-const GOAL_LABELS = { current: '현재 자산', target: '목표 금액', rate: '연 수익률' };
+const GOAL_LABELS = { target: '목표 금액', rate: '연 수익률' };
 
 export function setupAnnual(appState, onSave, onRender) {
   state = appState;
@@ -46,7 +47,6 @@ export function setupAnnual(appState, onSave, onRender) {
     if (!field) return;
     const value = parseAmount(event.target.value);
     // 목표 금액·수익률은 비우면 기본값으로
-    if (field === 'current') state.data.goal.current = value;
     if (field === 'target') state.data.goal.target = value === null ? 50000 : value;
     if (field === 'rate') state.data.goal.rate = value === null ? 0 : value;
     save();
@@ -55,6 +55,9 @@ export function setupAnnual(appState, onSave, onRender) {
   goalForm.addEventListener('submit', (event) => event.preventDefault());
   watchEdits(goalForm, () => state.data, (input, before, after) =>
     `[목표] ${GOAL_LABELS[input.dataset.field]}: ${shown(before)} → ${shown(after)}`, save);
+
+  // 저금액을 고치면 표의 저금액 칸과 예측을 다시 계산
+  setupWealth(state, save, renderNumbers);
 }
 
 function year() {
@@ -63,16 +66,26 @@ function year() {
 
 export function renderAnnual() {
   yearLabel.textContent = `${year()}년`;
+  renderNumbers();
+  renderEventsNote();
+  fillGoalInputs();
+  renderWealth();
+}
+
+// 요약 카드·그래프·표·예측 (저금액을 고칠 때도 다시 부름)
+function renderNumbers() {
   const rows = yearRows(state.data, year());
   const filled = rows.filter((row) => row.hasActual);
 
   // 비상금·저축·성과급에서 나간 큰돈은 그 달 자산에서 뺌 (특별비 적립금으로 낸 것은 이미 매달 지출이라 빼지 않음)
   const bigSpend = assetSpendByMonth(state.data.events, year());
-  renderSummary(rows, filled, bigSpend);
+  // 저금액을 적었으면 기준 달 말부터 달마다 저금액 (적기 전 달은 없음)
+  const { savings, savingsAsOf } = state.data.wealth;
+  const track = savingsTrack(state.data, savings, savingsAsOf, rows.map((row) => row.key));
+
+  renderSummary(rows, filled, bigSpend, track);
   renderChart(rows);
-  renderTable(rows, filled, bigSpend);
-  renderEventsNote();
-  fillGoalInputs();
+  renderTable(rows, filled, bigSpend, savings !== null ? track : null);
   renderForecast();
 }
 
@@ -85,7 +98,7 @@ function sumValues(map) {
   return Object.values(map).reduce((total, value) => total + value, 0);
 }
 
-function renderSummary(rows, filled, bigSpend) {
+function renderSummary(rows, filled, bigSpend, track) {
   const plan = summarize(state.data.items, {}).plan;
   const asset = sumActual(filled, 'asset');
   const spent = sumValues(bigSpend);
@@ -98,6 +111,10 @@ function renderSummary(rows, filled, bigSpend) {
     ['큰돈 반영 후 늘어난 자산', formatMoney(asset - spent), true],
     ['예산대로면 1년에', formatMoney(plan.asset * 12)],
   ];
+  // 저금액: 이번 달(지난해면 12월)까지 중 가장 최근 달
+  const today = monthKeyOf(new Date());
+  const latest = Object.keys(track).filter((key) => key <= today).sort().pop();
+  if (latest) cards.push([`저금액 (${formatMonth(latest)} 말)`, formatMoney(track[latest])]);
   summaryBox.replaceChildren(...cards.map(([title, value, main]) => {
     const card = document.createElement('div');
     card.className = main ? 'summary-card summary-main' : 'summary-card';
@@ -128,11 +145,18 @@ function renderChart(rows) {
 }
 
 // 누적 = 자산으로 쌓인 돈 − 비상금·저축·성과급에서 나간 큰돈 (달마다 더해 감)
-function renderTable(rows, filled, bigSpend) {
+// track이 있으면(저금액을 적었으면) 누적 대신 그 달 말 저금액을 보여 줌
+function renderTable(rows, filled, bigSpend, track) {
   renderHeadRow(thead, [
     ['월'], ['수입', true], ['지출', true], ['저축·투자', true], ['남는 돈', true],
-    ['자산으로 쌓인 돈', true], ['큰돈', true], ['누적 (큰돈 반영)', true], ['입력'],
+    ['자산으로 쌓인 돈', true], ['큰돈', true], [track ? '저금액 (큰돈 반영)' : '누적 (큰돈 반영)', true], ['입력'],
   ]);
+  // 누적 칸: 저금액이 있으면 그 달 저금액(기준 달 전은 빈칸), 없으면 올해 누적
+  const balanceCell = (key, cumulative, showEmpty) => {
+    if (track) return key in track ? cell(formatMoney(track[key]), track[key] < 0 ? 'num bad' : 'num') : cell('', 'num');
+    if (showEmpty) return cell('—', 'num muted');
+    return cell(formatMoney(cumulative), cumulative < 0 ? 'num bad' : 'num');
+  };
 
   let cumulative = 0;
   tbody.replaceChildren(...rows.map((row) => {
@@ -145,14 +169,14 @@ function renderTable(rows, filled, bigSpend) {
     if (!row.hasActual) {
       for (let i = 0; i < 5; i += 1) tr.append(cell('—', 'num muted'));
       cumulative -= spent;
-      tr.append(spentCell, spent ? cell(formatMoney(cumulative), 'num') : cell('—', 'num muted'), cell('아직 없음', 'muted'));
+      tr.append(spentCell, balanceCell(row.key, cumulative, !spent), cell('아직 없음', 'muted'));
       return tr;
     }
     cumulative += row.actual.asset - spent;
     for (const key of ['income', 'spending', 'saving', 'left', 'asset']) {
       tr.append(cell(formatMoney(row.actual[key]), row.actual[key] < 0 ? 'num bad' : 'num'));
     }
-    tr.append(spentCell, cell(formatMoney(cumulative), cumulative < 0 ? 'num bad' : 'num'));
+    tr.append(spentCell, balanceCell(row.key, cumulative, false));
     tr.append(cell(row.missing === 0 ? '다 적음' : `${row.missing}개 안 적음`, row.missing === 0 ? '' : 'muted'));
     return tr;
   }));
@@ -164,7 +188,9 @@ function renderTable(rows, filled, bigSpend) {
     total.append(cell(formatMoney(sumActual(filled, key)), 'num'));
   }
   const spentTotal = sumValues(bigSpend);
-  total.append(cell(spentTotal ? formatMoney(-spentTotal) : '', 'num'), cell(formatMoney(cumulative), 'num'), cell());
+  // 합계 줄의 누적: 저금액이 있으면 그 해 마지막 달 저금액
+  const lastBalance = track ? track[rows[rows.length - 1].key] : cumulative;
+  total.append(cell(spentTotal ? formatMoney(-spentTotal) : '', 'num'), cell(lastBalance === undefined ? '' : formatMoney(lastBalance), 'num'), cell());
   tfoot.replaceChildren(total);
 }
 
@@ -202,12 +228,13 @@ function renderForecast() {
 
   const plan = summarize(state.data.items, {}).plan;
   const average = actualAverage(state.data, state.month);
+  const start = state.data.wealth.savings;
   const blocks = [
-    ['예산대로 가면', forecastLines(goal, plan.saving, plan.asset, state.month)],
+    ['예산대로 가면', forecastLines(goal, start, plan.saving, plan.asset, state.month)],
   ];
   if (average) {
     blocks.push([`최근 실적대로 가면 (다 적은 ${average.months}개월 평균)`,
-      forecastLines(goal, average.saving, average.asset, state.month)]);
+      forecastLines(goal, start, average.saving, average.asset, state.month)]);
   } else {
     blocks.push(['최근 실적대로 가면', ['한 달 실제액을 모두 적으면 실적 기준으로도 계산해 드려요.']]);
   }

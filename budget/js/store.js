@@ -2,7 +2,7 @@
 // 키는 모두 "budget-"로 시작해서 다른 앱과 섞이지 않게 합니다.
 // 금액 단위는 모두 "만원"입니다.
 
-import { GROUPS, emptyMonth } from './calc.js';
+import { GROUPS, emptyMonth, monthKeyOf } from './calc.js';
 
 const DATA_KEY = 'budget-data';
 const THEME_KEY = 'budget-theme';
@@ -13,7 +13,8 @@ const THEME_KEY = 'budget-theme';
 //        카드별 목표 실적(cardGoals.a·b) 추가
 // 3 → 4: 큰돈 이벤트의 세부 항목(event.details) 추가
 // 4 → 5: 큰돈 이벤트의 누구 것인지(event.owner), 돈 나가는 곳(event.source) 추가. 글로 적던 "마련 방법"(method)은 source로 바꿈
-const DATA_VERSION = 5;
+// 5 → 6: 저금액·부채(wealth) 추가. 목표의 "현재 자산"(goal.current)은 저금액(wealth.savings)으로 옮김
+const DATA_VERSION = 6;
 
 // 큰돈이 어디서 나가는지 (연간 요약에서 비상금·저축·성과급으로 낸 것은 자산에서 뺌, calc.js의 assetSpendByMonth)
 export const EVENT_SOURCES = [
@@ -95,6 +96,7 @@ function defaultData() {
     ],
     months: {},
     goal: defaultGoal(),
+    wealth: { savings: null, savingsAsOf: null, debts: [] },
     history: [],
     lastBackupAt: null,
     events: [
@@ -107,8 +109,14 @@ function defaultData() {
 }
 
 // 목표: 현재 자산, 목표 금액(만원), 연 수익률(%)
+// 목표: 목표 금액(만원), 연 수익률(%). 시작 금액은 저금액(wealth.savings)
 function defaultGoal() {
-  return { current: null, target: 50000, rate: 4 };
+  return { target: 50000, rate: 4 };
+}
+
+// 부채 하나: 이름, 남은 금액(만원), 연 금리(%), 매달 갚는 돈(만원, 원금+이자)
+export function newDebt(name) {
+  return { id: newId('b'), name: name || '', balance: null, rate: null, payment: null };
 }
 
 /* ── 저장된 값 다듬기 (빠지거나 잘못된 값은 기본값으로) ── */
@@ -191,10 +199,34 @@ function normalizeDetail(saved) {
   };
 }
 
+// 저금액·부채. 버전 5까지는 저금액 대신 목표의 "현재 자산"(goal.current)에 적었으므로 그 값을 가져옴
+function normalizeWealth(saved, oldGoal) {
+  const wealth = { savings: null, savingsAsOf: null, debts: [] };
+  if (isObject(saved)) {
+    wealth.savings = toAmount(saved.savings);
+    wealth.savingsAsOf = /^\d{4}-\d{2}$/.test(saved.savingsAsOf) ? saved.savingsAsOf : null;
+    if (Array.isArray(saved.debts)) wealth.debts = saved.debts.filter(isObject).map(normalizeDebt);
+  } else if (isObject(oldGoal) && toAmount(oldGoal.current) !== null) {
+    wealth.savings = oldGoal.current;
+  }
+  // 저금액은 있는데 기준 달이 없으면 이번 달 기준으로
+  if (wealth.savings !== null && !wealth.savingsAsOf) wealth.savingsAsOf = monthKeyOf(new Date());
+  return wealth;
+}
+
+function normalizeDebt(saved) {
+  return {
+    id: toText(saved.id) || newId('b'),
+    name: toText(saved.name),
+    balance: toAmount(saved.balance),
+    rate: toAmount(saved.rate),
+    payment: toAmount(saved.payment),
+  };
+}
+
 function normalizeGoal(saved) {
   const goal = defaultGoal();
   if (!isObject(saved)) return goal;
-  goal.current = toAmount(saved.current);
   if (toAmount(saved.target) !== null) goal.target = saved.target;
   if (toAmount(saved.rate) !== null) goal.rate = saved.rate;
   return goal;
@@ -265,6 +297,7 @@ export function normalizeData(saved) {
     months,
     events: Array.isArray(saved.events) ? saved.events.filter(isObject).map(normalizeEvent) : [],
     goal: normalizeGoal(saved.goal),
+    wealth: normalizeWealth(saved.wealth, saved.goal),
     history: normalizeHistory(saved.history),
     lastBackupAt: typeof saved.lastBackupAt === 'number' ? saved.lastBackupAt : null,
   };

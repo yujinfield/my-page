@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/table.css">
   <link rel="stylesheet" href="css/charts.css">
   <link rel="stylesheet" href="css/actual.css">
+  <link rel="stylesheet" href="css/wealth.css">
 </head>
 <body>
   <header class="app-header">
@@ -139,14 +140,22 @@
       <p class="hint">② 실제 사용에 적은 실제액으로 계산해요. 실제액을 일부만 적은 달은 적은 만큼만 더해져요.</p>
       <p id="annual-events" class="hint"></p>
 
+      <h2 class="section-title">저금액 · 부채</h2>
+      <div class="savings-row">
+        <label>현재 저금액 <input type="text" inputmode="decimal" id="savings-input" class="text-input" data-field="savings" placeholder="0"> 만원</label>
+        <p id="savings-asof" class="hint"></p>
+      </div>
+      <ul id="debt-list" class="debt-list"></ul>
+      <div><button type="button" id="debt-add" class="button">＋ 부채 추가</button></div>
+      <div id="debt-comments" class="forecast"></div>
+
       <h2 class="section-title">이대로 가면?</h2>
       <form id="goal-form" class="row goal-form">
-        <label>현재 자산 <input type="text" inputmode="decimal" class="text-input" data-field="current" placeholder="0"> 만원</label>
         <label>목표 <input type="text" inputmode="decimal" class="text-input" data-field="target"> 만원 <span id="goal-target-text" class="hint"></span></label>
         <label>연 수익률 <input type="text" inputmode="decimal" class="text-input text-input-short" data-field="rate"> %</label>
       </form>
       <div id="annual-forecast" class="forecast-list"></div>
-      <p class="hint">매달 같은 금액을 넣고 연 수익률이 그대로라고 가정한 어림값이에요. 물가·세금·큰돈 지출은 빼고 계산해요.</p>
+      <p class="hint">위 "현재 저금액"에서 시작해 매달 같은 금액을 넣고 연 수익률이 그대로라고 가정한 어림값이에요. 물가·세금·큰돈 지출은 빼고 계산해요.</p>
     </section>
 
     <!-- ⑤ 백업·이력 -->

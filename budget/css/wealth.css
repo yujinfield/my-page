@@ -1,0 +1,79 @@
+/* ④ 연간 요약의 저금액 · 부채 */
+
+.savings-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-m);
+}
+
+.savings-row label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+}
+
+.savings-row .text-input {
+  text-align: right;
+}
+
+.debt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 720px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.debt-list:empty {
+  display: none;
+}
+
+/* [이름] [남은 금액] [금리] [매달 갚는 돈] [✕] */
+.debt-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7em 5em 7em 32px;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.debt-item .cell-input {
+  width: 100%;
+  min-width: 0;
+  background: var(--surface-soft);
+}
+
+.debt-head {
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.debt-head span:not(:first-child) {
+  padding-right: var(--space-s);
+  text-align: right;
+}
+
+/* 휴대폰: 이름 한 줄, 숫자 세 칸 한 줄 */
+@media (max-width: 768px) {
+  .debt-item {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 32px;
+    padding: var(--space-xs) 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* 첫 칸(이름)은 한 줄 전체, 마지막 칸(✕)은 이름 옆. 머리줄도 같은 배치라 숫자 칸 이름표가 맞음 */
+  .debt-item > :first-child {
+    grid-column: 1 / 4;
+  }
+
+  .debt-item > :last-child {
+    grid-column: 4;
+    grid-row: 1;
+  }
+
+  .debt-item [data-field="name"] {
+    font-weight: 700;
+  }
+}

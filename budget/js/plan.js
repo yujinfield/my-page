@@ -356,7 +356,7 @@ function renderSummary(totals) {
 /* ── 이대로 가면? (예산 기준) ── */
 
 function renderForecast(totals) {
-  const lines = forecastLines(state.data.goal, totals.plan.saving, totals.plan.asset, state.month);
+  const lines = forecastLines(state.data.goal, state.data.wealth.savings, totals.plan.saving, totals.plan.asset, state.month);
   const items = lines.map((text) => {
     const p = document.createElement('p');
     p.textContent = text;
@@ -364,7 +364,7 @@ function renderForecast(totals) {
   });
   const more = document.createElement('p');
   more.className = 'hint';
-  more.textContent = '예산 기준이에요. 현재 자산·목표·수익률은 ④ 연간 요약에서 바꿀 수 있어요.';
+  more.textContent = '예산 기준이에요. 저금액·부채·목표·수익률은 ④ 연간 요약에서 바꿀 수 있어요.';
   forecastBox.replaceChildren(...items, more);
 }
 

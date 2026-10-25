@@ -50,10 +50,10 @@ export function formatPeriod(months) {
 }
 
 // 코멘트 글 만들기
-// goal: { current, target, rate }, saving: 매달 저축·투자, asset: 매달 자산으로 쌓이는 돈(저축·투자 + 남는 돈)
+// goal: { target, rate }, start: 지금 저금액, saving: 매달 저축·투자, asset: 매달 자산으로 쌓이는 돈(저축·투자 + 남는 돈)
 // nowKey: 시작하는 달 ("2026-10") → 목표 달성 달을 "2033.12"처럼 알려 줌
-export function forecastLines(goal, saving, asset, nowKey) {
-  const start = goal.current || 0;
+export function forecastLines(goal, startAmount, saving, asset, nowKey) {
+  const start = startAmount || 0;
   const target = formatEok(goal.target);
 
   if (start >= goal.target) return [`이미 목표 ${target}을 넘었어요! 🎉 목표를 더 크게 잡아 보세요.`];
@@ -79,5 +79,73 @@ export function forecastLines(goal, saving, asset, nowKey) {
       lines.push(`남는 돈까지 모두 모으면(매달 ${formatEok(asset)}) ${formatPeriod(fasterMonths)} 걸려요${sooner}.`);
     }
   }
+  return lines;
+}
+
+/* ── 부채 ── */
+
+// 남은 금액 balance를 연 금리 rate(%)로, 매달 payment씩(원금+이자) 갚을 때
+// → { months: 다 갚기까지 달 수, interest: 그동안 내는 이자 합 } / 이자도 못 갚으면 null
+export function debtPayoff(balance, rate, payment) {
+  const r = (rate || 0) / 100 / 12;
+  let left = balance;
+  let interest = 0;
+  for (let month = 1; month <= MAX_MONTHS; month += 1) {
+    const monthInterest = left * r;
+    if (payment <= monthInterest) return null;
+    interest += monthInterest;
+    left = left + monthInterest - payment;
+    if (left <= 0) return { months: month, interest };
+  }
+  return null;
+}
+
+// 부채 코멘트: 언제 다 갚는지, 더 갚으면 얼마나 빨라지는지, 무엇부터 갚을지
+// debts: [{ name, balance, rate, payment }], savings: 저금액, investRate: 투자 기대 수익률(%)
+export function debtLines(debts, savings, investRate, nowKey) {
+  const active = debts.filter((debt) => debt.balance > 0);
+  if (active.length === 0) return ['부채가 없어요. 👏 지금처럼만 모으면 돼요.'];
+
+  const lines = [];
+  for (const debt of active) {
+    const name = debt.name || '이름 없는 부채';
+    if (!debt.payment) {
+      lines.push(`${name}: 매달 갚는 돈(원금+이자)을 적으면 언제 다 갚는지 알려 드려요.`);
+      continue;
+    }
+    const now = debtPayoff(debt.balance, debt.rate, debt.payment);
+    if (!now) {
+      const monthInterest = Math.ceil((debt.balance * (debt.rate || 0)) / 100 / 12);
+      lines.push(`${name}: 매달 ${formatEok(debt.payment)}로는 이자(약 ${formatEok(monthInterest)})만 겨우 내고 원금이 줄지 않아요. `
+        + `${formatEok(monthInterest)}보다 더 갚아야 빚이 줄기 시작해요.`);
+      continue;
+    }
+    lines.push(`${name}: 매달 ${formatEok(debt.payment)}씩 갚으면 ${formatPeriod(now.months)} 뒤(${formatMonth(shiftMonth(nowKey, now.months))}) `
+      + `다 갚아요. 앞으로 낼 이자는 약 ${formatEok(now.interest)}이에요.`);
+
+    // 매달 조금 더 갚으면 (갚는 돈의 20%쯤, 10만원 단위, 최소 10만원)
+    const extra = Math.max(10, Math.round((debt.payment * 0.2) / 10) * 10);
+    const faster = debtPayoff(debt.balance, debt.rate, debt.payment + extra);
+    if (faster && faster.months < now.months) {
+      lines.push(`→ 매달 ${formatEok(extra)}만 더 갚으면 ${formatPeriod(now.months - faster.months)} 빨리 끝나고, `
+        + `이자를 약 ${formatEok(now.interest - faster.interest)} 아껴요.`);
+    }
+  }
+
+  // 금리가 가장 높은 빚부터
+  const withRate = active.filter((debt) => debt.rate > 0).sort((x, y) => y.rate - x.rate);
+  if (withRate.length > 0) {
+    const top = withRate[0];
+    const topName = top.name || '이름 없는 부채';
+    if (withRate.length > 1) lines.push(`금리가 가장 높은 ${topName}(${top.rate}%)부터 갚으면 이자가 가장 많이 줄어요.`);
+    if (top.rate > (investRate || 0)) {
+      lines.push(`${topName} 금리(${top.rate}%)가 투자 기대 수익률(${investRate || 0}%)보다 높아요. `
+        + `남는 돈은 투자보다 ${topName}부터 먼저 갚는 게 이득이에요.`);
+    }
+  }
+
+  const total = active.reduce((sum, debt) => sum + debt.balance, 0);
+  const net = (savings || 0) - total;
+  lines.push(`부채는 모두 ${formatEok(total)}, 저금액에서 빼면 순자산은 ${formatEok(net)}이에요. 조금씩 더 갚을수록 이자가 줄어요 💪`);
   return lines;
 }
