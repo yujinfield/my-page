@@ -20,7 +20,8 @@ const THEME_KEY = 'budget-theme';
 //        용돈 기록(allowance, 사람마다 비밀번호로 암호화)
 // 9 → 10: 실제액을 사람마다 나눠 적기(months[달].actualBy). 예전에 합계로 적은 실제액(actual)은 그대로 둠
 // 10 → 11: 공동 몫 나누는 방법(splitRule: half 반반 / income 수입 비율) 추가
-const DATA_VERSION = 11;
+// 11 → 12: 큰돈 분류마다 추천 세부 항목 목록(categoryDetails) 추가
+const DATA_VERSION = 12;
 
 // 큰돈이 어디서 나가는지 (연간 요약에서 비상금·저축·성과급으로 낸 것은 자산에서 뺌, calc.js의 assetSpendByMonth)
 export const EVENT_SOURCES = [
@@ -36,6 +37,19 @@ const DEFAULT_PAYMENTS = ['신한카드', '삼성카드', '현금', '계좌이�
 
 // 큰돈 분류 기본 목록 (＋ 새로 추가하면 data.eventCategories 끝에 붙음)
 const DEFAULT_EVENT_CATEGORIES = ['결혼', '여행', '미용', '사치', '가전·가구', '차·보험·세금', '경조사', '기타'];
+
+// 큰돈 분류마다 추천 세부 항목 (③에서 "✨ 추천 세부 항목"으로 골라 넣음, ⚙️ 설정에서 고침)
+const DEFAULT_CATEGORY_DETAILS = {
+  결혼: ['예식장 대관·식대', '스드메', '예물·예단', '한복·예복', '청첩장·답례품', '본식 스냅·영상', '웨딩 소품·부케',
+    '축가·사회 사례비', '축의금 들어온 돈'],
+  여행: ['항공권', '숙소', '현지 교통', '식비', '관광·액티비티', '쇼핑·기념품', '여행자 보험', '환전·로밍·유심'],
+  미용: ['헤어', '피부과·시술', '네일', '화장품', '다이어트·운동', '치아 교정·미백'],
+  사치: ['명품 가방·지갑', '시계·주얼리', '전자기기', '오마카세·파인다이닝', '취미 장비'],
+  '가전·가구': ['큰 가전', '작은 가전', '침대·매트리스', '소파·식탁', '수납장·옷장', '커튼·조명·러그', '설치·배송비'],
+  '차·보험·세금': ['자동차 보험', '자동차세', '정비·소모품', '검사비', '재산세', '종합소득세·연말정산', '보험 연납'],
+  경조사: ['결혼식 축의금', '장례 조의금', '돌잔치·생일', '명절', '어버이날·부모님 생신', '기념일 선물'],
+  기타: ['이사', '병원비', '교육·자격증', '반려동물'],
+};
 
 // 이력은 최근 것만 남김 (너무 커지지 않게)
 export const HISTORY_LIMIT = 300;
@@ -124,6 +138,7 @@ function defaultData() {
       newEvent('상시', '가전 교체·집 수리', 'special', '가전·가구'),
     ],
     eventCategories: DEFAULT_EVENT_CATEGORIES.slice(),
+    categoryDetails: defaultCategoryDetails(),
     allowance: { a: null, b: null },
   };
 }
@@ -325,6 +340,22 @@ function normalizePaymentList(saved) {
 }
 
 // 사람별 결제 수단 목록 { a: [...], b: [...] } (예전 데이터에 없으면 둘 다 기본 목록)
+function defaultCategoryDetails() {
+  const result = {};
+  for (const [category, names] of Object.entries(DEFAULT_CATEGORY_DETAILS)) result[category] = names.slice();
+  return result;
+}
+
+// 분류마다 추천 세부 항목. 버전 11까지는 없어서 기본 목록
+function normalizeCategoryDetails(saved) {
+  if (!isObject(saved) || Array.isArray(saved)) return defaultCategoryDetails();
+  const result = {};
+  for (const category of Object.keys(saved)) {
+    result[category] = normalizeCategories(Array.isArray(saved[category]) ? saved[category] : []);
+  }
+  return result;
+}
+
 // 큰돈 분류 목록. 버전 8까지는 없어서 기본 목록
 function normalizeCategories(saved) {
   if (!Array.isArray(saved)) return DEFAULT_EVENT_CATEGORIES.slice();
@@ -391,6 +422,7 @@ export function normalizeData(saved) {
     months,
     events: Array.isArray(saved.events) ? saved.events.filter(isObject).map(normalizeEvent) : [],
     eventCategories: normalizeCategories(saved.eventCategories),
+    categoryDetails: normalizeCategoryDetails(saved.categoryDetails),
     allowance: normalizeAllowance(saved.allowance),
     goal: normalizeGoal(saved.goal),
     wealth: normalizeWealth(saved.wealth, saved.goal),

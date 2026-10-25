@@ -1,10 +1,12 @@
-// 설정 창 (오른쪽 위 ⚙️): 두 사람 이름, 사람마다 결제 수단 목록·카드 실적(payment-editor.js), 시작 저금액, 부채
+// 설정 창 (오른쪽 위 ⚙️): 두 사람 이름, 사람마다 결제 수단 목록·카드 실적(payment-editor.js),
+// 큰돈 추천 세부 항목(suggest-editor.js), 시작 저금액, 부채
 // 고치는 동안 바로 저장하고, 창을 닫으면 화면을 다시 그려서 표 머리줄·결제 수단 칸에 반영합니다.
 
 import { parseAmount, formatMonth, monthKeyOf } from './calc.js';
 import { watchEdits, shown } from './history.js';
 import { setupDebtEditor, renderDebtEditor } from './debt-editor.js';
 import { setupPaymentEditor, renderPaymentEditor } from './payment-editor.js';
+import { setupSuggestEditor, renderSuggestEditor } from './suggest-editor.js';
 
 const dialog = document.getElementById('settings-dialog');
 const openButton = document.getElementById('settings-button');
@@ -56,6 +58,7 @@ export function setupSettings(appState, save, render) {
 
   setupDebtEditor(state, save);
   setupPaymentEditor(state, save);
+  setupSuggestEditor(state, save);
 }
 
 // 다른 화면에서 설정 창을 열 때 (예: 연간 요약의 "⚙️ 설정에서 바꾸기"). focusId 칸에 커서
@@ -83,4 +86,5 @@ export function fillSettings() {
   renderAsOf();
   renderDebtEditor();
   renderPaymentEditor();
+  renderSuggestEditor();
 }

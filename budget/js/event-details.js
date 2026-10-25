@@ -17,7 +17,9 @@ export function detailToggle(event, open, short) {
 }
 
 // 이벤트 바로 아래 줄: 세부 항목 목록 [이름] [예상] [확정] [✕] + "＋ 세부 항목 추가"
-export function detailRow(event, columnCount) {
+// suggestions: 이 이벤트 분류의 추천 세부 항목 이름들 (큰돈 캘린더만, 있으면 "✨ 추천 세부 항목" 버튼)
+// suggestOpen: 추천 목록(체크칸)을 펼쳤는지
+export function detailRow(event, columnCount, suggestions = [], suggestOpen = false) {
   const tr = document.createElement('tr');
   tr.dataset.id = event.id;
   tr.className = event.done ? 'detail-row is-done' : 'detail-row';
@@ -57,9 +59,55 @@ export function detailRow(event, columnCount) {
   add.dataset.action = 'detail-add';
   add.textContent = '＋ 세부 항목 추가';
 
-  td.append(list, add);
+  const buttons = document.createElement('div');
+  buttons.className = 'detail-buttons';
+  buttons.append(add);
+  if (suggestions.length > 0) {
+    const suggest = document.createElement('button');
+    suggest.type = 'button';
+    suggest.className = 'button detail-add';
+    suggest.dataset.action = 'suggest-toggle';
+    suggest.setAttribute('aria-expanded', String(suggestOpen));
+    suggest.textContent = `✨ 추천 세부 항목 (${event.category})`;
+    buttons.append(suggest);
+  }
+
+  td.append(list, buttons);
+  if (suggestOpen && suggestions.length > 0) td.append(suggestPanel(event, suggestions));
   tr.append(td);
   return tr;
+}
+
+// 추천 목록: 필요한 것만 체크하고 "선택한 것 넣기" (이미 있는 이름은 체크할 수 없음)
+function suggestPanel(event, suggestions) {
+  const panel = document.createElement('div');
+  panel.className = 'suggest-panel';
+  const list = document.createElement('div');
+  list.className = 'suggest-list';
+  const existing = event.details.map((detail) => detail.name.trim());
+  for (const name of suggestions) {
+    const label = document.createElement('label');
+    label.className = 'suggest-option';
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.value = name;
+    box.className = 'suggest-check';
+    const has = existing.includes(name);
+    box.disabled = has;
+    box.checked = has;
+    label.append(box, ` ${name}${has ? ' (있음)' : ''}`);
+    list.append(label);
+  }
+  const addSelected = document.createElement('button');
+  addSelected.type = 'button';
+  addSelected.className = 'button button-primary';
+  addSelected.dataset.action = 'suggest-add';
+  addSelected.textContent = '선택한 것 넣기';
+  const hint = document.createElement('p');
+  hint.className = 'hint';
+  hint.textContent = '금액은 비워서 넣어요. 추천 목록은 ⚙️ 설정에서 고칠 수 있어요.';
+  panel.append(list, addSelected, hint);
+  return panel;
 }
 
 export function findDetail(item, element) {

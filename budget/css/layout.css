@@ -478,3 +478,41 @@ summary:focus-visible {
 .payment-add {
   font-size: var(--font-size-small);
 }
+
+/* ⚙️ 설정: 큰돈 추천 세부 항목 — 분류마다 펼치는 목록 */
+.suggest-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.suggest-category {
+  padding: var(--space-xs) var(--space-s);
+  border-radius: var(--radius-s);
+  background: var(--surface-soft);
+}
+
+.suggest-category summary {
+  padding: var(--space-xs) 0;
+  cursor: pointer;
+}
+
+.suggest-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: var(--space-xs) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.suggest-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.suggest-row .cell-input {
+  background: var(--surface);
+}
