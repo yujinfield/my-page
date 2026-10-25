@@ -171,45 +171,36 @@ export function actualAverage(data, untilKey) {
   return { months: totals.length, saving: saving / totals.length, asset: asset / totals.length };
 }
 
-/* ── 카드(결제 수단)별 실적 ── */
+/* ── 큰돈 캘린더 ── */
 
-// 한 항목의 금액 중 유진(a) 몫의 비율
-// - 결제 수단을 한 사람만 골랐으면 그 사람이 전부
-// - 둘 다 골랐으면: 개인 항목은 예산의 유진·남편 금액 비율, 공동 항목(또는 금액이 없으면)은 반반
-function paymentShareA(item) {
-  if (item.paymentA && !item.paymentB) return 1;
-  if (!item.paymentA && item.paymentB) return 0;
-  if (!item.joint && (item.a || 0) + (item.b || 0) > 0) return (item.a || 0) / ((item.a || 0) + (item.b || 0));
-  return 0.5;
+// 이벤트의 예상·확정 지출. 세부 항목이 있으면 세부 항목의 합, 없으면 이벤트에 직접 적은 금액
+export function eventTotals(event) {
+  if (event.details.length === 0) return { expected: event.expected, confirmed: event.confirmed };
+  let expected = 0;
+  let confirmed = 0;
+  for (const detail of event.details) {
+    expected += detail.expected || 0;
+    confirmed += detail.confirmed || 0;
+  }
+  return { expected, confirmed };
 }
 
-// 사람마다 카드별 합계. 수입 항목은 빼고 지출·저축만 셈
-// → { a: { 신한카드: { plan, actual, items: [{ name, actual }] } }, b: {...}, none: { plan, actual } }
-export function cardTotals(items, actualMap) {
-  const result = { a: {}, b: {}, none: { plan: 0, actual: 0 } };
+// 자산에서 빼는 돈 나가는 곳: 비상금·저축, 성과급 (성과급은 월 가계부에 수입으로 적어서 이미 자산에 쌓여 있음)
+// 특별비 적립금은 매달 지출로 이미 빠졌으니 다시 빼지 않음
+const ASSET_SOURCES = ['savings', 'bonus'];
 
-  for (const item of items) {
-    if (itemKind(item) === 'income') continue;
-    const plan = planAmount(item) || 0;
-    const actual = actualMap[item.id];
-
-    if (!item.paymentA && !item.paymentB) {
-      result.none.plan += plan;
-      result.none.actual += actual || 0;
-      continue;
-    }
-
-    const shareA = paymentShareA(item);
-    for (const [person, card, share] of [['a', item.paymentA, shareA], ['b', item.paymentB, 1 - shareA]]) {
-      if (!card || share === 0) continue;
-      if (!result[person][card]) result[person][card] = { plan: 0, actual: 0, items: [] };
-      const total = result[person][card];
-      total.plan += plan * share;
-      if (actual !== undefined && actual !== null) {
-        total.actual += actual * share;
-        total.items.push({ name: item.name || '이름 없는 항목', actual: actual * share });
-      }
-    }
+// 한 해 동안 쌓인 자산에서 나간 큰돈(확정 지출)을 달마다: { "2026-11": 1500 }
+// 월이 "2026.11"처럼 날짜인 것만 셈 ("상시"는 언제 나갔는지 몰라서 뺌)
+export function assetSpendByMonth(events, year) {
+  const result = {};
+  for (const event of events) {
+    if (!ASSET_SOURCES.includes(event.source)) continue;
+    const match = event.month.match(/^(\d{4})\D(\d{1,2})/);
+    if (!match || Number(match[1]) !== year) continue;
+    const confirmed = eventTotals(event).confirmed;
+    if (!confirmed) continue;
+    const key = `${match[1]}-${match[2].padStart(2, '0')}`;
+    result[key] = (result[key] || 0) + confirmed;
   }
   return result;
 }

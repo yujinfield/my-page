@@ -60,10 +60,9 @@
     <div class="tabs" role="tablist" aria-label="가계부 화면">
       <button type="button" role="tab" id="tab-plan" data-tab="plan" aria-controls="panel-plan">① 월 가계부</button>
       <button type="button" role="tab" id="tab-actual" data-tab="actual" aria-controls="panel-actual">② 실제 사용</button>
-      <button type="button" role="tab" id="tab-cards" data-tab="cards" aria-controls="panel-cards">③ 카드 실적</button>
-      <button type="button" role="tab" id="tab-events" data-tab="events" aria-controls="panel-events">④ 큰돈 캘린더</button>
-      <button type="button" role="tab" id="tab-annual" data-tab="annual" aria-controls="panel-annual">⑤ 연간 요약</button>
-      <button type="button" role="tab" id="tab-backup" data-tab="backup" aria-controls="panel-backup">⑥ 백업·이력</button>
+      <button type="button" role="tab" id="tab-events" data-tab="events" aria-controls="panel-events">③ 큰돈 캘린더</button>
+      <button type="button" role="tab" id="tab-annual" data-tab="annual" aria-controls="panel-annual">④ 연간 요약</button>
+      <button type="button" role="tab" id="tab-backup" data-tab="backup" aria-controls="panel-backup">⑤ 백업·이력</button>
     </div>
 
     <!-- ① 월 가계부 -->
@@ -99,16 +98,9 @@
       <div id="actual-list" class="actual-list"></div>
     </section>
 
-    <!-- ③ 카드 실적 -->
-    <section id="panel-cards" class="card" role="tabpanel" aria-labelledby="tab-cards" hidden>
-      <p class="hint">② 실제 사용에 적은 금액을 ① 월 가계부에서 고른 결제 수단으로 나눠 카드마다 더해요. 한 항목에 두 사람 결제 수단을 다 고르면, 개인 항목은 예산의 두 사람 금액 비율로, 공동 항목은 반반으로 나눠요. 목표 실적(전월 실적 조건 등)을 적으면 얼마 남았는지 보여 줘요.</p>
-      <div id="cards-list" class="card-list"></div>
-      <p id="cards-none" class="hint"></p>
-    </section>
-
-    <!-- ④ 큰돈 캘린더 -->
+    <!-- ③ 큰돈 캘린더 -->
     <section id="panel-events" class="card" role="tabpanel" aria-labelledby="tab-events" hidden>
-      <p class="hint">웨딩·신혼여행·가전·자동차 보험·성과급처럼 월 가계부에 섞으면 망가지는 돈은 여기서 따로 관리해요. 성과급은 생활비에 섞지 말고 결혼·대출상환·투자처럼 목적을 정해 두세요.</p>
+      <p class="hint">웨딩·신혼여행·가전·자동차 보험·성과급처럼 월 가계부에 섞으면 망가지는 돈은 여기서 따로 관리해요. 성과급은 생활비에 섞지 말고 결혼·대출상환·투자처럼 목적을 정해 두세요. "돈 나가는 곳"을 비상금·저축이나 성과급으로 고른 확정 지출은 ④ 연간 요약에서 자산에서 빠져요 (특별비 적립금은 이미 매달 지출로 빠져서 빼지 않아요).</p>
 
       <div class="table-wrap">
         <table class="budget-table card-table events-table">
@@ -123,7 +115,7 @@
       </div>
     </section>
 
-    <!-- ⑤ 연간 요약 -->
+    <!-- ④ 연간 요약 -->
     <section id="panel-annual" class="card" role="tabpanel" aria-labelledby="tab-annual" hidden>
       <div class="month-switch">
         <button type="button" id="year-prev" class="icon-button" aria-label="지난해 보기">◀</button>
@@ -153,7 +145,7 @@
       <p class="hint">매달 같은 금액을 넣고 연 수익률이 그대로라고 가정한 어림값이에요. 물가·세금·큰돈 지출은 빼고 계산해요.</p>
     </section>
 
-    <!-- ⑥ 백업·이력 -->
+    <!-- ⑤ 백업·이력 -->
     <section id="panel-backup" class="card" role="tabpanel" aria-labelledby="tab-backup" hidden>
       <h2 class="section-title">백업</h2>
       <p id="backup-status"></p>

@@ -11,7 +11,18 @@ const THEME_KEY = 'budget-theme';
 // 1 → 2: 목표(goal), 변경 이력(history), 마지막 백업 시각(lastBackupAt) 추가
 // 2 → 3: 사람별 결제 수단 목록(payments.a·b), 항목의 사람별 결제 수단(item.paymentA·B), 큰돈 완료 표시(event.done),
 //        카드별 목표 실적(cardGoals.a·b) 추가
-const DATA_VERSION = 3;
+// 3 → 4: 큰돈 이벤트의 세부 항목(event.details) 추가
+// 4 → 5: 큰돈 이벤트의 누구 것인지(event.owner), 돈 나가는 곳(event.source) 추가. 글로 적던 "마련 방법"(method)은 source로 바꿈
+const DATA_VERSION = 5;
+
+// 큰돈이 어디서 나가는지 (연간 요약에서 비상금·저축·성과급으로 낸 것은 자산에서 뺌, calc.js의 assetSpendByMonth)
+export const EVENT_SOURCES = [
+  ['special', '특별비 적립금'],
+  ['savings', '비상금·저축'],
+  ['bonus', '성과급'],
+];
+// 큰돈이 누구 것인지: 공통 / 첫 번째 사람(a) / 두 번째 사람(b)
+const EVENT_OWNERS = ['joint', 'a', 'b'];
 
 // 결제 수단 기본 목록 (두 사람 모두 이걸로 시작, 설정에서 사람마다 바꿀 수 있음)
 const DEFAULT_PAYMENTS = ['신한카드', '삼성카드', '현금', '계좌이체'];
@@ -50,8 +61,16 @@ export function newItem(group, name, joint, note) {
   return { id: newId('i'), group, name, a: null, b: null, joint, amount: null, paymentA: '', paymentB: '', note: note || '' };
 }
 
-export function newEvent(month, name, method) {
-  return { id: newId('e'), month, name, expected: null, confirmed: null, method: method || '', note: '', done: false };
+export function newEvent(month, name, source) {
+  return {
+    id: newId('e'), month, name, owner: 'joint', expected: null, confirmed: null, source: source || '', note: '', done: false,
+    details: [],
+  };
+}
+
+// 큰돈 이벤트의 세부 항목 (예: 여행 → 숙소, 비행기, 경비)
+export function newDetail(name, expected, confirmed) {
+  return { id: newId('d'), name, expected: expected ?? null, confirmed: confirmed ?? null };
 }
 
 // 처음 열었을 때 보여 줄 기본 표 (금액은 비워 둠)
@@ -79,10 +98,10 @@ function defaultData() {
     history: [],
     lastBackupAt: null,
     events: [
-      newEvent('2026.11', '결혼 준비', '기존 예산'),
-      newEvent('2027.01', '본식·신혼여행', '현금/성과급'),
-      newEvent('2027.02', '자동차 보험·세금', '월 적립금'),
-      newEvent('상시', '가전 교체·집 수리', '특별비 통장'),
+      newEvent('2026.11', '결혼 준비', 'savings'),
+      newEvent('2027.01', '본식·신혼여행', 'bonus'),
+      newEvent('2027.02', '자동차 보험·세금', 'special'),
+      newEvent('상시', '가전 교체·집 수리', 'special'),
     ],
   };
 }
@@ -132,16 +151,43 @@ function normalizeMonth(saved) {
   return month;
 }
 
+// 버전 4까지 글로 적던 "마련 방법"을 돈 나가는 곳으로 바꿈. 알아볼 수 없는 글은 null
+function sourceFromMethod(method) {
+  if (method.includes('성과급')) return 'bonus';
+  if (method.includes('적립') || method.includes('특별비')) return 'special';
+  if (method.includes('비상금') || method.includes('저축')) return 'savings';
+  return null;
+}
+
 function normalizeEvent(saved) {
+  let source = EVENT_SOURCES.some(([value]) => value === saved.source) ? saved.source : '';
+  let note = toText(saved.note);
+  const method = toText(saved.method).trim();
+  if (saved.source === undefined && method) {
+    // 바꿀 수 없는 글(예: "기존 예산")은 비고 앞에 붙여서 사라지지 않게
+    source = sourceFromMethod(method) || '';
+    if (!source) note = note ? `${method} · ${note}` : method;
+  }
   return {
     id: toText(saved.id) || newId('e'),
     month: toText(saved.month),
     name: toText(saved.name),
+    owner: EVENT_OWNERS.includes(saved.owner) ? saved.owner : 'joint',
     expected: toAmount(saved.expected),
     confirmed: toAmount(saved.confirmed),
-    method: toText(saved.method),
-    note: toText(saved.note),
+    source,
+    note,
     done: saved.done === true,
+    details: Array.isArray(saved.details) ? saved.details.filter(isObject).map(normalizeDetail) : [],
+  };
+}
+
+function normalizeDetail(saved) {
+  return {
+    id: toText(saved.id) || newId('d'),
+    name: toText(saved.name),
+    expected: toAmount(saved.expected),
+    confirmed: toAmount(saved.confirmed),
   };
 }
 
@@ -186,6 +232,7 @@ function normalizePayments(saved) {
 }
 
 // 카드별 목표 실적 { a: { 신한카드: 30 }, b: {...} } (숫자가 아닌 값은 버림)
+// 예전 "카드 실적" 화면의 기록. 화면은 없어졌지만 기록이 사라지지 않게 그대로 둠
 function normalizeCardGoals(saved) {
   const goals = { a: {}, b: {} };
   if (!isObject(saved)) return goals;

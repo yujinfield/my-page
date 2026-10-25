@@ -153,3 +153,81 @@
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
+/* 세로 막대 (가로축: 월) */
+.column-plot {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  height: 180px;
+  margin-top: var(--space-m); /* 맨 위 막대의 숫자가 들어갈 자리 */
+  border-bottom: 1px solid var(--line);
+}
+
+.column {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.column-bar {
+  position: absolute;
+  right: 15%;
+  bottom: 0;
+  left: 15%;
+  border-radius: 4px 4px 0 0;
+}
+
+.column-value {
+  position: absolute;
+  right: 0;
+  left: 0;
+  margin-bottom: 2px;
+  font-size: 12px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.column-labels {
+  display: flex;
+  gap: 4px;
+}
+
+.column-label {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-soft);
+  font-size: 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* 휴대폰: 12달이 한 줄에 들어가도록 글자를 조금 작게 */
+@media (max-width: 480px) {
+  .column-label,
+  .column-value {
+    font-size: 10px;
+    letter-spacing: -0.5px;
+  }
+}
+
+/* 예산 점선 */
+.reference-line {
+  position: absolute;
+  right: 0;
+  left: 0;
+  border-top: 2px dashed var(--series-plan);
+  pointer-events: none;
+}
+
+.reference-label {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  padding: 0 var(--space-xs);
+  border-radius: 4px;
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  font-size: 12px;
+}

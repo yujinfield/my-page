@@ -376,7 +376,7 @@ function renderForecast(totals) {
   });
   const more = document.createElement('p');
   more.className = 'hint';
-  more.textContent = '예산 기준이에요. 현재 자산·목표·수익률은 ⑤ 연간 요약에서 바꿀 수 있어요.';
+  more.textContent = '예산 기준이에요. 현재 자산·목표·수익률은 ④ 연간 요약에서 바꿀 수 있어요.';
   forecastBox.replaceChildren(...items, more);
 }
 

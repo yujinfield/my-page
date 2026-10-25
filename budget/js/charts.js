@@ -135,3 +135,45 @@ export function barChart(title, rows, series) {
 export function seriesColor(slot) {
   return `var(--series-${slot})`;
 }
+
+/* ── 세로 막대 그래프 (가로축: 월) ── */
+
+// columns: [{ label: '1월', value: 숫자 또는 null }]
+// reference: { value, label } 이면 그 높이에 점선(예: 예산)을 그림
+export function columnChart(title, columns, color, reference) {
+  const box = element('figure', 'chart columns');
+  box.append(element('figcaption', 'chart-title', title));
+
+  // 높이 기준: 가장 큰 값 (점선도 들어가게)
+  let max = reference ? reference.value : 0;
+  for (const column of columns) max = Math.max(max, column.value || 0);
+  const percent = (value) => (max > 0 && value > 0 ? (value / max) * 100 : 0);
+
+  const plot = element('div', 'column-plot');
+  if (reference && reference.value > 0) {
+    const line = element('div', 'reference-line');
+    line.style.bottom = `${percent(reference.value)}%`;
+    line.append(element('span', 'reference-label', reference.label));
+    plot.append(line);
+  }
+
+  const labels = element('div', 'column-labels');
+  for (const column of columns) {
+    const slot = element('div', 'column');
+    const valueText = column.value === null ? '' : formatMoney(column.value);
+    slot.title = `${column.label}: ${column.value === null ? '아직 없음' : `${valueText}만원`}`;
+
+    const bar = element('div', 'column-bar');
+    bar.style.height = `${percent(column.value)}%`;
+    bar.style.background = color;
+    const value = element('span', column.value !== null && column.value < 0 ? 'column-value bad' : 'column-value', valueText);
+    value.style.bottom = `${percent(column.value)}%`;
+    slot.append(bar, value);
+    plot.append(slot);
+
+    labels.append(element('span', 'column-label', column.label));
+  }
+
+  box.append(plot, labels);
+  return box;
+}

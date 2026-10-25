@@ -1,10 +1,11 @@
-// ⑤ 연간 요약: 한 해 12달 실적, 월별 그래프, "이대로 가면 N년 뒤 M억"
+// ④ 연간 요약: 한 해 12달 실적, 월별 그래프, "이대로 가면 N년 뒤 M억"
 
 import {
-  parseAmount, formatMoney, formatMonth, shiftMonth, summarize, yearRows, actualAverage,
+  parseAmount, formatMoney, formatMonth, shiftMonth, summarize, yearRows, actualAverage, eventTotals,
+  assetSpendByMonth,
 } from './calc.js';
 import { cell, renderHeadRow } from './cells.js';
-import { barChart, seriesColor } from './charts.js';
+import { columnChart, seriesColor } from './charts.js';
 import { forecastLines, formatEok } from './forecast.js';
 import { watchEdits, shown } from './history.js';
 
@@ -65,9 +66,11 @@ export function renderAnnual() {
   const rows = yearRows(state.data, year());
   const filled = rows.filter((row) => row.hasActual);
 
-  renderSummary(rows, filled);
+  // 비상금·저축·성과급에서 나간 큰돈은 그 달 자산에서 뺌 (특별비 적립금으로 낸 것은 이미 매달 지출이라 빼지 않음)
+  const bigSpend = assetSpendByMonth(state.data.events, year());
+  renderSummary(rows, filled, bigSpend);
   renderChart(rows);
-  renderTable(rows, filled);
+  renderTable(rows, filled, bigSpend);
   renderEventsNote();
   fillGoalInputs();
   renderForecast();
@@ -78,13 +81,21 @@ function sumActual(rows, key) {
   return rows.reduce((total, row) => total + row.actual[key], 0);
 }
 
-function renderSummary(rows, filled) {
+function sumValues(map) {
+  return Object.values(map).reduce((total, value) => total + value, 0);
+}
+
+function renderSummary(rows, filled, bigSpend) {
   const plan = summarize(state.data.items, {}).plan;
+  const asset = sumActual(filled, 'asset');
+  const spent = sumValues(bigSpend);
   const cards = [
     ['실제 수입', formatMoney(sumActual(filled, 'income'))],
     ['실제 지출', formatMoney(sumActual(filled, 'spending'))],
     ['실제 저축·투자', formatMoney(sumActual(filled, 'saving'))],
-    [`자산으로 쌓인 돈 (${filled.length}개월)`, formatMoney(sumActual(filled, 'asset')), true],
+    [`자산으로 쌓인 돈 (${filled.length}개월)`, formatMoney(asset)],
+    ['큰돈 (비상금·저축·성과급에서)', formatMoney(-spent)],
+    ['큰돈 반영 후 늘어난 자산', formatMoney(asset - spent), true],
     ['예산대로면 1년에', formatMoney(plan.asset * 12)],
   ];
   summaryBox.replaceChildren(...cards.map(([title, value, main]) => {
@@ -101,24 +112,26 @@ function renderSummary(rows, filled) {
   }));
 }
 
-// 예산은 달마다 같으므로 막대 대신 제목에 적고, 실제만 막대로 그림
+// 가로축은 월, 막대는 실제로 쌓인 돈, 점선은 예산(달마다 같음)
 function renderChart(rows) {
-  const chartRows = rows.map((row) => ({
+  const columns = rows.map((row) => ({
     label: `${Number(row.key.slice(5))}월`,
-    values: [row.hasActual ? row.actual.asset : null],
+    value: row.hasActual ? row.actual.asset : null,
   }));
   const planAsset = summarize(state.data.items, {}).plan.asset;
-  chartBox.replaceChildren(barChart(
-    `${year()}년 달마다 자산으로 쌓인 돈 (예산: 매달 ${formatMoney(planAsset)}만원)`,
-    chartRows,
-    [{ name: '실제', color: seriesColor(6) }],
+  chartBox.replaceChildren(columnChart(
+    `${year()}년 달마다 자산으로 쌓인 돈`,
+    columns,
+    seriesColor(6),
+    { value: planAsset, label: `예산 ${formatMoney(planAsset)}` },
   ));
 }
 
-function renderTable(rows, filled) {
+// 누적 = 자산으로 쌓인 돈 − 비상금·저축·성과급에서 나간 큰돈 (달마다 더해 감)
+function renderTable(rows, filled, bigSpend) {
   renderHeadRow(thead, [
     ['월'], ['수입', true], ['지출', true], ['저축·투자', true], ['남는 돈', true],
-    ['자산으로 쌓인 돈', true], ['누적', true], ['입력'],
+    ['자산으로 쌓인 돈', true], ['큰돈', true], ['누적 (큰돈 반영)', true], ['입력'],
   ]);
 
   let cumulative = 0;
@@ -126,16 +139,20 @@ function renderTable(rows, filled) {
     const tr = document.createElement('tr');
     if (row.key === state.month) tr.className = 'current-month';
     tr.append(cell(formatMonth(row.key)));
+    const spent = bigSpend[row.key] || 0;
+    const spentCell = spent ? cell(formatMoney(-spent), 'num bad') : cell('', 'num');
+
     if (!row.hasActual) {
-      for (let i = 0; i < 6; i += 1) tr.append(cell('—', 'num muted'));
-      tr.append(cell('아직 없음', 'muted'));
+      for (let i = 0; i < 5; i += 1) tr.append(cell('—', 'num muted'));
+      cumulative -= spent;
+      tr.append(spentCell, spent ? cell(formatMoney(cumulative), 'num') : cell('—', 'num muted'), cell('아직 없음', 'muted'));
       return tr;
     }
-    cumulative += row.actual.asset;
+    cumulative += row.actual.asset - spent;
     for (const key of ['income', 'spending', 'saving', 'left', 'asset']) {
       tr.append(cell(formatMoney(row.actual[key]), row.actual[key] < 0 ? 'num bad' : 'num'));
     }
-    tr.append(cell(formatMoney(cumulative), 'num'));
+    tr.append(spentCell, cell(formatMoney(cumulative), cumulative < 0 ? 'num bad' : 'num'));
     tr.append(cell(row.missing === 0 ? '다 적음' : `${row.missing}개 안 적음`, row.missing === 0 ? '' : 'muted'));
     return tr;
   }));
@@ -146,7 +163,8 @@ function renderTable(rows, filled) {
   for (const key of ['income', 'spending', 'saving', 'left', 'asset']) {
     total.append(cell(formatMoney(sumActual(filled, key)), 'num'));
   }
-  total.append(cell(), cell());
+  const spentTotal = sumValues(bigSpend);
+  total.append(cell(spentTotal ? formatMoney(-spentTotal) : '', 'num'), cell(formatMoney(cumulative), 'num'), cell());
   tfoot.replaceChildren(total);
 }
 
@@ -158,9 +176,12 @@ function renderEventsNote() {
     eventsNote.textContent = `${prefix}년 큰돈 캘린더에 적은 이벤트가 없어요.`;
     return;
   }
-  const expected = events.reduce((sum, event) => sum + (event.expected || 0), 0);
-  const confirmed = events.reduce((sum, event) => sum + (event.confirmed || 0), 0);
-  eventsNote.textContent = `${prefix}년 큰돈 캘린더 ${events.length}건: 예상 ${formatEok(expected)}, 확정 ${formatEok(confirmed)} (월 가계부와 따로 관리)`;
+  // 세부 항목이 있는 이벤트는 세부 항목 합계로
+  const expected = events.reduce((sum, event) => sum + (eventTotals(event).expected || 0), 0);
+  const confirmed = events.reduce((sum, event) => sum + (eventTotals(event).confirmed || 0), 0);
+  eventsNote.textContent = `${prefix}년 큰돈 캘린더 ${events.length}건: 예상 ${formatEok(expected)}, 확정 ${formatEok(confirmed)}. `
+    + '"돈 나가는 곳"이 비상금·저축·성과급인 확정 지출은 위 표에서 자산에서 빼요. '
+    + '성과급은 월 가계부에 수입으로 적어 이미 자산에 쌓였고, 특별비 적립금은 매달 지출로 이미 빠져서 다시 빼지 않아요.';
 }
 
 /* ── 이대로 가면? ── */
