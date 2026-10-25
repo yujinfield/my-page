@@ -32,10 +32,14 @@
 | `js/history.js` | 변경 이력 남기기 (`addHistory`, 칸을 벗어날 때 기록하는 `watchEdits`) |
 | `js/store.js` | 데이터 계층. `localStorage` 읽기/쓰기는 **이 파일에서만** |
 | `js/cells.js` | 표 칸·입력칸·고르는 칸 만드는 도우미. `areaCell`은 휴대폰 카드용 자리 이름·이름표, `showDiff`는 차이 색 |
-| `js/plan.js` | ① 월 가계부 (예산 입력, 실제액은 보기만, 표 위 이번 달 메모) |
+| `js/plan.js` | ① 월 가계부 표 (예산 입력, 실제액은 보기만, 항목 세부 항목) |
+| `js/plan-summary.js` | ① 월 가계부 위쪽 요약 카드·"이대로 가면?"·그래프 |
+| `js/item-details.js` | ① 월 가계부 항목의 세부 항목 줄 만들기 |
+| `js/payment-select.js` | ① 월 가계부의 사람별 결제 수단 고르는 칸 |
+| `js/month-memo.js` | ① 월 가계부 표 위 이번 달 메모 |
 | `js/actual.js` | ② 실제 사용 (그 달 실제액 입력) |
 | `js/events.js` | ③ 큰돈 캘린더 |
-| `js/event-details.js` | ③ 큰돈 캘린더의 세부 항목 줄·버튼 만들기 |
+| `js/event-details.js` | ③ 큰돈 캘린더의 세부 항목 줄, "세부 ▾" 버튼·세부 항목 찾기(월 가계부도 같이 씀) |
 | `js/annual.js` | ④ 연간 요약, 목표·예측 |
 | `js/wealth.js` | ④ 연간 요약의 지금 저금액·지금 남은 부채(보기만), 빚 빨리 갚기 코멘트 |
 | `js/debt-editor.js` | ⚙️ 설정 창의 부채 목록 (이름·남은 금액·이율·매달 갚는 돈·상환 기한·중도 상환) |
@@ -50,11 +54,12 @@
 ```js
 // localStorage 키: "budget-data" (금액 단위: 만원, 빈칸은 null)
 {
-  version: 7,
+  version: 8,
   names: { a: "유진", b: "남편" },
   payments: { a: ["신한카드", …], b: ["삼성카드", …] },      // 사람마다 결제 수단 목록 (⚙️ 설정에서 고침)
   cardGoals: { a: { 신한카드: 30 }, b: {} },                 // 예전 카드 실적 화면의 목표(화면 없음, 보존만)
-  items: [{ id, group, name, a, b, joint, amount, paymentA, paymentB, note }],   // 예산 (모든 달 공통), paymentA·B는 사람마다 결제 수단 이름
+  items: [{ id, group, name, a, b, joint, amount, paymentA, paymentB, note,   // 예산 (모든 달 공통), paymentA·B는 사람마다 결제 수단 이름
+             details: [{ id, name, amount, a, b }] }],                     // 세부 항목: 공동이면 amount, 개인이면 a·b
   months: { "2026-11": { actual: { [itemId]: 금액 }, memo, depositA, depositB } },  // memo: 그 달 메모(① 표 위), deposit은 예전 공동통장 기록(화면 없음, 보존만)
   events: [{ id, month, owner, name, expected, confirmed, source, note, done,   // owner: joint·a·b, done: 완료해서 숨김
              details: [{ id, name, expected, confirmed }] }],   // source: special(특별비 적립금)·savings(비상금·저축)·bonus(성과급), details: 세부 항목
@@ -68,13 +73,15 @@
 }
 ```
 
-- 월 예상액은 저장하지 않고 계산합니다: 공동이면 `amount`, 아니면 `a + b`.
+- 월 예상액은 저장하지 않고 계산합니다: 공동이면 `amount`, 아니면 `a + b` (세부 항목이 있으면 세부 항목 합).
 - 버전 1 → 2: `goal`·`history`·`lastBackupAt`이 없으면 기본값을 채웁니다 (`normalizeData`). 백업 파일을 불러올 때도 같은 함수를 씁니다.
 - 버전 2 → 3: `payments`가 없으면 두 사람 모두 기본 목록, `paymentA·B`는 빈칸(선택 안 함), `event.done`은 false, `cardGoals`는 빈 목표로 채웁니다.
 - 버전 3 → 4: `event.details`가 없으면 빈 목록으로 채웁니다.
 - 버전 4 → 5: `event.owner`는 공통(joint), 글로 적던 `method`는 `source`로 바꿉니다 ("성과급"→bonus, "적립·특별비"→special, "비상금·저축"→savings, 알아볼 수 없는 글은 비고 앞에 붙임).
 - 버전 5 → 6: `goal.current`(현재 자산)는 `wealth.savings`(저금액)로 옮기고 기준 달은 옮긴 달로 합니다. `memos`는 빈 목록으로 채웁니다.
 - 버전 6 → 7: 달마다 `memo`가 없으면 빈 글로 채웁니다.
+- 버전 7 → 8: 항목의 `details`가 없으면 빈 목록으로 채웁니다.
+- 월 가계부 항목에 세부 항목이 있으면 예상액(공동)·두 사람 금액(개인)은 세부 항목 합계입니다 (`planAmount`·`personAmounts`). 처음 세부 항목을 넣을 때 항목에 적힌 금액은 "기존 금액" 세부 항목으로 옮깁니다. 실제액은 ② 실제 사용에서 항목 단위로만 적습니다.
 - 저금액: ⚙️ 설정에 한 번 적은 시작 저금액(기준 달 말)에서 그 뒤 달마다 (자산으로 쌓인 돈 − 자산에서 나간 큰돈)을 더해 계산합니다. 연간 요약 표의 "저금액" 칸, "이대로 가면" 예측, 순자산 모두 지금 저금액 기준입니다.
 - 부채: ⚙️ 설정에 적은 남은 금액(적은 달 기준)에서 매달 갚는 돈만큼 줄어든 걸로 지금 남은 금액을 계산합니다. 코멘트는 상환 기한(못 맞추면 필요한 금액, 만기 일시 상환이면 모아 둘 돈), 중도 상환 불가면 더 갚기 권하지 않음, 수수료가 있으면 수수료와 아끼는 이자를 비교합니다.
 - 연간 요약: 큰돈 중 돈 나가는 곳이 비상금·저축·성과급인 확정 지출은 그 달 자산에서 뺍니다 (성과급은 월 가계부에 수입으로 적어 이미 자산에 쌓였기 때문). 특별비 적립금은 매달 지출로 이미 빠져서 빼지 않습니다.

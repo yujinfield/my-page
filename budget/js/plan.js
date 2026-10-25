@@ -1,25 +1,27 @@
 // ① 월 가계부: 예산(월 예상액)을 정하고, 그 달 실제액(② 실제 사용에서 입력)과 차이를 봅니다.
 
 import {
-  GROUPS, itemKind, parseAmount, formatMoney, formatMonth, planAmount,
-  diffOf, sortByGroup, summarize, monthRecord, ensureMonth, groupTotals, currentSavings, monthKeyOf,
+  GROUPS, itemKind, parseAmount, formatMoney, formatMonth, planAmount, personAmounts,
+  diffOf, sortByGroup, summarize, monthRecord,
 } from './calc.js';
-import { newItem } from './store.js';
+import { newItem, newItemDetail } from './store.js';
 import {
   areaCell, textInput, amountInput, computed, setMoney, showDiff, deleteButton, renderHeadRow,
 } from './cells.js';
-import { donutChart, barChart, seriesColor } from './charts.js';
-import { forecastLines } from './forecast.js';
+import { renderPlanSummary } from './plan-summary.js';
+import { detailToggle, findDetail } from './event-details.js';
+import { itemDetailRow } from './item-details.js';
+import { paymentSelect, PAYMENT_FIELDS, ADD_PAYMENT } from './payment-select.js';
+import { setupMonthMemo, renderMonthMemo } from './month-memo.js';
+
+const COLUMN_COUNT = 12; // 표 칸 수 (세부 항목 줄이 이만큼 가로로 걸침)
+const DETAIL_FIELDS = { detailName: 'name', detailAmount: 'amount', detailA: 'a', detailB: 'b' }; // 칸 이름 → 세부 항목 값
+const openIds = new Set(); // 세부 항목을 펼친 항목 id
 import { addHistory, watchEdits, shown } from './history.js';
 
-const summaryBox = document.getElementById('plan-summary');
 const missingNote = document.getElementById('plan-missing');
-const forecastBox = document.getElementById('plan-forecast');
 const editor = document.getElementById('plan-editor');
 const editToggle = document.getElementById('plan-edit-toggle');
-const memoLabel = document.getElementById('month-memo-label');
-const memoInput = document.getElementById('month-memo');
-const chartsBox = document.getElementById('plan-charts');
 const thead = document.getElementById('plan-head');
 const tbody = document.getElementById('plan-body');
 const tfoot = document.getElementById('plan-foot');
@@ -37,23 +39,7 @@ export function setupPlan(appState, onSave) {
   editToggle.addEventListener('click', toggleEditor);
   document.getElementById('plan-add').addEventListener('click', addItem);
 
-  // 이번 달 메모: 글을 칠 때마다 저장, 칸을 벗어날 때 이력에 남김
-  memoInput.addEventListener('input', () => {
-    ensureMonth(state.data, state.month).memo = memoInput.value;
-    save();
-  });
-  watchEdits(memoInput.parentElement, () => state.data, (input, before, after) =>
-    `[월 가계부] ${formatMonth(state.month)} 메모: ${shown(shortText(before))} → ${shown(shortText(after))}`, save);
-}
-
-// 이력에는 메모 앞부분만
-function shortText(text) {
-  return text.length > 30 ? `${text.slice(0, 30)}…` : text;
-}
-
-function renderMonthMemo() {
-  memoLabel.textContent = `${formatMonth(state.month)} 메모`;
-  if (memoInput !== document.activeElement) memoInput.value = monthRecord(state.data, state.month).memo;
+  setupMonthMemo(state, save);
 }
 
 // 휴대폰: 평소엔 요약·그래프만, "수정하기"를 누르면 입력칸을 엶 (CSS가 768px 이하에서만 숨김)
@@ -75,6 +61,12 @@ function describeEdit(input, before, after) {
     amount: '예상액', paymentA: `${names.a} 결제 수단`, paymentB: `${names.b} 결제 수단`, note: '메모',
   };
   const itemName = (input.dataset.field === 'name' ? before : item.name) || '이름 없는 항목';
+  const detail = findDetail(item, input);
+  if (detail) {
+    const detailLabels = { detailName: '이름', detailAmount: '금액', detailA: `${names.a} 금액`, detailB: `${names.b} 금액` };
+    const detailName = (input.dataset.field === 'detailName' ? before : detail.name) || '세부 항목';
+    return `[월 가계부] ${itemName} › ${detailName} ${detailLabels[input.dataset.field]}: ${shown(before)} → ${shown(after)}`;
+  }
   // 결제 수단은 "＋ 새로 추가…"를 고를 수도 있어서, 고른 칸 값 대신 실제로 저장된 값을 남김
   if (input.dataset.field in PAYMENT_FIELDS) {
     after = item[input.dataset.field];
@@ -85,7 +77,7 @@ function describeEdit(input, before, after) {
 
 export function renderPlan() {
   const { names } = state.data;
-  renderMonthMemo();
+  renderMonthMemo(state);
   renderHeadRow(thead, [
     ['구분'], ['항목'], [names.a, true], [names.b, true], ['공동'],
     ['월 예상액', true], [`실제액 (${formatMonth(state.month)})`, true], ['차이', true], [`${names.a} 결제`], [`${names.b} 결제`], ['결제일/메모'], [''],
@@ -94,11 +86,12 @@ export function renderPlan() {
   state.data.items = sortByGroup(state.data.items);
 
   let lastGroup = null;
-  const rows = state.data.items.map((item) => {
-    const row = buildRow(item, item.group !== lastGroup);
+  const rows = [];
+  for (const item of state.data.items) {
+    rows.push(buildRow(item, item.group !== lastGroup));
+    if (openIds.has(item.id)) rows.push(itemDetailRow(item, names, COLUMN_COUNT));
     lastGroup = item.group;
-    return row;
-  });
+  }
   tbody.replaceChildren(...rows);
   refreshNumbers();
 }
@@ -130,17 +123,27 @@ function buildRow(item, isGroupStart) {
   jointBox.setAttribute('aria-label', '공동 항목');
 
   // 공동 항목은 예상액을 직접, 개인 항목은 두 사람 금액을 적으면 합이 예상액
-  const inputA = amountInput('a', item.joint ? null : item.a, `${names.a} 금액`, item.joint ? '—' : '');
-  const inputB = amountInput('b', item.joint ? null : item.b, `${names.b} 금액`, item.joint ? '—' : '');
-  inputA.disabled = item.joint;
-  inputB.disabled = item.joint;
-  const planCell = item.joint ? amountInput('amount', item.amount, '월 예상액') : computed('plan');
+  // 세부 항목이 있으면 금액 칸은 세부 항목 합계(보기만)
+  const hasDetails = item.details.length > 0;
+  const personCell = (field) => {
+    if (hasDetails && !item.joint) return computed(field);
+    const input = amountInput(field, item.joint ? null : item[field], `${names[field]} 금액`, item.joint ? '—' : '');
+    input.disabled = item.joint;
+    return input;
+  };
+  const inputA = personCell('a');
+  const inputB = personCell('b');
+  const planCell = item.joint && !hasDetails ? amountInput('amount', item.amount, '월 예상액') : computed('plan');
+
+  const nameBox = document.createElement('div');
+  nameBox.className = 'event-name';
+  nameBox.append(textInput('name', item.name, '항목 이름', '항목 이름'), detailToggle(item, openIds.has(item.id), true));
 
   // [자리 이름, 휴대폰 카드에서 보일 이름표, 내용, 클래스]
   // 휴대폰에서는 표 대신 카드로 보여서, 자리 이름(data-area)으로 칸 위치를 정함 (table.css)
   const cells = [
     ['group', '', groupSelect],
-    ['name', '', textInput('name', item.name, '항목 이름', '항목 이름')],
+    ['name', '', nameBox],
     ['a', names.a, inputA, 'num'],
     ['b', names.b, inputB, 'num'],
     ['joint', '공동', jointBox, 'center'],
@@ -148,8 +151,8 @@ function buildRow(item, isGroupStart) {
     // 실제액은 ② 실제 사용에서 적고, 여기서는 보기만 함
     ['actual', `실제 (${formatMonth(state.month)})`, computed('actual'), 'num'],
     ['diff', '차이', computed('diff'), 'num'],
-    ['paymentA', `${names.a} 결제`, paymentSelect(item, 'paymentA'), ''],
-    ['paymentB', `${names.b} 결제`, paymentSelect(item, 'paymentB'), ''],
+    ['paymentA', `${names.a} 결제`, paymentSelect(state.data, item, 'paymentA'), ''],
+    ['paymentB', `${names.b} 결제`, paymentSelect(state.data, item, 'paymentB'), ''],
     ['note', '메모', textInput('note', item.note, '결제일/메모')],
     ['delete', '', deleteButton('항목 지우기')],
   ];
@@ -169,6 +172,15 @@ function handleInput(event) {
   const field = event.target.dataset.field;
   const item = findItem(event.target);
   if (!item || field === 'group' || field === 'joint' || field in PAYMENT_FIELDS) return;
+
+  const detail = findDetail(item, event.target);
+  if (detail) {
+    const key = DETAIL_FIELDS[field];
+    detail[key] = key === 'name' ? event.target.value : parseAmount(event.target.value);
+    save();
+    refreshNumbers();
+    return;
+  }
 
   if (field === 'name' || field === 'note') {
     item[field] = event.target.value;
@@ -199,37 +211,6 @@ function handleChange(event) {
 
 /* ── 결제 수단 (사람마다 따로) ── */
 
-const ADD_PAYMENT = '__add__'; // "＋ 새로 추가…" 칸의 값
-const PAYMENT_FIELDS = { paymentA: 'a', paymentB: 'b' }; // 칸 이름 → 사람
-
-// 한 사람의 결제 수단 고르는 칸: 선택 안 함 / 그 사람 목록 / ＋ 새로 추가…
-function paymentSelect(item, field) {
-  const person = PAYMENT_FIELDS[field];
-  const personName = state.data.names[person];
-  const select = document.createElement('select');
-  select.className = 'cell-input';
-  select.dataset.field = field;
-  select.setAttribute('aria-label', `${personName} 결제 수단`);
-
-  const names = state.data.payments[person].slice();
-  // 설정에서 목록에서 지웠어도 이 항목에 이미 고른 값은 보여 줌
-  if (item[field] && !names.includes(item[field])) names.push(item[field]);
-  // 누구 것인지는 열 머리줄("유진 결제")에 있으니 카드 이름만
-  const options = [
-    ['', '—'],
-    ...names.map((name) => [name, name]),
-    [ADD_PAYMENT, '＋ 새로 추가…'],
-  ];
-  for (const [value, text] of options) {
-    const option = document.createElement('option');
-    option.value = value;
-    option.textContent = text;
-    select.append(option);
-  }
-  select.value = item[field];
-  return select;
-}
-
 function choosePayment(item, field, value) {
   const person = PAYMENT_FIELDS[field];
   if (value === ADD_PAYMENT) {
@@ -249,6 +230,24 @@ function choosePayment(item, field, value) {
 }
 
 function handleClick(event) {
+  const action = event.target.closest('[data-action]');
+  if (action && action.dataset.action === 'toggle-details') {
+    const item = findItem(action);
+    if (openIds.has(item.id)) openIds.delete(item.id);
+    else openIds.add(item.id);
+    renderPlan();
+    focusIn(item.id, '[data-action="toggle-details"]');
+    return;
+  }
+  if (action && action.dataset.action === 'detail-add') {
+    addDetail(findItem(action));
+    return;
+  }
+  if (action && action.dataset.action === 'detail-delete') {
+    deleteDetail(findItem(action), action);
+    return;
+  }
+
   const button = event.target.closest('[data-action="delete"]');
   if (!button) return;
   const item = findItem(button);
@@ -259,6 +258,37 @@ function handleClick(event) {
   addHistory(state.data, `[월 가계부] "${item.name || '이름 없는 항목'}" 항목 지움`);
   save();
   renderPlan();
+}
+
+function addDetail(item) {
+  // 처음 세부 항목을 넣을 때 항목에 적어 둔 금액이 있으면 "기존 금액"으로 옮겨서 사라지지 않게
+  if (item.details.length === 0 && (item.amount !== null || item.a !== null || item.b !== null)) {
+    item.details.push(newItemDetail('기존 금액', item.amount, item.a, item.b));
+    item.amount = null;
+    item.a = null;
+    item.b = null;
+  }
+  const detail = newItemDetail('');
+  item.details.push(detail);
+  openIds.add(item.id);
+  save();
+  renderPlan();
+  focusIn(item.id, `[data-detail-id="${detail.id}"] [data-field="detailName"]`);
+}
+
+function deleteDetail(item, button) {
+  const detail = findDetail(item, button);
+  if (!detail) return;
+  item.details = item.details.filter((other) => other !== detail);
+  addHistory(state.data, `[월 가계부] ${item.name || '이름 없는 항목'} › "${detail.name || '세부 항목'}" 지움`);
+  save();
+  renderPlan();
+  focusIn(item.id, '[data-action="detail-add"]');
+}
+
+function focusIn(itemId, selector) {
+  const target = tbody.querySelector(`tr[data-id="${itemId}"] ${selector}`);
+  if (target) target.focus();
 }
 
 function addItem() {
@@ -279,9 +309,12 @@ function focusField(id, field) {
 function refreshNumbers() {
   const actualMap = monthRecord(state.data, state.month).actual;
 
-  for (const row of tbody.rows) {
+  for (const row of tbody.querySelectorAll('tr:not(.detail-row)')) {
     const item = state.data.items.find((other) => other.id === row.dataset.id);
     const plan = planAmount(item);
+    const person = personAmounts(item);
+    setMoney(row, 'a', person.a);
+    setMoney(row, 'b', person.b);
     setMoney(row, 'plan', plan);
     setMoney(row, 'actual', actualMap[item.id]);
     showDiff(row.querySelector('[data-cell="diff"]'), itemKind(item), diffOf(plan, actualMap[item.id]));
@@ -289,9 +322,7 @@ function refreshNumbers() {
 
   const totals = summarize(state.data.items, actualMap);
   renderFoot(totals);
-  renderSummary(totals);
-  renderForecast(totals);
-  renderCharts(totals, actualMap);
+  renderPlanSummary(state, totals, actualMap);
   missingNote.textContent = totals.missing > 0
     ? `${formatMonth(state.month)} 실제액을 아직 안 적은 항목이 ${totals.missing}개 있어요. ② 실제 사용에서 적어 주세요.`
     : `${formatMonth(state.month)} 실제액을 모두 적었어요.`;
@@ -325,117 +356,4 @@ function renderFoot(totals) {
     return tr;
   });
   tfoot.replaceChildren(...rows);
-}
-
-// 위쪽 요약 카드: 예상 / 실제
-const SUMMARY_CARDS = [
-  ['월 수입', 'income', 'income'],
-  ['지출', 'spending', 'spending'],
-  ['저축·투자', 'saving', 'saving'],
-  ['남는 돈', 'left', 'income'],
-  ['자산으로 쌓이는 돈', 'asset', 'income'],
-];
-
-function renderSummary(totals) {
-  const cards = SUMMARY_CARDS.map(([title, key, kind]) => {
-    const card = document.createElement('div');
-    card.className = 'summary-card';
-    if (key === 'asset') card.classList.add('summary-main');
-
-    const titleText = document.createElement('p');
-    titleText.className = 'summary-title';
-    titleText.textContent = title;
-
-    const planText = document.createElement('p');
-    planText.className = 'summary-value';
-    planText.textContent = `${formatMoney(totals.plan[key])}만원`;
-
-    const actualText = document.createElement('p');
-    actualText.className = 'summary-actual';
-    if (totals.hasActual) {
-      const diff = diffOf(totals.plan[key], totals.actual[key]);
-      const diffSpan = document.createElement('span');
-      showDiff(diffSpan, kind, diff);
-      actualText.append(`실제 ${formatMoney(totals.actual[key])} (`, diffSpan, ')');
-    } else {
-      actualText.textContent = '실제 —';
-    }
-
-    card.append(titleText, planText, actualText);
-    return card;
-  });
-  summaryBox.replaceChildren(...cards);
-}
-
-/* ── 이대로 가면? (예산 기준) ── */
-
-function renderForecast(totals) {
-  const now = currentSavings(state.data, monthKeyOf(new Date()));
-  const lines = forecastLines(state.data.goal, now ? now.amount : null, totals.plan.saving, totals.plan.asset, state.month);
-  const items = lines.map((text) => {
-    const p = document.createElement('p');
-    p.textContent = text;
-    return p;
-  });
-  const more = document.createElement('p');
-  more.className = 'hint';
-  more.textContent = '예산 기준이에요. 지금 저금액에서 시작해요. 시작 저금액은 ⚙️ 설정, 부채·목표·수익률은 ④ 연간 요약에서 바꿀 수 있어요.';
-  forecastBox.replaceChildren(...items, more);
-}
-
-/* ── 그래프 ── */
-
-// 원형 그래프 조각: 구분마다 색을 고정 (예산·실제 그래프에서 같은 색)
-const SLICES = [
-  ['고정지출', 1], ['개인지출', 2], ['가족', 3], ['생활비', 4], ['특별지출', 5], ['저축·투자', 6],
-];
-const LEFT_SLOT = 7; // 남는 돈
-
-function allocation(groups, key, left) {
-  const slices = SLICES.map(([group, slot]) => ({ label: group, value: groups[group][key], color: seriesColor(slot) }));
-  slices.push({ label: '남는 돈', value: left, color: seriesColor(LEFT_SLOT) });
-  return slices;
-}
-
-function renderCharts(totals, actualMap) {
-  const groups = groupTotals(state.data.items, actualMap);
-  const month = formatMonth(state.month);
-  const charts = [
-    donutChart('예산: 수입이 어디로 가나', allocation(groups, 'plan', totals.plan.left),
-      `${formatMoney(totals.plan.income)}만원`, '월 수입'),
-  ];
-
-  if (totals.hasActual) {
-    charts.push(donutChart(`실제 (${month}): 수입이 어디로 갔나`, allocation(groups, 'actual', totals.actual.left),
-      `${formatMoney(totals.actual.income)}만원`, '실제 수입'));
-  } else {
-    const empty = document.createElement('figure');
-    empty.className = 'chart chart-empty';
-    empty.textContent = `${month} 실제액을 적으면 실제 원형 그래프가 나와요.`;
-    charts.push(empty);
-  }
-
-  const rows = SLICES.map(([group]) => ({
-    label: group,
-    values: [groups[group].plan, groups[group].hasActual ? groups[group].actual : null],
-  }));
-  const bars = barChart(`구분별 예산 vs 실제 (${month})`, rows, [
-    { name: '예산', color: 'var(--series-plan)' },
-    { name: '실제', color: seriesColor(1) },
-  ]);
-  bars.classList.add('chart-wide');
-  charts.push(bars);
-
-  const warnings = [];
-  if (totals.plan.left < 0) warnings.push(`예산이 수입보다 ${formatMoney(-totals.plan.left)}만원 많아요.`);
-  if (totals.hasActual && totals.missing === 0 && totals.actual.left < 0) {
-    warnings.push(`${month}에는 수입보다 ${formatMoney(-totals.actual.left)}만원 더 썼어요.`);
-  }
-  for (const text of warnings) {
-    const p = document.createElement('p');
-    p.className = 'chart-warning bad';
-    p.textContent = text;
-    charts.push(p);
-  }
-  chartsBox.replaceChildren(...charts);
 }
