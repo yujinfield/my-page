@@ -182,6 +182,79 @@ select.cell-input {
   opacity: 0.55;
 }
 
+/* 큰돈 캘린더: 이벤트 이름 옆 "세부 3 ▾" 버튼과 펼친 세부 항목 */
+.event-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.detail-toggle {
+  flex-shrink: 0;
+  padding: var(--space-xs) var(--space-s);
+  border: none;
+  border-radius: var(--radius-l);
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.detail-toggle[aria-expanded="true"] {
+  background: var(--highlight);
+  color: var(--accent);
+}
+
+.detail-toggle:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.budget-table tr.detail-row td {
+  padding: 0 var(--space-xs) var(--space-s) var(--space-xl);
+}
+
+.event-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 560px;
+  margin: 0 0 var(--space-xs);
+  padding: var(--space-s);
+  border-left: 3px solid var(--highlight);
+  list-style: none;
+}
+
+/* [이름] [예상] [확정] [✕] */
+.detail-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6em 6em 32px;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.detail-item .cell-input {
+  width: 100%;
+  min-width: 0;
+}
+
+.detail-head {
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.detail-head span:nth-child(2),
+.detail-head span:nth-child(3) {
+  padding-right: var(--space-s);
+  text-align: right;
+}
+
+.detail-add {
+  padding: var(--space-xs) var(--space-m);
+  font-size: var(--font-size-small);
+}
+
 /* 머리줄의 ＋ (항목 추가) */
 .add-button {
   width: 32px;
@@ -427,6 +500,26 @@ select.cell-input {
     grid-template-areas:
       "name name"
       "expected confirmed";
+  }
+
+  /* 세부 항목 줄: 바로 위 이벤트 카드에 붙여서 보여 줌 */
+  .events-table tbody tr.detail-row {
+    display: block;
+    margin-top: calc(var(--space-s) * -1 - 2px);
+    border-radius: 0 0 var(--radius-s) var(--radius-s);
+  }
+
+  .budget-table.card-table tbody tr.detail-row td {
+    display: block;
+    padding: 0;
+  }
+
+  .events-table .event-details {
+    padding: var(--space-s) 0 var(--space-s) var(--space-s);
+  }
+
+  .events-table .detail-item .cell-amount {
+    background: var(--surface);
   }
 
   .events-table td[data-area="month"] .cell-input {

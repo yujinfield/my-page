@@ -11,7 +11,8 @@ const THEME_KEY = 'budget-theme';
 // 1 → 2: 목표(goal), 변경 이력(history), 마지막 백업 시각(lastBackupAt) 추가
 // 2 → 3: 사람별 결제 수단 목록(payments.a·b), 항목의 사람별 결제 수단(item.paymentA·B), 큰돈 완료 표시(event.done),
 //        카드별 목표 실적(cardGoals.a·b) 추가
-const DATA_VERSION = 3;
+// 3 → 4: 큰돈 이벤트의 세부 항목(event.details) 추가
+const DATA_VERSION = 4;
 
 // 결제 수단 기본 목록 (두 사람 모두 이걸로 시작, 설정에서 사람마다 바꿀 수 있음)
 const DEFAULT_PAYMENTS = ['신한카드', '삼성카드', '현금', '계좌이체'];
@@ -51,7 +52,14 @@ export function newItem(group, name, joint, note) {
 }
 
 export function newEvent(month, name, method) {
-  return { id: newId('e'), month, name, expected: null, confirmed: null, method: method || '', note: '', done: false };
+  return {
+    id: newId('e'), month, name, expected: null, confirmed: null, method: method || '', note: '', done: false, details: [],
+  };
+}
+
+// 큰돈 이벤트의 세부 항목 (예: 여행 → 숙소, 비행기, 경비)
+export function newDetail(name, expected, confirmed) {
+  return { id: newId('d'), name, expected: expected ?? null, confirmed: confirmed ?? null };
 }
 
 // 처음 열었을 때 보여 줄 기본 표 (금액은 비워 둠)
@@ -142,6 +150,16 @@ function normalizeEvent(saved) {
     method: toText(saved.method),
     note: toText(saved.note),
     done: saved.done === true,
+    details: Array.isArray(saved.details) ? saved.details.filter(isObject).map(normalizeDetail) : [],
+  };
+}
+
+function normalizeDetail(saved) {
+  return {
+    id: toText(saved.id) || newId('d'),
+    name: toText(saved.name),
+    expected: toAmount(saved.expected),
+    confirmed: toAmount(saved.confirmed),
   };
 }
 

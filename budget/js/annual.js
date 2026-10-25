@@ -1,10 +1,10 @@
 // ⑤ 연간 요약: 한 해 12달 실적, 월별 그래프, "이대로 가면 N년 뒤 M억"
 
 import {
-  parseAmount, formatMoney, formatMonth, shiftMonth, summarize, yearRows, actualAverage,
+  parseAmount, formatMoney, formatMonth, shiftMonth, summarize, yearRows, actualAverage, eventTotals,
 } from './calc.js';
 import { cell, renderHeadRow } from './cells.js';
-import { barChart, seriesColor } from './charts.js';
+import { columnChart, seriesColor } from './charts.js';
 import { forecastLines, formatEok } from './forecast.js';
 import { watchEdits, shown } from './history.js';
 
@@ -101,17 +101,18 @@ function renderSummary(rows, filled) {
   }));
 }
 
-// 예산은 달마다 같으므로 막대 대신 제목에 적고, 실제만 막대로 그림
+// 가로축은 월, 막대는 실제로 쌓인 돈, 점선은 예산(달마다 같음)
 function renderChart(rows) {
-  const chartRows = rows.map((row) => ({
+  const columns = rows.map((row) => ({
     label: `${Number(row.key.slice(5))}월`,
-    values: [row.hasActual ? row.actual.asset : null],
+    value: row.hasActual ? row.actual.asset : null,
   }));
   const planAsset = summarize(state.data.items, {}).plan.asset;
-  chartBox.replaceChildren(barChart(
-    `${year()}년 달마다 자산으로 쌓인 돈 (예산: 매달 ${formatMoney(planAsset)}만원)`,
-    chartRows,
-    [{ name: '실제', color: seriesColor(6) }],
+  chartBox.replaceChildren(columnChart(
+    `${year()}년 달마다 자산으로 쌓인 돈`,
+    columns,
+    seriesColor(6),
+    { value: planAsset, label: `예산 ${formatMoney(planAsset)}` },
   ));
 }
 
@@ -158,8 +159,9 @@ function renderEventsNote() {
     eventsNote.textContent = `${prefix}년 큰돈 캘린더에 적은 이벤트가 없어요.`;
     return;
   }
-  const expected = events.reduce((sum, event) => sum + (event.expected || 0), 0);
-  const confirmed = events.reduce((sum, event) => sum + (event.confirmed || 0), 0);
+  // 세부 항목이 있는 이벤트는 세부 항목 합계로
+  const expected = events.reduce((sum, event) => sum + (eventTotals(event).expected || 0), 0);
+  const confirmed = events.reduce((sum, event) => sum + (eventTotals(event).confirmed || 0), 0);
   eventsNote.textContent = `${prefix}년 큰돈 캘린더 ${events.length}건: 예상 ${formatEok(expected)}, 확정 ${formatEok(confirmed)} (월 가계부와 따로 관리)`;
 }
 

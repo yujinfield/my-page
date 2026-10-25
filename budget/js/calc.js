@@ -213,3 +213,17 @@ export function cardTotals(items, actualMap) {
   }
   return result;
 }
+
+/* ── 큰돈 캘린더 ── */
+
+// 이벤트의 예상·확정 지출. 세부 항목이 있으면 세부 항목의 합, 없으면 이벤트에 직접 적은 금액
+export function eventTotals(event) {
+  if (event.details.length === 0) return { expected: event.expected, confirmed: event.confirmed };
+  let expected = 0;
+  let confirmed = 0;
+  for (const detail of event.details) {
+    expected += detail.expected || 0;
+    confirmed += detail.confirmed || 0;
+  }
+  return { expected, confirmed };
+}
