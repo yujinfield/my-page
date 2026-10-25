@@ -204,3 +204,49 @@ export function assetSpendByMonth(events, year) {
   }
   return result;
 }
+
+/* ── 저금액 ── */
+
+// 기준 달(asOf) 말의 저금액에서 시작해, 그 뒤 달마다 "자산으로 쌓인 돈 − 자산에서 나간 큰돈"을 더한 달 말 저금액
+// keys: ["2026-01", …] → { "2026-10": 5000, "2026-11": 5370, … } (기준 달보다 앞선 달은 넣지 않음)
+// 실제액을 안 적은 달은 0으로 셈 (아직 안 지난 달이라고 봄)
+export function savingsTrack(data, savings, asOf, keys) {
+  const result = {};
+  if (savings === null || !asOf || keys.length === 0) return result;
+  const last = keys.slice().sort()[keys.length - 1];
+  const spendByYear = {};
+
+  let balance = savings;
+  for (let key = asOf; key <= last; key = shiftMonth(key, 1)) {
+    if (key !== asOf) {
+      const year = Number(key.slice(0, 4));
+      if (!spendByYear[year]) spendByYear[year] = assetSpendByMonth(data.events, year);
+      const total = summarize(data.items, monthRecord(data, key).actual);
+      balance += (total.hasActual ? total.actual.asset : 0) - (spendByYear[year][key] || 0);
+    }
+    if (keys.includes(key)) result[key] = balance;
+  }
+  return result;
+}
+
+// 지금 저금액: ⚙️ 설정의 시작 저금액에 그 뒤 달마다 쌓인 돈을 더한 이번 달 말 저금액
+// → { amount, key: "2026-11" } / 시작 저금액이 없으면 null
+export function currentSavings(data, todayKey) {
+  const { savings, savingsAsOf } = data.wealth;
+  if (savings === null || !savingsAsOf) return null;
+  const key = todayKey < savingsAsOf ? savingsAsOf : todayKey;
+  return { amount: savingsTrack(data, savings, savingsAsOf, [key])[key], key };
+}
+
+// "2026-10"부터 "2027-01"까지 몇 달 (3). 뒤가 앞이면 음수
+export function monthsBetween(fromKey, toKey) {
+  const [fromYear, fromMonth] = fromKey.split('-').map(Number);
+  const [toYear, toMonth] = toKey.split('-').map(Number);
+  return (toYear - fromYear) * 12 + (toMonth - fromMonth);
+}
+
+// "2030.08", "2030-8" 같은 글 → "2030-08". 날짜가 아니면 null
+export function monthKeyFromText(text) {
+  const match = String(text || '').match(/^(\d{4})\D(\d{1,2})/);
+  return match ? `${match[1]}-${match[2].padStart(2, '0')}` : null;
+}

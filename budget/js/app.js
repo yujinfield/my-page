@@ -9,6 +9,7 @@ import { setupEvents, renderEvents } from './events.js';
 import { setupAnnual, renderAnnual } from './annual.js';
 import { setupBackup, renderBackup } from './backup.js';
 import { setupSettings, fillSettings } from './settings.js';
+import { setupMemo } from './memo.js';
 
 // month: 지금 보고 있는 달 ("2026-11"), tab: 지금 보이는 화면
 const state = { data: loadData(), month: monthKeyOf(new Date()), tab: 'plan' };
@@ -75,6 +76,7 @@ setupActual(state, save);
 setupEvents(state, save);
 setupAnnual(state, save, render);
 setupSettings(state, save, render);
+setupMemo(state, save);
 // 백업 파일을 불러와 데이터가 통째로 바뀌면 설정 칸과 화면을 새로 고침
 setupBackup(state, save, () => {
   fillSettings();
