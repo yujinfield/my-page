@@ -48,6 +48,12 @@ let state = null;
 let save = null;
 let showDone = false; // 완료한 이벤트도 보여 줄지
 const openIds = new Set(); // 세부 항목을 펼친 이벤트 id
+const suggestIds = new Set(); // 추천 세부 항목 목록을 펼친 이벤트 id
+
+// 이 이벤트 분류의 추천 세부 항목 (⚙️ 설정에서 고침)
+function suggestionsFor(event) {
+  return (event.category && state.data.categoryDetails[event.category]) || [];
+}
 
 export function setupEvents(appState, onSave) {
   state = appState;
@@ -102,7 +108,7 @@ export function renderEvents() {
   const rows = [];
   for (const event of sortByMonth(visible)) {
     rows.push(eventRow(event));
-    if (openIds.has(event.id)) rows.push(detailRow(event, COLUMN_COUNT));
+    if (openIds.has(event.id)) rows.push(detailRow(event, COLUMN_COUNT, suggestionsFor(event), suggestIds.has(event.id)));
   }
   tbody.replaceChildren(...rows);
   renderFoot();
@@ -210,6 +216,7 @@ function handleInput(event) {
   }
   save();
   renderFoot();
+  if (field === 'category') openSuggestions(item);
 }
 
 function handleClick(event) {
@@ -224,6 +231,18 @@ function handleClick(event) {
   }
   if (action && action.dataset.action === 'detail-add') {
     addDetail(findEvent(action));
+    return;
+  }
+  if (action && action.dataset.action === 'suggest-toggle') {
+    const item = findEvent(action);
+    if (suggestIds.has(item.id)) suggestIds.delete(item.id);
+    else suggestIds.add(item.id);
+    renderEvents();
+    focusIn(item.id, '[data-action="suggest-toggle"]');
+    return;
+  }
+  if (action && action.dataset.action === 'suggest-add') {
+    addSuggested(findEvent(action), action.closest('.suggest-panel'));
     return;
   }
   if (action && action.dataset.action === 'detail-delete') {
@@ -263,13 +282,45 @@ function addCategory(item) {
   focusIn(item.id, '[data-field="category"]');
 }
 
-function addDetail(item) {
-  // 처음 세부 항목을 넣을 때 이벤트에 적어 둔 금액이 있으면 "기존 금액"으로 옮겨서 사라지지 않게
+// 분류를 고른 이벤트에 세부 항목이 아직 없으면 추천 목록을 펼쳐서 보여 줌
+// (고르는 칸의 change 이력이 먼저 남도록 다음 차례에 다시 그림)
+function openSuggestions(item) {
+  if (item.details.length > 0 || suggestionsFor(item).length === 0) return;
+  openIds.add(item.id);
+  suggestIds.add(item.id);
+  setTimeout(() => {
+    renderEvents();
+    focusIn(item.id, '[data-field="category"]');
+  }, 0);
+}
+
+// 추천 목록에서 체크한 것을 금액 없이 세부 항목으로 넣음
+function addSuggested(item, panel) {
+  const names = [...panel.querySelectorAll('.suggest-check:checked:not(:disabled)')].map((box) => box.value);
+  if (names.length === 0) {
+    window.alert('넣을 세부 항목을 체크해 주세요.');
+    return;
+  }
+  moveAmountsToDetail(item);
+  for (const name of names) item.details.push(newDetail(name, null, null));
+  suggestIds.delete(item.id);
+  addHistory(state.data, `[큰돈 캘린더] ${item.name || '이름 없는 이벤트'} › 추천 세부 항목 넣음: ${names.join(', ')}`);
+  save();
+  renderEvents();
+  focusIn(item.id, `[data-detail-id="${item.details[item.details.length - names.length].id}"] [data-field="detailExpected"]`);
+}
+
+// 처음 세부 항목을 넣을 때 이벤트에 적어 둔 금액이 있으면 "기존 금액"으로 옮겨서 사라지지 않게
+function moveAmountsToDetail(item) {
   if (item.details.length === 0 && (item.expected !== null || item.confirmed !== null)) {
     item.details.push(newDetail('기존 금액', item.expected, item.confirmed));
     item.expected = null;
     item.confirmed = null;
   }
+}
+
+function addDetail(item) {
+  moveAmountsToDetail(item);
   const detail = newDetail('', null, null);
   item.details.push(detail);
   openIds.add(item.id);
