@@ -19,7 +19,8 @@ const THEME_KEY = 'budget-theme';
 // 8 → 9: 구분 "특별지출" → "특별비", 세부 항목의 결제 수단(detail.paymentA·B), 큰돈 분류(event.category·eventCategories),
 //        용돈 기록(allowance, 사람마다 비밀번호로 암호화)
 // 9 → 10: 실제액을 사람마다 나눠 적기(months[달].actualBy). 예전에 합계로 적은 실제액(actual)은 그대로 둠
-const DATA_VERSION = 10;
+// 10 → 11: 공동 몫 나누는 방법(splitRule: half 반반 / income 수입 비율) 추가
+const DATA_VERSION = 11;
 
 // 큰돈이 어디서 나가는지 (연간 요약에서 비상금·저축·성과급으로 낸 것은 자산에서 뺌, calc.js의 assetSpendByMonth)
 export const EVENT_SOURCES = [
@@ -96,6 +97,7 @@ function defaultData() {
     names: { a: '유진', b: '남편' },
     payments: { a: DEFAULT_PAYMENTS.slice(), b: DEFAULT_PAYMENTS.slice() },
     cardGoals: { a: {}, b: {} },
+    splitRule: 'half',
     items: [
       newItem('수입', '월급', false, '실수령 기준'),
       newItem('고정지출', '주담대 이자', true),
@@ -384,6 +386,7 @@ export function normalizeData(saved) {
     names: { a: toText(names.a) || '유진', b: toText(names.b) || '남편' },
     payments: normalizePayments(saved.payments),
     cardGoals: normalizeCardGoals(saved.cardGoals),
+    splitRule: saved.splitRule === 'income' ? 'income' : 'half',
     items: Array.isArray(saved.items) ? saved.items.filter(isObject).map(normalizeItem) : [],
     months,
     events: Array.isArray(saved.events) ? saved.events.filter(isObject).map(normalizeEvent) : [],

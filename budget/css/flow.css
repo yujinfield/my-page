@@ -1,0 +1,143 @@
+/* ① 월 가계부 "두 사람 돈 흐름": 계층도 + 정산 */
+
+.money-flow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.flow-rule {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+}
+
+.flow-rule select {
+  background: var(--surface-soft);
+}
+
+.flow-tree {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 640px;
+  width: 100%;
+}
+
+.flow-node {
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-s);
+  background: var(--surface-soft);
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-top {
+  background: var(--highlight);
+}
+
+/* 이어 주는 선: 맨 위 → 가로줄 → 두 사람 */
+.flow-stem {
+  width: 2px;
+  height: var(--space-m);
+  background: var(--series-plan);
+}
+
+.flow-branches {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+}
+
+.flow-branches::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 25%;
+  right: 25%;
+  border-top: 2px solid var(--series-plan);
+}
+
+.flow-branch {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-m) var(--space-xs) 0;
+}
+
+.flow-branch::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: var(--space-m);
+  border-left: 2px solid var(--series-plan);
+}
+
+/* 사람 아래 목록: 짧은 선으로 이어진 상자 */
+.flow-branch .flow-stem {
+  height: var(--space-s);
+}
+
+.flow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  max-width: 240px;
+  margin: 0;
+  padding: var(--space-s);
+  border-radius: var(--radius-s);
+  background: var(--surface-soft);
+  list-style: none;
+  font-size: var(--font-size-small);
+}
+
+.flow-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+
+.flow-list li:last-child {
+  margin-top: var(--space-xs);
+  padding-top: var(--space-xs);
+  border-top: 1px solid var(--line);
+}
+
+.flow-list .num {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-list .flow-left {
+  font-weight: 700;
+}
+
+.flow-list .bad {
+  font-weight: 700;
+}
+
+/* 정산: 누가 누구에게 얼마 */
+.flow-transfer {
+  max-width: 640px;
+  margin-top: var(--space-s);
+  padding: var(--space-m);
+  border-radius: var(--radius-m);
+  background: var(--surface-soft);
+}
+
+.flow-transfer p {
+  margin: 0 0 var(--space-xs);
+}
+
+.flow-transfer-main {
+  color: var(--accent);
+  font-size: 20px;
+  font-weight: 700;
+}
