@@ -50,9 +50,11 @@
 | `js/wealth.js` | ④ 연간 요약의 지금 저금액·지금 남은 부채(보기만), 빚 빨리 갚기 코멘트 |
 | `js/debt-editor.js` | ⚙️ 설정 창의 부채 목록 (이름·남은 금액·이율·매달 갚는 돈·상환 기한·중도 상환) |
 | `js/allowance.js` | ⑤ 용돈: 잠금 화면(비밀번호 정하기·열기), 푼 뒤 쓸 곳·금액·메모. 탭을 떠나면 잠김, 내용은 이력에 안 남김 |
-| `js/allowance-lock.js` | 용돈 잠그기·풀기 (Web Crypto: PBKDF2 → AES-GCM, DOM 사용 안 함) |
+| `js/allowance-lock.js` | 용돈·동기화 잠그기·풀기 (Web Crypto: PBKDF2 → AES-GCM, DOM 사용 안 함) |
+| `js/gist.js` | GitHub Gist API (만들기·읽기·고치기, `fetch`만 씀) |
+| `js/sync.js` | ☁️ 같이 쓰기: 우리집 비밀번호로 잠가 비공개 Gist에 올리고 받기, 충돌 시 물어보기, 설정 창 연결 화면, 위쪽 상태 글 |
 | `js/backup.js` | ⑥ 백업 파일 내려받기·불러오기, 이력 보기 |
-| `js/settings.js` | ⚙️ 설정 창: 두 사람 이름, 결제 수단(`payment-editor.js`), 시작 저금액, 부채(`debt-editor.js`) |
+| `js/settings.js` | ⚙️ 설정 창: (☁️ 같이 쓰기는 `sync.js`) 두 사람 이름, 결제 수단(`payment-editor.js`), 시작 저금액, 부채(`debt-editor.js`) |
 | `js/suggest-editor.js` | ⚙️ 설정 창의 큰돈 추천 세부 항목: 분류마다 펼치는 목록, 한 줄씩 [이름] [✕] |
 | `js/payment-editor.js` | ⚙️ 설정 창의 결제 수단 목록: 한 줄씩 [이름] [☐ 실적] [실적 금액] [✕]. 이름을 바꾸면 이미 고른 칸·실적 설정도 같이 바뀜 |
 | `js/memo.js` | 📝 메모: 쓰고 Enter → 날짜와 함께 포스트잇이 쌓임 (Shift+Enter 줄 바꿈, 한글 조합 중 Enter 무시) |
@@ -112,6 +114,14 @@
 - 큰돈 캘린더는 "상시"처럼 날짜가 아닌 것이 맨 위, 그 아래는 날짜순입니다.
 - 그래프 색 `--series-1~7`은 색약 검증을 거친 순서입니다. 순서를 바꾸지 말고, 원형 그래프 구분마다 고정 색을 씁니다.
 - 데이터 형식을 바꾸면 `version`을 올리고 `store.js`의 `loadData()`에 옮기는 코드를 추가해 **기존 기록이 사라지지 않게** 합니다.
+
+## ☁️ 같이 쓰기 (동기화)
+
+- 서버가 없으므로 비공개 GitHub Gist 하나(`budget.json`)를 저장소로 씁니다. 외부 연결은 `index.html`의 CSP `connect-src`에 적은 GitHub 주소만 허용합니다.
+- Gist 파일: `{ app, savedAt, box }` — `box`는 "우리집 비밀번호"로 잠근 가계부 전체(`budget-data`). 비밀번호 없이는 못 읽습니다.
+- 기기마다 설정은 `localStorage` 키 `budget-sync`: `{ token, gistId, lock: { salt, key }, remoteSavedAt, dirty }`. 백업 파일·Gist에는 들어가지 않습니다.
+- `app.js`의 `save()`가 `markChanged()`를 불러 2초 뒤 올리고, 앱을 열 때·다시 볼 때(visibilitychange) 받습니다. 받은 뒤 다른 기기에서 또 올렸는데 이 기기에도 안 올린 변경이 있으면 어느 쪽을 남길지 물어봅니다.
+- Gist는 토큰 주인만 고칠 수 있어서, 두 사람이 같은 토큰(gist 권한만)을 씁니다.
 
 ## 실행 & 확인
 

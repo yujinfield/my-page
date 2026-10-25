@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- 보안: 이 사이트의 파일만 쓰고 외부 연결은 막음 -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <!-- 보안: 이 사이트의 파일만 쓰고, 외부 연결은 ☁️ 동기화용 GitHub(Gist)만 -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://api.github.com https://gist.githubusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>우리집 가계부</title>
   <link rel="stylesheet" href="css/base.css">
@@ -48,6 +48,10 @@
       <button type="button" id="settings-close" class="icon-button" aria-label="설정 닫기">✕</button>
     </div>
 
+    <h3 class="settings-section">☁️ 같이 쓰기 (PC·핸드폰·두 사람)</h3>
+    <p class="hint">가계부를 우리집 비밀번호로 잠가서 비공개 GitHub Gist에 올려요. 같은 연결 코드로 연결한 기기끼리 같은 가계부를 봐요.</p>
+    <div id="sync-box" class="sync-box"></div>
+
     <h3 class="settings-section">두 사람 이름</h3>
     <div class="row">
       <label>첫 번째 사람 <input type="text" id="name-a" class="text-input" maxlength="10"></label>
@@ -82,6 +86,7 @@
       <p class="hint">금액 단위: 만원 · 이 브라우저에만 자동 저장돼요.</p>
     </div>
     <p id="save-status" class="status" role="status"></p>
+    <p id="sync-status" class="hint sync-status" role="status"></p>
 
     <div class="tabs" role="tablist" aria-label="가계부 화면">
       <button type="button" role="tab" id="tab-plan" data-tab="plan" aria-controls="panel-plan">① 월 가계부</button>
