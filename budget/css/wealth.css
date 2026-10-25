@@ -7,73 +7,100 @@
   gap: var(--space-xs) var(--space-m);
 }
 
-.savings-row label {
+.savings-row .button {
+  padding: var(--space-xs) var(--space-m);
+  font-size: var(--font-size-small);
+}
+
+/* 설정 창의 시작 저금액 */
+.savings-start {
   display: flex;
   align-items: center;
   gap: var(--space-s);
 }
 
-.savings-row .text-input {
+.savings-start .text-input {
   text-align: right;
 }
 
-.debt-list {
+/* 연간 요약: 부채 한 줄씩 (보기만) */
+.debt-summary {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  max-width: 720px;
+  gap: var(--space-xs);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.debt-list:empty {
+.debt-summary:empty {
   display: none;
 }
 
-/* [이름] [남은 금액] [금리] [매달 갚는 돈] [✕] */
-.debt-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 7em 5em 7em 32px;
-  align-items: center;
-  gap: var(--space-xs);
+.debt-summary li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-s);
 }
 
-.debt-item .cell-input {
-  width: 100%;
-  min-width: 0;
+/* 설정 창: 부채 카드 */
+.debt-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+/* [이름          ✕]
+   [남은 금액] [이율]
+   [매달 갚는 돈] [상환 기한]
+   [중도 상환] [수수료 %] */
+.debt-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 32px;
+  align-items: end; /* 이름표가 두 줄이 돼도 입력칸은 나란히 */
+  gap: var(--space-s);
+  padding: var(--space-s);
+  border-radius: var(--radius-s);
   background: var(--surface-soft);
 }
 
-.debt-head {
+.debt-card .debt-name {
+  grid-column: 1 / 3;
+}
+
+.debt-card .delete-button {
+  grid-column: 3;
+  grid-row: 1;
+  align-self: end;
+}
+
+.debt-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
   color: var(--text-soft);
   font-size: 12px;
 }
 
-.debt-head span:not(:first-child) {
-  padding-right: var(--space-s);
-  text-align: right;
+/* 이름 칸 다음 줄부터는 두 칸씩 (✕ 자리는 비움) */
+.debt-field:not(.debt-name):nth-of-type(odd) {
+  grid-column: 2;
 }
 
-/* 휴대폰: 이름 한 줄, 숫자 세 칸 한 줄 */
-@media (max-width: 768px) {
-  .debt-item {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) 32px;
-    padding: var(--space-xs) 0;
-    border-bottom: 1px solid var(--line);
-  }
+.debt-field:not(.debt-name):nth-of-type(even) {
+  grid-column: 1;
+}
 
-  /* 첫 칸(이름)은 한 줄 전체, 마지막 칸(✕)은 이름 옆. 머리줄도 같은 배치라 숫자 칸 이름표가 맞음 */
-  .debt-item > :first-child {
-    grid-column: 1 / 4;
-  }
+.debt-field .cell-input {
+  width: 100%;
+  min-width: 0;
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--font-size); /* 16px 이상: 아이폰에서 누를 때 확대되지 않게 */
+}
 
-  .debt-item > :last-child {
-    grid-column: 4;
-    grid-row: 1;
-  }
-
-  .debt-item [data-field="name"] {
-    font-weight: 700;
-  }
+.debt-name .cell-input {
+  font-weight: 700;
 }

@@ -2,7 +2,7 @@
 
 import {
   parseAmount, formatMoney, formatMonth, shiftMonth, summarize, yearRows, actualAverage, eventTotals,
-  assetSpendByMonth, savingsTrack, monthKeyOf,
+  assetSpendByMonth, savingsTrack, monthKeyOf, currentSavings,
 } from './calc.js';
 import { cell, renderHeadRow } from './cells.js';
 import { columnChart, seriesColor } from './charts.js';
@@ -56,8 +56,7 @@ export function setupAnnual(appState, onSave, onRender) {
   watchEdits(goalForm, () => state.data, (input, before, after) =>
     `[목표] ${GOAL_LABELS[input.dataset.field]}: ${shown(before)} → ${shown(after)}`, save);
 
-  // 저금액을 고치면 표의 저금액 칸과 예측을 다시 계산
-  setupWealth(state, save, renderNumbers);
+  setupWealth(state);
 }
 
 function year() {
@@ -72,7 +71,7 @@ export function renderAnnual() {
   renderWealth();
 }
 
-// 요약 카드·그래프·표·예측 (저금액을 고칠 때도 다시 부름)
+// 요약 카드·그래프·표·예측
 function renderNumbers() {
   const rows = yearRows(state.data, year());
   const filled = rows.filter((row) => row.hasActual);
@@ -228,7 +227,9 @@ function renderForecast() {
 
   const plan = summarize(state.data.items, {}).plan;
   const average = actualAverage(state.data, state.month);
-  const start = state.data.wealth.savings;
+  // 지금 저금액(시작 저금액 + 그 뒤 쌓인 돈)에서 시작
+  const now = currentSavings(state.data, monthKeyOf(new Date()));
+  const start = now ? now.amount : null;
   const blocks = [
     ['예산대로 가면', forecastLines(goal, start, plan.saving, plan.asset, state.month)],
   ];

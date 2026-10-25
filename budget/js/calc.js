@@ -228,3 +228,25 @@ export function savingsTrack(data, savings, asOf, keys) {
   }
   return result;
 }
+
+// 지금 저금액: ⚙️ 설정의 시작 저금액에 그 뒤 달마다 쌓인 돈을 더한 이번 달 말 저금액
+// → { amount, key: "2026-11" } / 시작 저금액이 없으면 null
+export function currentSavings(data, todayKey) {
+  const { savings, savingsAsOf } = data.wealth;
+  if (savings === null || !savingsAsOf) return null;
+  const key = todayKey < savingsAsOf ? savingsAsOf : todayKey;
+  return { amount: savingsTrack(data, savings, savingsAsOf, [key])[key], key };
+}
+
+// "2026-10"부터 "2027-01"까지 몇 달 (3). 뒤가 앞이면 음수
+export function monthsBetween(fromKey, toKey) {
+  const [fromYear, fromMonth] = fromKey.split('-').map(Number);
+  const [toYear, toMonth] = toKey.split('-').map(Number);
+  return (toYear - fromYear) * 12 + (toMonth - fromMonth);
+}
+
+// "2030.08", "2030-8" 같은 글 → "2030-08". 날짜가 아니면 null
+export function monthKeyFromText(text) {
+  const match = String(text || '').match(/^(\d{4})\D(\d{1,2})/);
+  return match ? `${match[1]}-${match[2].padStart(2, '0')}` : null;
+}

@@ -18,15 +18,16 @@
 
 | 파일 | 역할 |
 | --- | --- |
-| `index.html` | 마크업 뼈대 (달 이동, 탭 5개, ⚙️ 설정 창) |
+| `index.html` | 마크업 뼈대 (달 이동, 탭 5개, 📝 메모 창, ⚙️ 설정 창) |
 | `css/base.css` | CSS 변수(색상·간격·폰트), 리셋, 다크 모드 |
 | `css/layout.css` | 머리말, 탭, 카드, 요약 카드, 버튼, 반응형 |
 | `css/table.css` | 가계부 표, 입력칸, 합계 줄, 휴대폰(768px 이하) 카드 배치 |
 | `css/charts.css` | 원형·막대 그래프, 범례 |
 | `css/actual.css` | ② 실제 사용 목록 |
-| `css/wealth.css` | ④ 연간 요약의 저금액·부채 |
-| `js/calc.js` | 금액 계산·월 계산·연간 합계·큰돈 합계 `eventTotals`·`assetSpendByMonth`·달마다 저금액 `savingsTrack` (순수 함수, DOM 사용 안 함) |
-| `js/forecast.js` | "이대로 가면 N년 뒤 M억" 계산·코멘트, 부채 상환 `debtPayoff`·코멘트 `debtLines`, 억 단위 표시 (순수 함수) |
+| `css/memo.css` | 📝 메모 창, 포스트잇 |
+| `css/wealth.css` | 저금액·부채 (연간 요약 보기, 설정 창 부채 카드) |
+| `js/calc.js` | 금액 계산·월 계산·연간 합계·큰돈 합계 `eventTotals`·`assetSpendByMonth`·달마다 저금액 `savingsTrack`·지금 저금액 `currentSavings` (순수 함수, DOM 사용 안 함) |
+| `js/forecast.js` | "이대로 가면 N년 뒤 M억" 계산·코멘트, 부채 상환 `debtPayoff`·지금 남은 부채 `debtBalanceNow`·코멘트 `debtLines`, 억 단위 표시 (순수 함수) |
 | `js/charts.js` | 원형(SVG)·가로 막대·세로 막대(HTML) 그래프. 색은 `--series-*` 변수 |
 | `js/history.js` | 변경 이력 남기기 (`addHistory`, 칸을 벗어날 때 기록하는 `watchEdits`) |
 | `js/store.js` | 데이터 계층. `localStorage` 읽기/쓰기는 **이 파일에서만** |
@@ -36,9 +37,11 @@
 | `js/events.js` | ③ 큰돈 캘린더 |
 | `js/event-details.js` | ③ 큰돈 캘린더의 세부 항목 줄·버튼 만들기 |
 | `js/annual.js` | ④ 연간 요약, 목표·예측 |
-| `js/wealth.js` | ④ 연간 요약의 저금액·부채 입력, 빚 빨리 갚기 코멘트 |
+| `js/wealth.js` | ④ 연간 요약의 지금 저금액·지금 남은 부채(보기만), 빚 빨리 갚기 코멘트 |
+| `js/debt-editor.js` | ⚙️ 설정 창의 부채 목록 (이름·남은 금액·이율·매달 갚는 돈·상환 기한·중도 상환) |
 | `js/backup.js` | ⑤ 백업 파일 내려받기·불러오기, 이력 보기 |
-| `js/settings.js` | ⚙️ 설정 창: 두 사람 이름, 사람마다 결제 수단 목록 |
+| `js/settings.js` | ⚙️ 설정 창: 두 사람 이름, 사람마다 결제 수단 목록, 시작 저금액, 부채(`debt-editor.js`) |
+| `js/memo.js` | 📝 메모: 쓰고 Enter → 날짜와 함께 포스트잇이 쌓임 (Shift+Enter 줄 바꿈, 한글 조합 중 Enter 무시) |
 | `js/theme.js` | 라이트·다크 전환 |
 | `js/app.js` | 진입점. 상태(데이터, 보고 있는 달, 탭)를 들고 화면을 연결 |
 
@@ -56,7 +59,10 @@
   events: [{ id, month, owner, name, expected, confirmed, source, note, done,   // owner: joint·a·b, done: 완료해서 숨김
              details: [{ id, name, expected, confirmed }] }],   // source: special(특별비 적립금)·savings(비상금·저축)·bonus(성과급), details: 세부 항목
   goal: { target, rate },               // 목표(만원), 연 수익률(%)
-  wealth: { savings, savingsAsOf, debts: [{ id, name, balance, rate, payment }] },  // 저금액(그 달 말 기준), 부채(남은 금액·금리 %·매달 갚는 돈)
+  wealth: { savings, savingsAsOf,                // 시작 저금액과 그 기준 달(⚙️ 설정에서 적은 달)
+            debts: [{ id, name, balance, balanceAsOf, rate, payment, dueMonth, prepay, prepayFee }] },
+            // 부채: 남은 금액(balanceAsOf 달 기준)·이율 %·매달 갚는 돈·상환 기한("2030.08")·중도 상환(yes/fee/no)·수수료 %
+  memos: [{ id, text, time }],          // 📝 메모(포스트잇), time은 쓴 시각(ms)
   history: [{ time, text }],            // 변경 이력, 최근 300개
   lastBackupAt: null                    // 마지막 백업 시각(ms)
 }
@@ -67,8 +73,9 @@
 - 버전 2 → 3: `payments`가 없으면 두 사람 모두 기본 목록, `paymentA·B`는 빈칸(선택 안 함), `event.done`은 false, `cardGoals`는 빈 목표로 채웁니다.
 - 버전 3 → 4: `event.details`가 없으면 빈 목록으로 채웁니다.
 - 버전 4 → 5: `event.owner`는 공통(joint), 글로 적던 `method`는 `source`로 바꿉니다 ("성과급"→bonus, "적립·특별비"→special, "비상금·저축"→savings, 알아볼 수 없는 글은 비고 앞에 붙임).
-- 버전 5 → 6: `goal.current`(현재 자산)는 `wealth.savings`(저금액)로 옮기고 기준 달은 옮긴 달로 합니다.
-- 저금액: 연간 요약 표의 "저금액" 칸은 기준 달 말 저금액에서 시작해 그 뒤 달마다 (자산으로 쌓인 돈 − 자산에서 나간 큰돈)을 더합니다. "이대로 가면" 예측도 저금액에서 시작합니다.
+- 버전 5 → 6: `goal.current`(현재 자산)는 `wealth.savings`(저금액)로 옮기고 기준 달은 옮긴 달로 합니다. `memos`는 빈 목록으로 채웁니다.
+- 저금액: ⚙️ 설정에 한 번 적은 시작 저금액(기준 달 말)에서 그 뒤 달마다 (자산으로 쌓인 돈 − 자산에서 나간 큰돈)을 더해 계산합니다. 연간 요약 표의 "저금액" 칸, "이대로 가면" 예측, 순자산 모두 지금 저금액 기준입니다.
+- 부채: ⚙️ 설정에 적은 남은 금액(적은 달 기준)에서 매달 갚는 돈만큼 줄어든 걸로 지금 남은 금액을 계산합니다. 코멘트는 상환 기한(못 맞추면 필요한 금액, 만기 일시 상환이면 모아 둘 돈), 중도 상환 불가면 더 갚기 권하지 않음, 수수료가 있으면 수수료와 아끼는 이자를 비교합니다.
 - 연간 요약: 큰돈 중 돈 나가는 곳이 비상금·저축·성과급인 확정 지출은 그 달 자산에서 뺍니다 (성과급은 월 가계부에 수입으로 적어 이미 자산에 쌓였기 때문). 특별비 적립금은 매달 지출로 이미 빠져서 빼지 않습니다.
 - 큰돈 이벤트에 세부 항목이 있으면 예상·확정 지출은 세부 항목 합계입니다 (`eventTotals`). 처음 세부 항목을 넣을 때 이벤트에 적힌 금액은 "기존 금액" 세부 항목으로 옮깁니다.
 - 큰돈 캘린더는 "상시"처럼 날짜가 아닌 것이 맨 위, 그 아래는 날짜순입니다.
