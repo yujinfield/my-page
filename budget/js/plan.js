@@ -33,6 +33,7 @@ export function setupPlan(appState, onSave) {
   tbody.addEventListener('click', handleClick);
   watchEdits(tbody, () => state.data, describeEdit, save);
   editToggle.addEventListener('click', toggleEditor);
+  document.getElementById('plan-add').addEventListener('click', addItem);
 }
 
 // 휴대폰: 평소엔 요약·그래프만, "수정하기"를 누르면 입력칸을 엶 (CSS가 768px 이하에서만 숨김)
@@ -66,11 +67,8 @@ export function renderPlan() {
   const { names } = state.data;
   renderHeadRow(thead, [
     ['구분'], ['항목'], [names.a, true], [names.b, true], ['공동'],
-    ['월 예상액', true], [`실제액 (${formatMonth(state.month)})`, true], ['차이', true], ['결제 수단'], ['결제일/메모'], [''],
+    ['월 예상액', true], [`실제액 (${formatMonth(state.month)})`, true], ['차이', true], [`결제 (${names.a} · ${names.b})`], ['결제일/메모'], [''],
   ]);
-  // 머리줄 맨 오른쪽(✕ 칸 위)에 ＋ 버튼
-  thead.querySelector('th:last-child').append(headerAddButton());
-
   // 저장 순서도 구분 순서로 맞춤 (화면·백업 파일이 같은 순서가 되게)
   state.data.items = sortByGroup(state.data.items);
 
@@ -82,17 +80,6 @@ export function renderPlan() {
   });
   tbody.replaceChildren(...rows);
   refreshNumbers();
-}
-
-function headerAddButton() {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'add-button';
-  button.textContent = '＋';
-  button.setAttribute('aria-label', '항목 추가');
-  button.title = '항목 추가';
-  button.addEventListener('click', addItem);
-  return button;
 }
 
 function buildRow(item, isGroupStart) {
@@ -140,7 +127,7 @@ function buildRow(item, isGroupStart) {
     // 실제액은 ② 실제 사용에서 적고, 여기서는 보기만 함
     ['actual', `실제 (${formatMonth(state.month)})`, computed('actual'), 'num'],
     ['diff', '차이', computed('diff'), 'num'],
-    ['payment', '결제', paymentPair(item), ''],
+    ['payment', `결제 ${names.a}·${names.b}`, paymentPair(item), ''],
     ['note', '메모', textInput('note', item.note, '결제일/메모')],
     ['delete', '', deleteButton('항목 지우기')],
   ];
@@ -215,7 +202,8 @@ function paymentSelect(item, field) {
   if (item[field] && !names.includes(item[field])) names.push(item[field]);
   const options = [
     ['', `${personName} —`],
-    ...names.map((name) => [name, `${personName} ${name}`]),
+    // 고른 뒤에는 카드 이름만 (누구 것인지는 머리줄과 칸 순서로: 왼쪽 첫 번째 사람, 오른쪽 두 번째 사람)
+    ...names.map((name) => [name, name]),
     [ADD_PAYMENT, '＋ 새로 추가…'],
   ];
   for (const [value, text] of options) {

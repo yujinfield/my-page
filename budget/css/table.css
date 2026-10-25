@@ -89,15 +89,23 @@
 }
 
 /* 항목·메모 이름이 잘리지 않게 */
-.cell-input[data-field="name"],
-.cell-input[data-field="note"] {
+.cell-input[data-field="name"] {
   min-width: 9em;
+}
+
+.cell-input[data-field="note"] {
+  min-width: 7em;
 }
 
 /* 두 사람 결제 수단 고르는 칸 [유진 ▾] [남편 ▾] */
 .payment-pair {
   display: flex;
   gap: var(--space-xs);
+}
+
+/* 너비를 정해 둠 (안 그러면 가장 긴 글자 "＋ 새로 추가…"에 맞춰 넓어져서 표가 화면 밖으로 밀림) */
+.payment-pair select.cell-input {
+  width: 6em;
 }
 
 select.cell-input {
@@ -268,7 +276,14 @@ select.cell-input {
   font-size: var(--font-size-small);
 }
 
-/* 머리줄의 ＋ (항목 추가) */
+/* 표 바로 위 오른쪽 ＋ (항목 추가) */
+.table-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: calc(var(--space-m) * -1); /* 바로 아래 표에 붙임 */
+}
+
+/* ＋ 버튼 */
 .add-button {
   width: 32px;
   height: 32px;
@@ -441,16 +456,6 @@ select.cell-input {
      │ 예상  실제  차이   │
      │ 결제 수단          │
      └ 메모              ┘ */
-
-  /* 머리줄은 ＋ 버튼만 오른쪽 위에 */
-  .plan-table thead tr {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .plan-table thead th:last-child {
-    display: block;
-  }
 
   .plan-table tbody tr {
     grid-template-columns: repeat(3, 1fr);
