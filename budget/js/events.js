@@ -1,16 +1,33 @@
-// ④ 연간 큰돈 캘린더: 월 가계부에 섞으면 안 되는 큰돈(결혼, 여행, 보험, 성과급 등)
+// ③ 연간 큰돈 캘린더: 월 가계부에 섞으면 안 되는 큰돈(결혼, 여행, 보험, 성과급 등)
 
 import { parseAmount, formatMoney, eventTotals } from './calc.js';
-import { newEvent, newDetail } from './store.js';
-import { areaCell, textInput, amountInput, computed, setMoney, deleteButton, renderHeadRow } from './cells.js';
+import { newEvent, newDetail, EVENT_SOURCES } from './store.js';
+import {
+  areaCell, textInput, amountInput, selectInput, computed, setMoney, deleteButton, renderHeadRow,
+} from './cells.js';
 import { addHistory, watchEdits, shown } from './history.js';
 import { detailToggle, detailRow, findDetail } from './event-details.js';
 
 const LABELS = {
-  month: '월', name: '이벤트', expected: '예상 지출', confirmed: '확정 지출', method: '마련 방법', note: '잔액/비고',
+  month: '월', owner: '누구', name: '이벤트', expected: '예상 지출', confirmed: '확정 지출', source: '돈 나가는 곳',
+  note: '잔액/비고',
   detailName: '이름', detailExpected: '예상', detailConfirmed: '확정',
 };
-const COLUMN_COUNT = 8; // 표 칸 수 (세부 항목 줄이 이만큼 가로로 걸침)
+const COLUMN_COUNT = 9; // 표 칸 수 (세부 항목 줄이 이만큼 가로로 걸침)
+const SOURCE_OPTIONS = [['', '—'], ...EVENT_SOURCES];
+
+// 누구 것인지 고르는 칸의 목록: 공통 / 유진 / 남편 (이름은 ⚙️ 설정에서)
+function ownerOptions() {
+  return [['joint', '공통'], ['a', state.data.names.a], ['b', state.data.names.b]];
+}
+
+// 고르는 칸은 이력에 값(joint, savings…) 대신 보이는 글자로 남김
+function optionText(field, value) {
+  const options = field === 'owner' ? ownerOptions() : field === 'source' ? SOURCE_OPTIONS : null;
+  if (!options) return value;
+  const found = options.find(([optionValue]) => optionValue === value);
+  return found ? found[1] : value;
+}
 
 const thead = document.getElementById('events-head');
 const tbody = document.getElementById('events-body');
@@ -64,12 +81,13 @@ function describeEdit(input, before, after) {
     const detailName = (input.dataset.field === 'detailName' ? before : detail.name) || '세부 항목';
     return `[큰돈 캘린더] ${eventName} › ${detailName} ${LABELS[input.dataset.field]}: ${shown(before)} → ${shown(after)}`;
   }
-  return `[큰돈 캘린더] ${eventName} ${LABELS[input.dataset.field]}: ${shown(before)} → ${shown(after)}`;
+  const field = input.dataset.field;
+  return `[큰돈 캘린더] ${eventName} ${LABELS[field]}: ${shown(optionText(field, before))} → ${shown(optionText(field, after))}`;
 }
 
 export function renderEvents() {
   renderHeadRow(thead, [
-    ['월'], ['이벤트'], ['예상 지출', true], ['확정 지출', true], ['마련 방법'], ['잔액/비고'], [''], [''],
+    ['월'], ['누구'], ['이벤트'], ['예상 지출', true], ['확정 지출', true], ['돈 나가는 곳'], ['잔액/비고'], [''], [''],
   ]);
   const visible = state.data.events.filter((event) => showDone || !event.done);
   const rows = [];
@@ -85,7 +103,8 @@ export function renderEvents() {
 function eventRow(event) {
   const tr = document.createElement('tr');
   tr.dataset.id = event.id;
-  if (event.done) tr.className = 'is-done';
+  tr.className = `owner-${event.owner}`;
+  if (event.done) tr.classList.add('is-done');
 
   // 세부 항목이 있으면 예상·확정은 세부 항목 합계(보기만), 없으면 직접 적음
   const hasDetails = event.details.length > 0;
@@ -99,10 +118,11 @@ function eventRow(event) {
   // 휴대폰에서는 카드로 보임 (자리 이름·이름표는 table.css)
   tr.append(
     areaCell('month', '', textInput('month', event.month, '월', '2027.01 / 상시')),
+    areaCell('owner', '', selectInput('owner', event.owner, '누구 것인지', ownerOptions())),
     areaCell('name', '', nameBox),
     areaCell('expected', '예상 지출', expected, 'num'),
     areaCell('confirmed', '확정 지출', confirmed, 'num'),
-    areaCell('method', '마련 방법', textInput('method', event.method, '마련 방법', '현금/성과급/적립금')),
+    areaCell('source', '돈 나가는 곳', selectInput('source', event.source, '돈 나가는 곳', SOURCE_OPTIONS)),
     areaCell('note', '잔액/비고', textInput('note', event.note, '잔액/비고')),
     areaCell('done', '', doneButton(event)),
     areaCell('delete', '', deleteButton('이벤트 지우기')),
@@ -168,6 +188,12 @@ function handleInput(event) {
 
   if (field === 'expected' || field === 'confirmed') item[field] = parseAmount(event.target.value);
   else item[field] = event.target.value;
+  // 누구 것인지 바꾸면 줄 왼쪽 색 표시도 바꿈
+  if (field === 'owner') {
+    const row = event.target.closest('tr');
+    row.classList.remove('owner-joint', 'owner-a', 'owner-b');
+    row.classList.add(`owner-${item.owner}`);
+  }
   save();
   renderFoot();
 }
@@ -254,25 +280,33 @@ function addEvent() {
   if (input) input.focus();
 }
 
+// 합계 줄 + 누구별 합계 줄 (완료한 것도 포함)
 function renderFoot() {
-  let expected = 0;
-  let confirmed = 0;
+  const total = { expected: 0, confirmed: 0 };
+  const byOwner = { joint: { expected: 0, confirmed: 0 }, a: { expected: 0, confirmed: 0 }, b: { expected: 0, confirmed: 0 } };
   for (const event of state.data.events) {
     const totals = eventTotals(event);
-    expected += totals.expected || 0;
-    confirmed += totals.confirmed || 0;
+    for (const sum of [total, byOwner[event.owner]]) {
+      sum.expected += totals.expected || 0;
+      sum.confirmed += totals.confirmed || 0;
+    }
   }
-  const tr = document.createElement('tr');
-  tr.className = 'total-row';
-  const label = areaCell('name', '', '합계 (완료 포함)');
-  label.colSpan = 2;
-  const rest = areaCell('rest', '', '');
-  rest.colSpan = 4;
-  tr.append(
-    label,
-    areaCell('expected', '예상 지출', formatMoney(expected), 'num'),
-    areaCell('confirmed', '확정 지출', formatMoney(confirmed), 'num'),
-    rest,
-  );
-  tfoot.replaceChildren(tr);
+  const rows = [['합계 (완료 포함)', total, 'total-row']];
+  for (const [owner, name] of ownerOptions()) rows.push([name, byOwner[owner], `owner-${owner}`]);
+
+  tfoot.replaceChildren(...rows.map(([labelText, sum, className]) => {
+    const tr = document.createElement('tr');
+    tr.className = className;
+    const label = areaCell('name', '', labelText);
+    label.colSpan = 3;
+    const rest = areaCell('rest', '', '');
+    rest.colSpan = 4;
+    tr.append(
+      label,
+      areaCell('expected', '예상 지출', formatMoney(sum.expected), 'num'),
+      areaCell('confirmed', '확정 지출', formatMoney(sum.confirmed), 'num'),
+      rest,
+    );
+    return tr;
+  }));
 }

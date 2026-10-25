@@ -90,8 +90,7 @@
 
 /* 항목·메모 이름이 잘리지 않게 */
 .cell-input[data-field="name"],
-.cell-input[data-field="note"],
-.cell-input[data-field="method"] {
+.cell-input[data-field="note"] {
   min-width: 9em;
 }
 
@@ -180,6 +179,20 @@ select.cell-input {
 
 .budget-table tr.is-done td {
   opacity: 0.55;
+}
+
+/* 큰돈이 누구 것인지: 왼쪽 색 띠 (공통은 없음) */
+.events-table tr.owner-a > td:first-child {
+  box-shadow: inset 4px 0 var(--series-1);
+}
+
+.events-table tr.owner-b > td:first-child {
+  box-shadow: inset 4px 0 var(--series-2);
+}
+
+.events-table tfoot tr:not(.total-row) td {
+  border-top: none;
+  font-weight: 400;
 }
 
 /* 큰돈 캘린더: 이벤트 이름 옆 "세부 3 ▾" 버튼과 펼친 세부 항목 */
@@ -396,7 +409,7 @@ select.cell-input {
   /* 글 입력칸(메모 등)은 이름표 옆에 한 줄로 */
   .card-table td[data-area="payment"],
   .card-table td[data-area="note"],
-  .card-table td[data-area="method"] {
+  .card-table td[data-area="source"] {
     flex-direction: row;
     align-items: center;
     gap: var(--space-xs);
@@ -418,7 +431,8 @@ select.cell-input {
   .card-table td[data-area="month"] { grid-area: month; }
   .card-table td[data-area="expected"] { grid-area: expected; }
   .card-table td[data-area="confirmed"] { grid-area: confirmed; }
-  .card-table td[data-area="method"] { grid-area: method; }
+  .card-table td[data-area="source"] { grid-area: source; }
+  .card-table td[data-area="owner"] { grid-area: owner; }
 
   /* ── ① 월 가계부 ──
      ┌ 구분   공동 ☐   ✕ ┐
@@ -479,20 +493,40 @@ select.cell-input {
     gap: var(--space-xs);
   }
 
-  /* ── ④ 큰돈 캘린더 ──
-     ┌ 월      ✓ 완료  ✕ ┐
-     │ 이벤트          │
-     │ 예상  확정       │
-     │ 마련 방법        │
-     └ 잔액/비고        ┘ */
+  /* ── ③ 큰돈 캘린더 ──
+     ┌ 월   누구   ✓ 완료  ✕ ┐
+     │ 이벤트  세부 ▾        │
+     │ 예상     확정         │
+     │ 돈 나가는 곳          │
+     └ 잔액/비고             ┘ */
   .events-table tbody tr {
-    grid-template-columns: 1fr 1fr auto;
+    /* 완료·✕ 칸은 너비를 정해 둠 (auto면 아래 확정 지출 칸에 끌려 넓어져서 월·누구 칸이 좁아짐) */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 5.5em 2.5em;
     grid-template-areas:
-      "month done delete"
-      "name name name"
-      "expected confirmed confirmed"
-      "method method method"
-      "note note note";
+      "month owner done delete"
+      "name name name name"
+      "expected expected confirmed confirmed"
+      "source source source source"
+      "note note note note";
+  }
+
+  /* 휴대폰 카드: 누구 것인지는 카드 왼쪽 색 띠 */
+  .events-table tr.owner-a > td:first-child,
+  .events-table tr.owner-b > td:first-child {
+    box-shadow: none;
+  }
+
+  .events-table tbody tr.owner-a:not(.detail-row) {
+    border-left: 4px solid var(--series-1);
+  }
+
+  .events-table tbody tr.owner-b:not(.detail-row) {
+    border-left: 4px solid var(--series-2);
+  }
+
+  .events-table td[data-area="owner"] select {
+    width: 100%;
+    min-width: 0;
   }
 
   .events-table tfoot tr {
@@ -523,7 +557,8 @@ select.cell-input {
   }
 
   .events-table td[data-area="month"] .cell-input {
-    width: 9em;
+    width: 100%;
+    min-width: 0;
     color: var(--text-soft);
   }
 }

@@ -1,4 +1,4 @@
-// ⑥ 백업·이력: 백업 파일 내려받기·불러오기, 변경 이력 보기
+// ⑤ 백업·이력: 백업 파일 내려받기·불러오기, 변경 이력 보기
 
 import { normalizeData, looksLikeBackup } from './store.js';
 import { addHistory } from './history.js';

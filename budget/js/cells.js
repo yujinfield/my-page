@@ -31,6 +31,22 @@ export function textInput(field, value, label, placeholder) {
   return input;
 }
 
+// 고르는 칸. options: [[값, 보이는 글자], ...]
+export function selectInput(field, value, label, options) {
+  const select = document.createElement('select');
+  select.className = 'cell-input';
+  select.dataset.field = field;
+  select.setAttribute('aria-label', label);
+  for (const [optionValue, text] of options) {
+    const option = document.createElement('option');
+    option.value = optionValue;
+    option.textContent = text;
+    select.append(option);
+  }
+  select.value = value;
+  return select;
+}
+
 // 금액 입력칸 (휴대폰에서 숫자 키패드)
 export function amountInput(field, value, label, placeholder) {
   const input = textInput(field, value === null || value === undefined ? '' : String(value), label, placeholder);

@@ -1,4 +1,4 @@
-// ④ 큰돈 캘린더의 세부 항목 (예: 여행 → 숙소, 비행기, 경비)
+// ③ 큰돈 캘린더의 세부 항목 (예: 여행 → 숙소, 비행기, 경비)
 // 줄·버튼을 만드는 함수만 모아 둠. 입력·클릭 처리는 events.js에서 합니다.
 
 import { textInput, amountInput, deleteButton } from './cells.js';
