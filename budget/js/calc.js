@@ -34,11 +34,29 @@ export function formatDiff(value) {
   return formatMoney(value);
 }
 
-// 항목의 월 예상액: 공동이면 직접 적은 금액, 아니면 두 사람 금액의 합
+// 개인 항목의 두 사람 금액. 세부 항목이 있으면 세부 항목들의 합
+export function personAmounts(item) {
+  const details = item.details || [];
+  if (details.length === 0) return { a: item.a, b: item.b };
+  let a = 0;
+  let b = 0;
+  for (const detail of details) {
+    a += detail.a || 0;
+    b += detail.b || 0;
+  }
+  return { a, b };
+}
+
+// 항목의 월 예상액: 공동이면 직접 적은 금액, 아니면 두 사람 금액의 합 (세부 항목이 있으면 세부 항목 합)
 export function planAmount(item) {
-  if (item.joint) return item.amount;
-  if (item.a === null && item.b === null) return null;
-  return (item.a || 0) + (item.b || 0);
+  const details = item.details || [];
+  if (item.joint) {
+    if (details.length === 0) return item.amount;
+    return details.reduce((sum, detail) => sum + (detail.amount || 0), 0);
+  }
+  const { a, b } = personAmounts(item);
+  if (a === null && b === null) return null;
+  return (a || 0) + (b || 0);
 }
 
 // 차이 = 실제 - 예상. 실제를 안 적었으면 null

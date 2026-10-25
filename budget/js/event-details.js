@@ -3,13 +3,14 @@
 
 import { textInput, amountInput, deleteButton } from './cells.js';
 
-// "세부 3 ▾" 버튼: 세부 항목 줄을 펼치고 접음
-export function detailToggle(event, open) {
+// "세부 3 ▾" 버튼: 세부 항목 줄을 펼치고 접음. short면 "3 ▾"처럼 짧게 (칸이 좁은 월 가계부)
+export function detailToggle(event, open, short) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'detail-toggle';
   button.dataset.action = 'toggle-details';
-  button.textContent = `세부 ${event.details.length || '＋'} ${open ? '▴' : '▾'}`;
+  button.textContent = `${short ? '' : '세부 '}${event.details.length || '＋'} ${open ? '▴' : '▾'}`;
+  button.title = '세부 항목';
   button.setAttribute('aria-expanded', String(open));
   button.setAttribute('aria-label', `세부 항목 ${event.details.length}개 ${open ? '접기' : '펼치기'}`);
   return button;

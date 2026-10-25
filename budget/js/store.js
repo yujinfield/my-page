@@ -15,7 +15,8 @@ const THEME_KEY = 'budget-theme';
 // 4 → 5: 큰돈 이벤트의 누구 것인지(event.owner), 돈 나가는 곳(event.source) 추가. 글로 적던 "마련 방법"(method)은 source로 바꿈
 // 5 → 6: 저금액·부채(wealth), 메모(memos) 추가. 목표의 "현재 자산"(goal.current)은 저금액(wealth.savings)으로 옮김
 // 6 → 7: 달마다 메모(months[달].memo) 추가 (① 월 가계부 표 위)
-const DATA_VERSION = 7;
+// 7 → 8: 월 가계부 항목의 세부 항목(item.details) 추가
+const DATA_VERSION = 8;
 
 // 큰돈이 어디서 나가는지 (연간 요약에서 비상금·저축·성과급으로 낸 것은 자산에서 뺌, calc.js의 assetSpendByMonth)
 export const EVENT_SOURCES = [
@@ -59,8 +60,13 @@ export function newId(prefix) {
   return `${prefix}_${Date.now().toString(36)}${idCount}`;
 }
 
+// 월 가계부 항목의 세부 항목: 공동 항목이면 amount, 개인 항목이면 a·b (예: 식비 → 장보기, 배달)
+export function newItemDetail(name, amount, a, b) {
+  return { id: newId('d'), name, amount: amount ?? null, a: a ?? null, b: b ?? null };
+}
+
 export function newItem(group, name, joint, note) {
-  return { id: newId('i'), group, name, a: null, b: null, joint, amount: null, paymentA: '', paymentB: '', note: note || '' };
+  return { id: newId('i'), group, name, a: null, b: null, joint, amount: null, paymentA: '', paymentB: '', note: note || '', details: [] };
 }
 
 export function newEvent(month, name, source) {
@@ -137,6 +143,16 @@ function toText(value) {
   return typeof value === 'string' ? value : '';
 }
 
+function normalizeItemDetail(saved) {
+  return {
+    id: toText(saved.id) || newId('d'),
+    name: toText(saved.name),
+    amount: toAmount(saved.amount),
+    a: toAmount(saved.a),
+    b: toAmount(saved.b),
+  };
+}
+
 function normalizeItem(saved) {
   return {
     id: toText(saved.id) || newId('i'),
@@ -149,6 +165,7 @@ function normalizeItem(saved) {
     paymentA: toText(saved.paymentA),
     paymentB: toText(saved.paymentB),
     note: toText(saved.note),
+    details: Array.isArray(saved.details) ? saved.details.filter(isObject).map(normalizeItemDetail) : [],
   };
 }
 

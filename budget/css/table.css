@@ -198,7 +198,20 @@ select.cell-input {
   font-weight: 400;
 }
 
-/* 큰돈 캘린더: 이벤트 이름 옆 "세부 3 ▾" 버튼과 펼친 세부 항목 */
+/* 월 가계부: 항목 이름 옆에 "세부" 버튼이 붙어도 표가 PC 한 화면에 들어오게 조금 좁게 */
+.plan-table .cell-input[data-field="name"] {
+  min-width: 7.5em;
+}
+
+.plan-table .detail-toggle {
+  padding: 2px 6px;
+}
+
+.plan-table .cell-input[data-field="note"] {
+  min-width: 5.5em;
+}
+
+/* 큰돈 캘린더·월 가계부: 이름 옆 "세부 3 ▾" 버튼과 펼친 세부 항목 */
 .event-name {
   display: flex;
   align-items: center;
@@ -248,6 +261,11 @@ select.cell-input {
   grid-template-columns: minmax(0, 1fr) 6em 6em 32px;
   align-items: center;
   gap: var(--space-xs);
+}
+
+/* 공동 항목의 세부 항목: [이름] [금액] [✕] */
+.detail-joint .detail-item {
+  grid-template-columns: minmax(0, 1fr) 6em 32px;
 }
 
 .detail-item .cell-input {
@@ -532,7 +550,7 @@ select.cell-input {
   }
 
   /* 세부 항목 줄: 바로 위 이벤트 카드에 붙여서 보여 줌 */
-  .events-table tbody tr.detail-row {
+  .card-table tbody tr.detail-row {
     display: block;
     margin-top: calc(var(--space-s) * -1 - 2px);
     border-radius: 0 0 var(--radius-s) var(--radius-s);
@@ -543,11 +561,11 @@ select.cell-input {
     padding: 0;
   }
 
-  .events-table .event-details {
+  .card-table .event-details {
     padding: var(--space-s) 0 var(--space-s) var(--space-s);
   }
 
-  .events-table .detail-item .cell-amount {
+  .card-table .detail-item .cell-amount {
     background: var(--surface);
   }
 
