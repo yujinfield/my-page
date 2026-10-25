@@ -284,7 +284,8 @@ select.cell-input {
 /* [이름] [예상] [확정] [✕] */
 .detail-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 6em 6em 32px;
+  /* 너비는 rem: 머리줄은 글자가 작아서 em이면 칸이 좁아져 아래 줄과 어긋남 */
+  grid-template-columns: minmax(0, 1fr) 6rem 6rem 32px;
   align-items: center;
   gap: var(--space-xs);
 }
@@ -296,11 +297,15 @@ select.cell-input {
 }
 
 .item-details .detail-item {
-  grid-template-columns: minmax(0, 1fr) 5.5em 5.5em 7em 7em 32px;
+  grid-template-columns: minmax(0, 1fr) 5.5rem 5.5rem 7rem 7rem 32px;
 }
 
 .item-details.detail-joint .detail-item {
-  grid-template-columns: minmax(0, 1fr) 6em 7em 7em 32px;
+  grid-template-columns: minmax(0, 1fr) 6rem 7rem 7rem 32px;
+}
+
+.item-details .is-blank {
+  visibility: hidden;
 }
 
 .detail-head span {
@@ -622,6 +627,11 @@ select.cell-input {
   }
 
   .item-details .detail-head {
+    display: none;
+  }
+
+  /* 결제 칸이 필요 없으면(수입·특별비·저축·투자, 금액 안 적은 사람) 카드에서 이름표까지 숨김 */
+  .plan-table td.is-empty {
     display: none;
   }
 

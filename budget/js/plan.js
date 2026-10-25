@@ -2,7 +2,7 @@
 
 import {
   GROUPS, GROUP_COLORS, itemKind, itemPayment, parseAmount, formatMoney, formatMonth, planAmount, personAmounts,
-  diffOf, sortByGroup, summarize, monthRecord,
+  diffOf, sortByGroup, summarize, monthRecord, needsPayment,
 } from './calc.js';
 import { newItem, newItemDetail } from './store.js';
 import {
@@ -280,7 +280,10 @@ function handleClick(event) {
   if (!item || !window.confirm(`"${item.name || '이름 없는 항목'}" 항목을 지울까요?`)) return;
 
   state.data.items = state.data.items.filter((other) => other !== item);
-  for (const record of Object.values(state.data.months)) delete record.actual[item.id];
+  for (const record of Object.values(state.data.months)) {
+    delete record.actual[item.id];
+    delete record.actualBy[item.id];
+  }
   addHistory(state.data, `[월 가계부] "${item.name || '이름 없는 항목'}" 항목 지움`);
   save();
   renderPlan();
@@ -339,6 +342,26 @@ function renderPaymentSummary(itemId) {
   }
 }
 
+// 결제 칸은 필요한 사람만 보여 줌: 수입·특별비·저축·투자는 없음, 개인 항목은 금액을 적은 사람만 (calc.js의 needsPayment)
+// 금액을 적는 대로 바로 나타나게, 칸은 만들어 두고 숨기기만 함 (고른 값은 그대로 둠)
+function refreshPayments(row, item) {
+  for (const [field, person] of Object.entries(PAYMENT_FIELDS)) {
+    const td = row.querySelector(`[data-area="${field}"]`);
+    const show = needsPayment(item, person);
+    td.classList.toggle('is-empty', !show);
+    td.firstElementChild.hidden = !show;
+  }
+  renderPaymentSummary(item.id);
+  const detailRow = tbody.querySelector(`tr.detail-row[data-id="${item.id}"]`);
+  if (!detailRow) return;
+  for (const line of detailRow.querySelectorAll('[data-detail-id]')) {
+    const detail = item.details.find((other) => other.id === line.dataset.detailId);
+    // 세부 항목 줄은 칸 자리를 남겨 둬야 ✕가 제자리에 있음 (hidden이면 칸이 당겨짐)
+    line.querySelector('.d-pay-a').classList.toggle('is-blank', !needsPayment(item, 'a', detail));
+    line.querySelector('.d-pay-b').classList.toggle('is-blank', !needsPayment(item, 'b', detail));
+  }
+}
+
 function focusField(id, field) {
   const input = tbody.querySelector(`tr[data-id="${id}"] [data-field="${field}"]`);
   if (input) input.focus();
@@ -358,6 +381,7 @@ function refreshNumbers() {
     setMoney(row, 'plan', plan);
     setMoney(row, 'actual', actualMap[item.id]);
     showDiff(row.querySelector('[data-cell="diff"]'), itemKind(item), diffOf(plan, actualMap[item.id]));
+    refreshPayments(row, item);
   }
 
   const totals = summarize(state.data.items, actualMap);

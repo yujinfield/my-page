@@ -115,7 +115,8 @@ function withLeft(total) {
 /* ── 월 ── */
 
 export function emptyMonth() {
-  return { actual: {}, depositA: null, depositB: null, memo: '' };
+  // actual: 항목별 실제액(합계), actualBy: 사람마다 나눠 적은 실제액 { a, b } (합이 actual)
+  return { actual: {}, actualBy: {}, depositA: null, depositB: null, memo: '' };
 }
 
 // 읽기만 할 때: 없는 달이면 빈 기록 (저장하지 않음)
@@ -274,12 +275,35 @@ export function monthKeyFromText(text) {
   return match ? `${match[1]}-${match[2].padStart(2, '0')}` : null;
 }
 
+// 결제 수단이 필요 없는 구분 (카드로 쓰는 돈이 아님)
+const NO_PAYMENT_GROUPS = ['수입', '특별비', '저축·투자'];
+
+export function groupHasPayment(group) {
+  return !NO_PAYMENT_GROUPS.includes(group);
+}
+
+// 이 사람(a·b)의 결제 수단 칸이 필요한지: 결제 수단이 필요 없는 구분이면 아니고, 공동 항목이면 항상,
+// 개인 항목이면 그 사람 금액을 적었을 때만. detail을 주면 그 세부 항목 금액으로 봄
+export function needsPayment(item, person, detail) {
+  if (!groupHasPayment(item.group)) return false;
+  if (item.joint) return true;
+  const amounts = detail || personAmounts(item);
+  return Boolean(amounts[person]);
+}
+
+const FIELD_PERSON = { paymentA: 'a', paymentB: 'b' };
+
 // 항목의 결제 수단 (field: paymentA·paymentB). 세부 항목이 있으면 세부 항목들의 결제 수단을 모아서
-// 하나면 그 이름, 여러 개면 "신한카드 외", 없으면 빈 글
+// 하나면 그 이름, 여러 개면 "신한카드 외", 없으면 빈 글. 결제 칸이 필요 없는 곳은 빼고 봄
 export function itemPayment(item, field) {
+  const person = FIELD_PERSON[field];
+  if (!needsPayment(item, person)) return '';
   const details = item.details || [];
   if (details.length === 0) return item[field];
-  const names = [...new Set(details.map((detail) => detail[field]).filter(Boolean))];
+  const names = [...new Set(details
+    .filter((detail) => needsPayment(item, person, detail))
+    .map((detail) => detail[field])
+    .filter(Boolean))];
   if (names.length === 0) return '';
   return names.length === 1 ? names[0] : `${names[0]} 외`;
 }

@@ -18,7 +18,8 @@ const THEME_KEY = 'budget-theme';
 // 7 → 8: 월 가계부 항목의 세부 항목(item.details) 추가
 // 8 → 9: 구분 "특별지출" → "특별비", 세부 항목의 결제 수단(detail.paymentA·B), 큰돈 분류(event.category·eventCategories),
 //        용돈 기록(allowance, 사람마다 비밀번호로 암호화)
-const DATA_VERSION = 9;
+// 9 → 10: 실제액을 사람마다 나눠 적기(months[달].actualBy). 예전에 합계로 적은 실제액(actual)은 그대로 둠
+const DATA_VERSION = 10;
 
 // 큰돈이 어디서 나가는지 (연간 요약에서 비상금·저축·성과급으로 낸 것은 자산에서 뺌, calc.js의 assetSpendByMonth)
 export const EVENT_SOURCES = [
@@ -189,6 +190,14 @@ function normalizeMonth(saved) {
     for (const id of Object.keys(saved.actual)) {
       const value = toAmount(saved.actual[id]);
       if (value !== null) month.actual[id] = value;
+    }
+  }
+  if (saved.actualBy && typeof saved.actualBy === 'object') {
+    for (const id of Object.keys(saved.actualBy)) {
+      const split = saved.actualBy[id] || {};
+      const a = toAmount(split.a);
+      const b = toAmount(split.b);
+      if (a !== null || b !== null) month.actualBy[id] = { a, b };
     }
   }
   month.depositA = toAmount(saved.depositA);
