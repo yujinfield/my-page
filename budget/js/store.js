@@ -14,7 +14,8 @@ const THEME_KEY = 'budget-theme';
 // 3 → 4: 큰돈 이벤트의 세부 항목(event.details) 추가
 // 4 → 5: 큰돈 이벤트의 누구 것인지(event.owner), 돈 나가는 곳(event.source) 추가. 글로 적던 "마련 방법"(method)은 source로 바꿈
 // 5 → 6: 저금액·부채(wealth), 메모(memos) 추가. 목표의 "현재 자산"(goal.current)은 저금액(wealth.savings)으로 옮김
-const DATA_VERSION = 6;
+// 6 → 7: 달마다 메모(months[달].memo) 추가 (① 월 가계부 표 위)
+const DATA_VERSION = 7;
 
 // 큰돈이 어디서 나가는지 (연간 요약에서 비상금·저축·성과급으로 낸 것은 자산에서 뺌, calc.js의 assetSpendByMonth)
 export const EVENT_SOURCES = [
@@ -163,6 +164,7 @@ function normalizeMonth(saved) {
   }
   month.depositA = toAmount(saved.depositA);
   month.depositB = toAmount(saved.depositB);
+  month.memo = toText(saved.memo);
   return month;
 }
 

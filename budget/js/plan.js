@@ -2,7 +2,7 @@
 
 import {
   GROUPS, itemKind, parseAmount, formatMoney, formatMonth, planAmount,
-  diffOf, sortByGroup, summarize, monthRecord, groupTotals, currentSavings, monthKeyOf,
+  diffOf, sortByGroup, summarize, monthRecord, ensureMonth, groupTotals, currentSavings, monthKeyOf,
 } from './calc.js';
 import { newItem } from './store.js';
 import {
@@ -17,6 +17,8 @@ const missingNote = document.getElementById('plan-missing');
 const forecastBox = document.getElementById('plan-forecast');
 const editor = document.getElementById('plan-editor');
 const editToggle = document.getElementById('plan-edit-toggle');
+const memoLabel = document.getElementById('month-memo-label');
+const memoInput = document.getElementById('month-memo');
 const chartsBox = document.getElementById('plan-charts');
 const thead = document.getElementById('plan-head');
 const tbody = document.getElementById('plan-body');
@@ -34,6 +36,24 @@ export function setupPlan(appState, onSave) {
   watchEdits(tbody, () => state.data, describeEdit, save);
   editToggle.addEventListener('click', toggleEditor);
   document.getElementById('plan-add').addEventListener('click', addItem);
+
+  // 이번 달 메모: 글을 칠 때마다 저장, 칸을 벗어날 때 이력에 남김
+  memoInput.addEventListener('input', () => {
+    ensureMonth(state.data, state.month).memo = memoInput.value;
+    save();
+  });
+  watchEdits(memoInput.parentElement, () => state.data, (input, before, after) =>
+    `[월 가계부] ${formatMonth(state.month)} 메모: ${shown(shortText(before))} → ${shown(shortText(after))}`, save);
+}
+
+// 이력에는 메모 앞부분만
+function shortText(text) {
+  return text.length > 30 ? `${text.slice(0, 30)}…` : text;
+}
+
+function renderMonthMemo() {
+  memoLabel.textContent = `${formatMonth(state.month)} 메모`;
+  if (memoInput !== document.activeElement) memoInput.value = monthRecord(state.data, state.month).memo;
 }
 
 // 휴대폰: 평소엔 요약·그래프만, "수정하기"를 누르면 입력칸을 엶 (CSS가 768px 이하에서만 숨김)
@@ -65,9 +85,10 @@ function describeEdit(input, before, after) {
 
 export function renderPlan() {
   const { names } = state.data;
+  renderMonthMemo();
   renderHeadRow(thead, [
     ['구분'], ['항목'], [names.a, true], [names.b, true], ['공동'],
-    ['월 예상액', true], [`실제액 (${formatMonth(state.month)})`, true], ['차이', true], [`결제 (${names.a} · ${names.b})`], ['결제일/메모'], [''],
+    ['월 예상액', true], [`실제액 (${formatMonth(state.month)})`, true], ['차이', true], [`${names.a} 결제`], [`${names.b} 결제`], ['결제일/메모'], [''],
   ]);
   // 저장 순서도 구분 순서로 맞춤 (화면·백업 파일이 같은 순서가 되게)
   state.data.items = sortByGroup(state.data.items);
@@ -127,7 +148,8 @@ function buildRow(item, isGroupStart) {
     // 실제액은 ② 실제 사용에서 적고, 여기서는 보기만 함
     ['actual', `실제 (${formatMonth(state.month)})`, computed('actual'), 'num'],
     ['diff', '차이', computed('diff'), 'num'],
-    ['payment', `결제 ${names.a}·${names.b}`, paymentPair(item), ''],
+    ['paymentA', `${names.a} 결제`, paymentSelect(item, 'paymentA'), ''],
+    ['paymentB', `${names.b} 결제`, paymentSelect(item, 'paymentB'), ''],
     ['note', '메모', textInput('note', item.note, '결제일/메모')],
     ['delete', '', deleteButton('항목 지우기')],
   ];
@@ -180,14 +202,6 @@ function handleChange(event) {
 const ADD_PAYMENT = '__add__'; // "＋ 새로 추가…" 칸의 값
 const PAYMENT_FIELDS = { paymentA: 'a', paymentB: 'b' }; // 칸 이름 → 사람
 
-// 두 사람의 결제 수단 고르는 칸을 나란히: [유진 ▾] [남편 ▾]
-function paymentPair(item) {
-  const pair = document.createElement('div');
-  pair.className = 'payment-pair';
-  pair.append(paymentSelect(item, 'paymentA'), paymentSelect(item, 'paymentB'));
-  return pair;
-}
-
 // 한 사람의 결제 수단 고르는 칸: 선택 안 함 / 그 사람 목록 / ＋ 새로 추가…
 function paymentSelect(item, field) {
   const person = PAYMENT_FIELDS[field];
@@ -200,9 +214,9 @@ function paymentSelect(item, field) {
   const names = state.data.payments[person].slice();
   // 설정에서 목록에서 지웠어도 이 항목에 이미 고른 값은 보여 줌
   if (item[field] && !names.includes(item[field])) names.push(item[field]);
+  // 누구 것인지는 열 머리줄("유진 결제")에 있으니 카드 이름만
   const options = [
-    ['', `${personName} —`],
-    // 고른 뒤에는 카드 이름만 (누구 것인지는 머리줄과 칸 순서로: 왼쪽 첫 번째 사람, 오른쪽 두 번째 사람)
+    ['', '—'],
     ...names.map((name) => [name, name]),
     [ADD_PAYMENT, '＋ 새로 추가…'],
   ];
@@ -300,7 +314,7 @@ function renderFoot(totals) {
     const diffSpan = document.createElement('span');
     showDiff(diffSpan, kind, diffOf(totals.plan[key], actual));
     const rest = areaCell('rest', '', '');
-    rest.colSpan = 3;
+    rest.colSpan = 4;
     tr.append(
       labelCell,
       areaCell('plan', '예상', formatMoney(totals.plan[key]), 'num'),

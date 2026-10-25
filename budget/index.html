@@ -94,6 +94,11 @@
       <div id="plan-forecast" class="forecast"></div>
       <p class="formula">월 수입 − 고정지출 − 생활비 − 각자 용돈 − 특별비 적립 − 저축·투자 = <strong>남는 돈</strong></p>
       <p id="plan-missing" class="hint"></p>
+      <!-- 이번 달 메모: 보고 있는 달마다 따로 저장 -->
+      <label class="month-memo">
+        <span id="month-memo-label">이번 달 메모</span>
+        <textarea id="month-memo" data-field="memo" rows="2" placeholder="예: 경조사 2건, 카드값 미리 냄"></textarea>
+      </label>
       <!-- 휴대폰에서만 보이는 버튼: 누르면 아래 입력칸이 열림 (컴퓨터에서는 항상 열려 있음) -->
       <button type="button" id="plan-edit-toggle" class="button button-primary edit-toggle" aria-expanded="false" aria-controls="plan-editor">✏️ 수정하기</button>
 

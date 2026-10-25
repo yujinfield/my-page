@@ -32,7 +32,7 @@
 | `js/history.js` | 변경 이력 남기기 (`addHistory`, 칸을 벗어날 때 기록하는 `watchEdits`) |
 | `js/store.js` | 데이터 계층. `localStorage` 읽기/쓰기는 **이 파일에서만** |
 | `js/cells.js` | 표 칸·입력칸·고르는 칸 만드는 도우미. `areaCell`은 휴대폰 카드용 자리 이름·이름표, `showDiff`는 차이 색 |
-| `js/plan.js` | ① 월 가계부 (예산 입력, 실제액은 보기만) |
+| `js/plan.js` | ① 월 가계부 (예산 입력, 실제액은 보기만, 표 위 이번 달 메모) |
 | `js/actual.js` | ② 실제 사용 (그 달 실제액 입력) |
 | `js/events.js` | ③ 큰돈 캘린더 |
 | `js/event-details.js` | ③ 큰돈 캘린더의 세부 항목 줄·버튼 만들기 |
@@ -50,12 +50,12 @@
 ```js
 // localStorage 키: "budget-data" (금액 단위: 만원, 빈칸은 null)
 {
-  version: 6,
+  version: 7,
   names: { a: "유진", b: "남편" },
   payments: { a: ["신한카드", …], b: ["삼성카드", …] },      // 사람마다 결제 수단 목록 (⚙️ 설정에서 고침)
   cardGoals: { a: { 신한카드: 30 }, b: {} },                 // 예전 카드 실적 화면의 목표(화면 없음, 보존만)
   items: [{ id, group, name, a, b, joint, amount, paymentA, paymentB, note }],   // 예산 (모든 달 공통), paymentA·B는 사람마다 결제 수단 이름
-  months: { "2026-11": { actual: { [itemId]: 금액 }, depositA, depositB } },  // deposit은 예전 공동통장 기록(화면 없음, 보존만)
+  months: { "2026-11": { actual: { [itemId]: 금액 }, memo, depositA, depositB } },  // memo: 그 달 메모(① 표 위), deposit은 예전 공동통장 기록(화면 없음, 보존만)
   events: [{ id, month, owner, name, expected, confirmed, source, note, done,   // owner: joint·a·b, done: 완료해서 숨김
              details: [{ id, name, expected, confirmed }] }],   // source: special(특별비 적립금)·savings(비상금·저축)·bonus(성과급), details: 세부 항목
   goal: { target, rate },               // 목표(만원), 연 수익률(%)
@@ -74,6 +74,7 @@
 - 버전 3 → 4: `event.details`가 없으면 빈 목록으로 채웁니다.
 - 버전 4 → 5: `event.owner`는 공통(joint), 글로 적던 `method`는 `source`로 바꿉니다 ("성과급"→bonus, "적립·특별비"→special, "비상금·저축"→savings, 알아볼 수 없는 글은 비고 앞에 붙임).
 - 버전 5 → 6: `goal.current`(현재 자산)는 `wealth.savings`(저금액)로 옮기고 기준 달은 옮긴 달로 합니다. `memos`는 빈 목록으로 채웁니다.
+- 버전 6 → 7: 달마다 `memo`가 없으면 빈 글로 채웁니다.
 - 저금액: ⚙️ 설정에 한 번 적은 시작 저금액(기준 달 말)에서 그 뒤 달마다 (자산으로 쌓인 돈 − 자산에서 나간 큰돈)을 더해 계산합니다. 연간 요약 표의 "저금액" 칸, "이대로 가면" 예측, 순자산 모두 지금 저금액 기준입니다.
 - 부채: ⚙️ 설정에 적은 남은 금액(적은 달 기준)에서 매달 갚는 돈만큼 줄어든 걸로 지금 남은 금액을 계산합니다. 코멘트는 상환 기한(못 맞추면 필요한 금액, 만기 일시 상환이면 모아 둘 돈), 중도 상환 불가면 더 갚기 권하지 않음, 수수료가 있으면 수수료와 아끼는 이자를 비교합니다.
 - 연간 요약: 큰돈 중 돈 나가는 곳이 비상금·저축·성과급인 확정 지출은 그 달 자산에서 뺍니다 (성과급은 월 가계부에 수입으로 적어 이미 자산에 쌓였기 때문). 특별비 적립금은 매달 지출로 이미 빠져서 빼지 않습니다.
