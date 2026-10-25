@@ -1,4 +1,4 @@
-/* ② 실제 사용: 구분별 목록, 한 줄에 [이름·예산] [실제 입력칸·차이] */
+/* ② 실제 사용: 구분별 목록, 한 줄에 [이름·예산] [두 사람 실제 입력칸 / 합계·차이] */
 
 .actual-list {
   display: flex;
@@ -46,9 +46,52 @@
   flex-shrink: 0;
 }
 
+/* 두 사람 입력칸: [유진 ___] [영규 ___] */
+.actual-people {
+  display: flex;
+  gap: var(--space-s);
+}
+
+.actual-person {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
 .actual-input .cell-input {
-  width: 7em;
+  width: 6em;
   background: var(--surface);
+  color: var(--text);
+  font-size: var(--font-size); /* 16px 이상: 아이폰에서 누를 때 확대되지 않게 */
+}
+
+.actual-legacy:empty {
+  display: none;
+}
+
+/* 휴대폰: 입력칸은 이름 아래 줄로 */
+@media (max-width: 768px) {
+  .actual-item {
+    flex-wrap: wrap;
+  }
+
+  .actual-input {
+    width: 100%;
+  }
+
+  .actual-people {
+    width: 100%;
+  }
+
+  .actual-person {
+    flex: 1;
+  }
+
+  .actual-input .cell-input {
+    width: 100%;
+  }
 }
 
 .actual-diff {

@@ -38,7 +38,7 @@
 | `js/item-details.js` | ① 월 가계부 항목의 세부 항목 줄 만들기 |
 | `js/payment-select.js` | ① 월 가계부의 사람별 결제 수단 고르는 칸 |
 | `js/month-memo.js` | ① 월 가계부 표 위 이번 달 메모 |
-| `js/actual.js` | ② 실제 사용 (그 달 실제액 입력) |
+| `js/actual.js` | ② 실제 사용 (그 달 실제액을 두 사람이 나눠 입력, 합계는 `actual`에) |
 | `js/events.js` | ③ 큰돈 캘린더 (분류 고르기·＋ 새 분류) |
 | `js/event-details.js` | ③ 큰돈 캘린더의 세부 항목 줄, "세부 ▾" 버튼·세부 항목 찾기(월 가계부도 같이 씀) |
 | `js/annual.js` | ④ 연간 요약, 목표·예측 |
@@ -57,13 +57,13 @@
 ```js
 // localStorage 키: "budget-data" (금액 단위: 만원, 빈칸은 null)
 {
-  version: 9,
+  version: 10,
   names: { a: "유진", b: "남편" },
   payments: { a: ["신한카드", …], b: ["삼성카드", …] },      // 사람마다 결제 수단 목록 (⚙️ 설정에서 고침)
   cardGoals: { a: { 신한카드: 30 }, b: {} },                 // 예전 카드 실적 화면의 목표(화면 없음, 보존만)
   items: [{ id, group, name, a, b, joint, amount, paymentA, paymentB, note,   // 예산 (모든 달 공통), paymentA·B는 사람마다 결제 수단 이름
              details: [{ id, name, amount, a, b, paymentA, paymentB }] }], // 세부 항목: 공동이면 amount, 개인이면 a·b, 결제 수단도 따로
-  months: { "2026-11": { actual: { [itemId]: 금액 }, memo, depositA, depositB } },  // memo: 그 달 메모(① 표 위), deposit은 예전 공동통장 기록(화면 없음, 보존만)
+  months: { "2026-11": { actual: { [itemId]: 금액 }, actualBy: { [itemId]: { a, b } }, memo, depositA, depositB } },  // memo: 그 달 메모(① 표 위), deposit은 예전 공동통장 기록(화면 없음, 보존만)
   events: [{ id, month, owner, category, name, expected, confirmed, source, note, done,   // owner: joint·a·b, done: 완료해서 숨김
              details: [{ id, name, expected, confirmed }] }],   // source: special(특별비 적립금)·savings(비상금·저축)·bonus(성과급), details: 세부 항목
   eventCategories: ["결혼", "여행", …, "기타"],   // 큰돈 분류 목록 ("＋ 새로 추가…"로 늘어남)
@@ -88,6 +88,8 @@
 - 버전 6 → 7: 달마다 `memo`가 없으면 빈 글로 채웁니다.
 - 버전 7 → 8: 항목의 `details`가 없으면 빈 목록으로 채웁니다.
 - 버전 8 → 9: 구분 "특별지출"은 "특별비"로, 세부 항목 `paymentA·B`는 빈칸, `event.category`는 빈칸, `eventCategories`는 기본 목록, `allowance`는 둘 다 null로 채웁니다.
+- 버전 9 → 10: 달마다 `actualBy`가 없으면 빈 것으로 채웁니다. 예전에 합계로만 적은 `actual`은 그대로 두고 ②에서 "예전에 합계로 적은 금액"으로 보여 줍니다. 나눠 적으면 `actual` = a + b.
+- 결제 칸은 필요한 곳만 보입니다 (`needsPayment`): 수입·특별비·저축·투자는 없음, 공동 항목은 두 사람 모두, 개인 항목(세부 항목 포함)은 금액을 적은 사람만.
 - 세부 항목이 있는 항목의 결제 수단은 세부 항목들의 결제 수단을 모아서 보여 줍니다 (`itemPayment`: 하나면 그 이름, 여러 개면 "신한카드 외").
 - 월 가계부 항목에 세부 항목이 있으면 예상액(공동)·두 사람 금액(개인)은 세부 항목 합계입니다 (`planAmount`·`personAmounts`). 처음 세부 항목을 넣을 때 항목에 적힌 금액은 "기존 금액" 세부 항목으로 옮깁니다. 실제액은 ② 실제 사용에서 항목 단위로만 적습니다.
 - 저금액: ⚙️ 설정에 한 번 적은 시작 저금액(기준 달 말)에서 그 뒤 달마다 (자산으로 쌓인 돈 − 자산에서 나간 큰돈)을 더해 계산합니다. 연간 요약 표의 "저금액" 칸, "이대로 가면" 예측, 순자산 모두 지금 저금액 기준입니다.

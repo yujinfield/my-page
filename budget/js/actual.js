@@ -1,9 +1,10 @@
-// ② 실제 사용: 그 달에 실제로 받은·쓴 금액을 항목마다 적습니다.
+// ② 실제 사용: 그 달에 실제로 받은·쓴 금액을 항목마다 두 사람이 나눠 적습니다.
 // 예산(월 예상액)은 ① 월 가계부에서 정하고, 여기서는 실제액만 적어요.
+// 두 사람 금액은 months[달].actualBy에, 그 합은 months[달].actual에 저장 (다른 화면은 합계만 씀)
 
 import {
   GROUPS, itemKind, parseAmount, formatMoney, formatMonth, planAmount, diffOf, summarize,
-  monthRecord, ensureMonth, itemPayment,
+  monthRecord, ensureMonth, itemPayment, personAmounts,
 } from './calc.js';
 import { amountInput, showDiff } from './cells.js';
 import { watchEdits, shown } from './history.js';
@@ -11,6 +12,8 @@ import { watchEdits, shown } from './history.js';
 const summaryBox = document.getElementById('actual-summary');
 const progressNote = document.getElementById('actual-progress');
 const listBox = document.getElementById('actual-list');
+
+const PERSON_FIELDS = { actualA: 'a', actualB: 'b' }; // 입력칸 이름 → 사람
 
 let state = null;
 let save = null;
@@ -22,11 +25,12 @@ export function setupActual(appState, onSave) {
   watchEdits(listBox, () => state.data, describeEdit, save);
 }
 
-// 예: "[실제 사용] 식비·배달·장보기 (2026.10): 100 → 130"
+// 예: "[실제 사용] 식비·배달·장보기 유진 (2026.10): 100 → 130"
 function describeEdit(input, before, after) {
   const item = findItem(input);
   if (!item) return null;
-  return `[실제 사용] ${item.name || '이름 없는 항목'} (${formatMonth(state.month)}): ${shown(before)} → ${shown(after)}`;
+  const personName = state.data.names[PERSON_FIELDS[input.dataset.field]];
+  return `[실제 사용] ${item.name || '이름 없는 항목'} ${personName} (${formatMonth(state.month)}): ${shown(before)} → ${shown(after)}`;
 }
 
 function findItem(element) {
@@ -35,7 +39,7 @@ function findItem(element) {
 }
 
 export function renderActual() {
-  const actualMap = monthRecord(state.data, state.month).actual;
+  const record = monthRecord(state.data, state.month);
 
   // 구분마다 묶어서 보여 줌 (항목이 없는 구분은 건너뜀)
   const sections = [];
@@ -50,7 +54,7 @@ export function renderActual() {
     title.textContent = group;
     const list = document.createElement('ul');
     list.className = 'actual-items';
-    list.append(...items.map((item) => buildRow(item, actualMap[item.id])));
+    list.append(...items.map((item) => buildRow(item, record.actualBy[item.id])));
     section.append(title, list);
     sections.push(section);
   }
@@ -65,8 +69,9 @@ export function renderActual() {
   refreshNumbers();
 }
 
-// 한 줄: [항목 이름 / 예산 · 메모]  [실제 입력칸 / 차이]
-function buildRow(item, actual) {
+// 한 줄: [항목 이름 / 예산 · 메모]  [유진 입력칸] [남편 입력칸] / [합계 · 차이]
+// split: 이 달에 두 사람이 나눠 적은 실제액 { a, b } (없으면 undefined)
+function buildRow(item, split) {
   const row = document.createElement('li');
   row.className = 'actual-item';
   row.dataset.id = item.id;
@@ -86,46 +91,84 @@ function buildRow(item, actual) {
     item.note,
   ].filter(Boolean);
   plan.textContent = parts.join(' · ');
-  info.append(name, plan);
+  // 예전에 합계로만 적은 실제액이 있으면 알려 줌 (나눠 적으면 두 사람 합으로 바뀜)
+  const legacy = document.createElement('span');
+  legacy.className = 'hint actual-legacy';
+  legacy.dataset.cell = 'legacy';
+  info.append(name, plan, legacy);
 
   const inputBox = document.createElement('div');
   inputBox.className = 'actual-input';
-  const input = amountInput('actual', actual, `${item.name || '이름 없는 항목'} 실제 금액`);
+  const people = document.createElement('div');
+  people.className = 'actual-people';
+  // 개인 항목은 칸 안에 그 사람 예산을 흐리게 보여 줌 (예: "예산 50")
+  const budget = item.joint ? {} : personAmounts(item);
+  for (const [field, person] of Object.entries(PERSON_FIELDS)) {
+    const label = document.createElement('label');
+    label.className = 'actual-person';
+    const personName = document.createElement('span');
+    personName.textContent = names[person];
+    const value = split ? split[person] : null;
+    const placeholder = budget[person] ? `예산 ${formatMoney(budget[person])}` : '';
+    const input = amountInput(field, value, `${item.name || '이름 없는 항목'} ${names[person]} 실제 금액`, placeholder);
+    label.append(personName, input);
+    people.append(label);
+  }
   const diff = document.createElement('span');
   diff.className = 'actual-diff';
   diff.dataset.cell = 'diff';
-  inputBox.append(input, diff);
+  inputBox.append(people, diff);
 
   row.append(info, inputBox);
   return row;
 }
 
 function handleInput(event) {
-  if (event.target.dataset.field !== 'actual') return;
+  const person = PERSON_FIELDS[event.target.dataset.field];
   const item = findItem(event.target);
-  if (!item) return;
+  if (!person || !item) return;
 
   const record = ensureMonth(state.data, state.month);
-  const value = parseAmount(event.target.value);
-  if (value === null) delete record.actual[item.id];
-  else record.actual[item.id] = value;
+  const split = record.actualBy[item.id] || { a: null, b: null };
+  split[person] = parseAmount(event.target.value);
+  if (split.a === null && split.b === null) {
+    delete record.actualBy[item.id];
+    delete record.actual[item.id];
+  } else {
+    record.actualBy[item.id] = split;
+    record.actual[item.id] = (split.a || 0) + (split.b || 0);
+  }
   save();
   refreshNumbers();
 }
 
 function refreshNumbers() {
-  const actualMap = monthRecord(state.data, state.month).actual;
+  const record = monthRecord(state.data, state.month);
+  const actualMap = record.actual;
+  const spent = { a: 0, b: 0 }; // 사람마다 쓴 돈 (지출 항목만)
 
   for (const row of listBox.querySelectorAll('.actual-item')) {
     const item = state.data.items.find((other) => other.id === row.dataset.id);
-    const diff = diffOf(planAmount(item), actualMap[item.id]);
-    showDiff(row.querySelector('[data-cell="diff"]'), itemKind(item), diff);
+    const actual = actualMap[item.id];
+    const split = record.actualBy[item.id];
+    const diffBox = row.querySelector('[data-cell="diff"]');
+    showDiff(diffBox, itemKind(item), diffOf(planAmount(item), actual));
+    // 차이 앞에 합계: "합계 130 · +10"
+    if (actual !== undefined && actual !== null) diffBox.textContent = `합계 ${formatMoney(actual)} · ${diffBox.textContent}`;
+    const legacy = row.querySelector('[data-cell="legacy"]');
+    legacy.textContent = actual !== undefined && !split ? `예전에 합계로 적은 금액 ${formatMoney(actual)} · 나눠 적으면 두 사람 합으로 바뀌어요` : '';
+    if (split && itemKind(item) === 'spending') {
+      spent.a += split.a || 0;
+      spent.b += split.b || 0;
+    }
   }
 
   const totals = summarize(state.data.items, actualMap);
   renderSummary(totals);
   const done = state.data.items.length - totals.missing;
-  progressNote.textContent = `${formatMonth(state.month)}: ${state.data.items.length}개 중 ${done}개 적었어요.`;
+  const { names } = state.data;
+  progressNote.textContent = `${formatMonth(state.month)}: ${state.data.items.length}개 중 ${done}개 적었어요. `
+    + `쓴 돈 ${names.a} ${formatMoney(spent.a)} · ${names.b} ${formatMoney(spent.b)}`;
 }
 
 // 위쪽 요약: 남은 지출 예산(크게) + 수입·지출·저축 실제/예산

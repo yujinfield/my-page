@@ -5,6 +5,7 @@
 
 import { textInput, amountInput, deleteButton } from './cells.js';
 import { paymentSelect } from './payment-select.js';
+import { groupHasPayment } from './calc.js';
 
 // data: 전체 데이터 (이름·결제 수단 목록)
 export function itemDetailRow(item, data, columnCount) {
@@ -22,7 +23,8 @@ export function itemDetailRow(item, data, columnCount) {
   head.setAttribute('aria-hidden', 'true');
   // 공동 항목은 금액 칸 하나라 칸 수가 하나 적음 (detail-joint)
   if (item.joint) list.classList.add('detail-joint');
-  const pays = [`${names.a} 결제`, `${names.b} 결제`];
+  // 수입·특별비·저축·투자는 결제 칸이 없으니 머리줄도 비움 (칸 자리는 남겨서 줄을 맞춤)
+  const pays = groupHasPayment(item.group) ? [`${names.a} 결제`, `${names.b} 결제`] : ['', ''];
   const headTexts = item.joint ? ['세부 항목', '금액', ...pays, ''] : ['세부 항목', names.a, names.b, ...pays, ''];
   for (const text of headTexts) {
     const span = document.createElement('span');
