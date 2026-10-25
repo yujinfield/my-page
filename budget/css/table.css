@@ -97,14 +97,9 @@
   min-width: 7em;
 }
 
-/* 두 사람 결제 수단 고르는 칸 [유진 ▾] [남편 ▾] */
-.payment-pair {
-  display: flex;
-  gap: var(--space-xs);
-}
-
-/* 너비를 정해 둠 (안 그러면 가장 긴 글자 "＋ 새로 추가…"에 맞춰 넓어져서 표가 화면 밖으로 밀림) */
-.payment-pair select.cell-input {
+/* 결제 수단 고르는 칸: 너비를 정해 둠 (안 그러면 가장 긴 글자 "＋ 새로 추가…"에 맞춰 넓어져서 표가 화면 밖으로 밀림) */
+select.cell-input[data-field="paymentA"],
+select.cell-input[data-field="paymentB"] {
   width: 6em;
 }
 
@@ -365,15 +360,10 @@ select.cell-input {
     min-width: 0; /* 칸 내용이 길어도 카드 밖으로 넘치지 않게 */
   }
 
-  /* 결제 수단 두 칸은 자기 자리 너비를 반씩 */
-  .card-table .payment-pair {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .card-table .payment-pair select {
-    flex: 1;
-    width: 0;
+  /* 결제 수단 칸은 자기 자리 너비에 맞춤 */
+  .card-table select.cell-input[data-field="paymentA"],
+  .card-table select.cell-input[data-field="paymentB"] {
+    width: 100%;
     min-width: 0;
   }
 
@@ -422,7 +412,6 @@ select.cell-input {
   }
 
   /* 글 입력칸(메모 등)은 이름표 옆에 한 줄로 */
-  .card-table td[data-area="payment"],
   .card-table td[data-area="note"],
   .card-table td[data-area="source"] {
     flex-direction: row;
@@ -440,7 +429,8 @@ select.cell-input {
   .card-table td[data-area="actual"] { grid-area: actual; }
   .card-table td[data-area="diff"] { grid-area: diff; }
   .card-table td[data-area="note"] { grid-area: note; }
-  .card-table td[data-area="payment"] { grid-area: payment; }
+  .card-table td[data-area="paymentA"] { grid-area: paymentA; }
+  .card-table td[data-area="paymentB"] { grid-area: paymentB; }
   .card-table td[data-area="done"] { grid-area: done; align-items: flex-end; }
   .card-table td[data-area="delete"] { grid-area: delete; }
   .card-table td[data-area="month"] { grid-area: month; }
@@ -454,7 +444,7 @@ select.cell-input {
      │ 항목 이름          │
      │ 유진  남편         │  ← 개인 항목만 (공동이면 줄 없음)
      │ 예상  실제  차이   │
-     │ 결제 수단          │
+     │ 유진 결제  영규 결제 │
      └ 메모              ┘ */
 
   .plan-table tbody tr {
@@ -464,7 +454,7 @@ select.cell-input {
       "name name name"
       "a b ."
       "plan actual diff"
-      "payment payment payment"
+      "paymentA paymentB ."
       "note note note";
   }
 
@@ -473,7 +463,7 @@ select.cell-input {
       "group joint delete"
       "name name name"
       "plan actual diff"
-      "payment payment payment"
+      "paymentA paymentB ."
       "note note note";
   }
 

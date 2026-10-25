@@ -92,7 +92,7 @@ function withLeft(total) {
 /* ── 월 ── */
 
 export function emptyMonth() {
-  return { actual: {}, depositA: null, depositB: null };
+  return { actual: {}, depositA: null, depositB: null, memo: '' };
 }
 
 // 읽기만 할 때: 없는 달이면 빈 기록 (저장하지 않음)
