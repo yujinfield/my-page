@@ -516,3 +516,44 @@ summary:focus-visible {
 .suggest-row .cell-input {
   background: var(--surface);
 }
+
+/* ⚙️ 설정: ☁️ 같이 쓰기 */
+.sync-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.sync-box .text-input {
+  font-size: var(--font-size); /* 16px 이상: 아이폰에서 누를 때 확대되지 않게 */
+}
+
+.sync-message {
+  margin: 0;
+  color: var(--accent);
+  font-size: var(--font-size-small);
+}
+
+.sync-message:empty {
+  display: none;
+}
+
+.sync-connected {
+  margin: 0;
+}
+
+.sync-connected code {
+  padding: 2px var(--space-xs);
+  border-radius: var(--radius-s);
+  background: var(--surface-soft);
+  word-break: break-all;
+}
+
+/* 위쪽 "☁️ 올림 10:31" */
+.sync-status {
+  margin: 0;
+}
+
+.sync-status:empty {
+  display: none;
+}

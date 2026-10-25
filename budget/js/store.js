@@ -6,6 +6,7 @@ import { GROUPS, emptyMonth, monthKeyOf } from './calc.js';
 
 const DATA_KEY = 'budget-data';
 const THEME_KEY = 'budget-theme';
+const SYNC_KEY = 'budget-sync'; // ☁️ 동기화 설정 (이 기기에만, 백업·Gist에는 안 들어감)
 
 // 데이터 형식을 바꾸면 이 숫자를 올리고 loadData()에 옮기는 코드를 추가합니다.
 // 1 → 2: 목표(goal), 변경 이력(history), 마지막 백업 시각(lastBackupAt) 추가
@@ -458,5 +459,32 @@ export function saveTheme(theme) {
     localStorage.setItem(THEME_KEY, theme);
   } catch (error) {
     // 저장 못 해도 이번 화면에서는 바뀜
+  }
+}
+
+/* ── ☁️ 동기화 설정 ── */
+
+// { token, gistId, lock: { salt, key }, remoteSavedAt, dirty } / 연결 안 했으면 null
+export function loadSync() {
+  const saved = readJson(SYNC_KEY);
+  if (!isObject(saved) || typeof saved.token !== 'string' || typeof saved.gistId !== 'string' || !isObject(saved.lock)) return null;
+  return {
+    token: saved.token,
+    gistId: saved.gistId,
+    lock: { salt: toText(saved.lock.salt), key: toText(saved.lock.key) },
+    remoteSavedAt: typeof saved.remoteSavedAt === 'number' ? saved.remoteSavedAt : 0,
+    dirty: saved.dirty === true,
+  };
+}
+
+export function saveSync(sync) {
+  return writeJson(SYNC_KEY, sync);
+}
+
+export function clearSync() {
+  try {
+    localStorage.removeItem(SYNC_KEY);
+  } catch (error) {
+    // 저장소를 못 쓰면 지울 것도 없음
   }
 }

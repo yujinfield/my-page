@@ -11,6 +11,7 @@ import { setupAllowance, renderAllowance, lockAllowance } from './allowance.js';
 import { setupBackup, renderBackup } from './backup.js';
 import { setupSettings, fillSettings } from './settings.js';
 import { setupMemo } from './memo.js';
+import { setupSync, markChanged } from './sync.js';
 
 // month: 지금 보고 있는 달 ("2026-11"), tab: 지금 보이는 화면
 const state = { data: loadData(), month: monthKeyOf(new Date()), tab: 'plan' };
@@ -25,6 +26,16 @@ const monthLabel = document.getElementById('month-label');
 function save() {
   const saved = saveData(state.data);
   saveStatus.textContent = saved ? '' : '저장하지 못했어요. 비공개 모드이거나 저장 공간이 꽉 찼을 수 있어요.';
+  markChanged(); // ☁️ 동기화를 연결했으면 잠시 뒤 올림
+}
+
+// 데이터를 통째로 바꿈 (☁️ 다른 기기에서 받아 왔을 때). 받아 온 것이라 다시 올리지 않음
+function replaceData(data) {
+  state.data = data;
+  saveData(state.data);
+  lockAllowance();
+  fillSettings();
+  render();
 }
 
 function render() {
@@ -88,3 +99,4 @@ setupBackup(state, save, () => {
   render();
 });
 showTab('plan');
+setupSync(state, replaceData);
