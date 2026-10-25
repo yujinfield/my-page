@@ -26,6 +26,15 @@
   --series-7: #6250d6;
   --series-plan: #b9b4ad;
 
+  /* 월 가계부 구분 색 (줄 왼쪽 띠·옅은 배경·원형 그래프). 특별비는 저축·투자와 비슷한 초록 */
+  --group-income: #64748b;
+  --group-fixed: var(--series-1);
+  --group-personal: var(--series-2);
+  --group-family: var(--series-3);
+  --group-living: var(--series-4);
+  --group-special: #4caf50;
+  --group-saving: var(--series-6);
+
   --space-xs: 4px;
   --space-s: 8px;
   --space-m: 16px;
@@ -70,6 +79,8 @@
     --series-6: #008300;
     --series-7: #9085e9;
     --series-plan: #6b6762;
+    --group-income: #94a3b8;
+    --group-special: #3fa83f;
   }
 }
 
@@ -98,6 +109,8 @@
   --series-6: #008300;
   --series-7: #9085e9;
   --series-plan: #6b6762;
+  --group-income: #94a3b8;
+  --group-special: #3fa83f;
 }
 
 *,

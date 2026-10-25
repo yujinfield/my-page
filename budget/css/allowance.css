@@ -1,0 +1,110 @@
+/* ⑤ 용돈: 사람마다 한 칸 (컴퓨터는 나란히, 휴대폰은 위아래) */
+
+.allowance-people {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-m);
+}
+
+.allowance-person {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  padding: var(--space-m);
+  border-radius: var(--radius-m);
+  background: var(--surface-soft);
+}
+
+.allowance-title {
+  margin: 0;
+  font-size: 18px;
+}
+
+.allowance-lock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.allowance-password {
+  width: 100%;
+  padding: var(--space-s) var(--space-m);
+  background: var(--surface);
+  font-size: var(--font-size); /* 16px 이상: 아이폰에서 누를 때 확대되지 않게 */
+}
+
+.allowance-message {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--bad);
+  font-size: var(--font-size-small);
+}
+
+/* 쓸 곳 한 줄: [이름] [금액] [✕] */
+.allowance-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.allowance-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6em 32px;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.allowance-row .cell-input {
+  width: 100%;
+  min-width: 0;
+  background: var(--surface);
+}
+
+.allowance-total {
+  margin: 0;
+  font-size: var(--font-size-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.allowance-memo {
+  width: 100%;
+  padding: var(--space-s) var(--space-m);
+  border: none;
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--font-size);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.allowance-memo:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* "비밀번호를 잊었어요": 눈에 덜 띄는 글자 버튼 */
+.link-button {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link-button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .allowance-people {
+    grid-template-columns: 1fr;
+  }
+}

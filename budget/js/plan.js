@@ -1,7 +1,7 @@
 // ① 월 가계부: 예산(월 예상액)을 정하고, 그 달 실제액(② 실제 사용에서 입력)과 차이를 봅니다.
 
 import {
-  GROUPS, itemKind, parseAmount, formatMoney, formatMonth, planAmount, personAmounts,
+  GROUPS, GROUP_COLORS, itemKind, itemPayment, parseAmount, formatMoney, formatMonth, planAmount, personAmounts,
   diffOf, sortByGroup, summarize, monthRecord,
 } from './calc.js';
 import { newItem, newItemDetail } from './store.js';
@@ -63,7 +63,15 @@ function describeEdit(input, before, after) {
   const itemName = (input.dataset.field === 'name' ? before : item.name) || '이름 없는 항목';
   const detail = findDetail(item, input);
   if (detail) {
-    const detailLabels = { detailName: '이름', detailAmount: '금액', detailA: `${names.a} 금액`, detailB: `${names.b} 금액` };
+    const detailLabels = {
+      detailName: '이름', detailAmount: '금액', detailA: `${names.a} 금액`, detailB: `${names.b} 금액`,
+      paymentA: `${names.a} 결제 수단`, paymentB: `${names.b} 결제 수단`,
+    };
+    // 결제 수단은 "＋ 새로 추가…"를 고를 수도 있어서 실제로 저장된 값을 남김
+    if (input.dataset.field in PAYMENT_FIELDS) {
+      after = detail[input.dataset.field];
+      if (before === after) return null;
+    }
     const detailName = (input.dataset.field === 'detailName' ? before : detail.name) || '세부 항목';
     return `[월 가계부] ${itemName} › ${detailName} ${detailLabels[input.dataset.field]}: ${shown(before)} → ${shown(after)}`;
   }
@@ -89,7 +97,11 @@ export function renderPlan() {
   const rows = [];
   for (const item of state.data.items) {
     rows.push(buildRow(item, item.group !== lastGroup));
-    if (openIds.has(item.id)) rows.push(itemDetailRow(item, names, COLUMN_COUNT));
+    if (openIds.has(item.id)) {
+      const detailRow = itemDetailRow(item, state.data, COLUMN_COUNT);
+      detailRow.classList.add(`g-${GROUP_COLORS[item.group]}`); // 위 항목과 같은 구분 색
+      rows.push(detailRow);
+    }
     lastGroup = item.group;
   }
   tbody.replaceChildren(...rows);
@@ -100,7 +112,7 @@ function buildRow(item, isGroupStart) {
   const { names } = state.data;
   const tr = document.createElement('tr');
   tr.dataset.id = item.id;
-  tr.className = `kind-${itemKind(item)}`;
+  tr.className = `kind-${itemKind(item)} g-${GROUP_COLORS[item.group]}`;
   if (item.joint) tr.classList.add('is-joint');
   if (isGroupStart) tr.classList.add('group-start');
 
@@ -151,8 +163,8 @@ function buildRow(item, isGroupStart) {
     // 실제액은 ② 실제 사용에서 적고, 여기서는 보기만 함
     ['actual', `실제 (${formatMonth(state.month)})`, computed('actual'), 'num'],
     ['diff', '차이', computed('diff'), 'num'],
-    ['paymentA', `${names.a} 결제`, paymentSelect(state.data, item, 'paymentA'), ''],
-    ['paymentB', `${names.b} 결제`, paymentSelect(state.data, item, 'paymentB'), ''],
+    ['paymentA', `${names.a} 결제`, paymentCell(item, 'paymentA'), ''],
+    ['paymentB', `${names.b} 결제`, paymentCell(item, 'paymentB'), ''],
     ['note', '메모', textInput('note', item.note, '결제일/메모')],
     ['delete', '', deleteButton('항목 지우기')],
   ];
@@ -160,6 +172,16 @@ function buildRow(item, isGroupStart) {
     tr.append(areaCell(area, label, content, className));
   }
   return tr;
+}
+
+// 결제 칸: 세부 항목이 있으면 세부 항목들의 결제 수단 요약("신한카드 외")을 보기만, 없으면 고르는 칸
+function paymentCell(item, field) {
+  if (item.details.length === 0) return paymentSelect(state.data, item, field);
+  const text = document.createElement('span');
+  text.className = 'computed payment-summary';
+  text.textContent = itemPayment(item, field) || '—';
+  text.title = '세부 항목에서 고른 결제 수단';
+  return text;
 }
 
 function findItem(element) {
@@ -197,7 +219,8 @@ function handleChange(event) {
   const item = findItem(event.target);
   if (!item) return;
   if (field in PAYMENT_FIELDS) {
-    choosePayment(item, field, event.target.value);
+    // 세부 항목의 결제 칸이면 세부 항목에, 아니면 항목에
+    choosePayment(findDetail(item, event.target) || item, field, event.target.value, item.id);
     return;
   }
   if (field !== 'group' && field !== 'joint') return;
@@ -211,20 +234,23 @@ function handleChange(event) {
 
 /* ── 결제 수단 (사람마다 따로) ── */
 
-function choosePayment(item, field, value) {
+// owner: 결제 수단을 고른 항목 또는 세부 항목, itemId: 다시 그린 뒤 커서를 둘 항목
+function choosePayment(owner, field, value, itemId) {
   const person = PAYMENT_FIELDS[field];
   if (value === ADD_PAYMENT) {
     const name = (window.prompt(`${state.data.names[person]}의 새 결제 수단 이름 (예: 현대카드)`) || '').trim();
     if (name) {
       const list = state.data.payments[person];
       if (!list.includes(name)) list.push(name);
-      item[field] = name;
+      owner[field] = name;
     }
     // 새 이름이 모든 칸의 목록에 들어가도록 다시 그림 (취소했으면 원래 값으로 돌아감)
     renderPlan();
-    focusField(item.id, field);
+    focusField(itemId, field);
   } else {
-    item[field] = value;
+    owner[field] = value;
+    // 세부 항목의 결제 수단이 바뀌면 위 항목 줄의 요약("신한카드 외")도 바꿈
+    if (owner !== findItemById(itemId)) renderPaymentSummary(itemId);
   }
   save();
 }
@@ -262,8 +288,9 @@ function handleClick(event) {
 
 function addDetail(item) {
   // 처음 세부 항목을 넣을 때 항목에 적어 둔 금액이 있으면 "기존 금액"으로 옮겨서 사라지지 않게
-  if (item.details.length === 0 && (item.amount !== null || item.a !== null || item.b !== null)) {
-    item.details.push(newItemDetail('기존 금액', item.amount, item.a, item.b));
+  const hasValues = item.amount !== null || item.a !== null || item.b !== null || item.paymentA || item.paymentB;
+  if (item.details.length === 0 && hasValues) {
+    item.details.push(newItemDetail('기존 금액', item.amount, item.a, item.b, item.paymentA, item.paymentB));
     item.amount = null;
     item.a = null;
     item.b = null;
@@ -297,6 +324,19 @@ function addItem() {
   renderPlan(); // 다시 그리면서 구분 순서로 정렬됨
   save();
   focusField(item.id, 'name');
+}
+
+function findItemById(id) {
+  return state.data.items.find((item) => item.id === id);
+}
+
+function renderPaymentSummary(itemId) {
+  const item = findItemById(itemId);
+  const row = tbody.querySelector(`tr[data-id="${itemId}"]:not(.detail-row)`);
+  for (const field of ['paymentA', 'paymentB']) {
+    const summary = row.querySelector(`[data-area="${field}"] .payment-summary`);
+    if (summary) summary.textContent = itemPayment(item, field) || '—';
+  }
 }
 
 function focusField(id, field) {

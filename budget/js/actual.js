@@ -3,7 +3,7 @@
 
 import {
   GROUPS, itemKind, parseAmount, formatMoney, formatMonth, planAmount, diffOf, summarize,
-  monthRecord, ensureMonth,
+  monthRecord, ensureMonth, itemPayment,
 } from './calc.js';
 import { amountInput, showDiff } from './cells.js';
 import { watchEdits, shown } from './history.js';
@@ -81,8 +81,8 @@ function buildRow(item, actual) {
   const { names } = state.data;
   const parts = [
     `예산 ${formatMoney(planAmount(item)) || '—'}`,
-    item.paymentA && `${names.a} ${item.paymentA}`,
-    item.paymentB && `${names.b} ${item.paymentB}`,
+    itemPayment(item, 'paymentA') && `${names.a} ${itemPayment(item, 'paymentA')}`,
+    itemPayment(item, 'paymentB') && `${names.b} ${itemPayment(item, 'paymentB')}`,
     item.note,
   ].filter(Boolean);
   plan.textContent = parts.join(' · ');

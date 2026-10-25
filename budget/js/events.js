@@ -9,12 +9,21 @@ import { addHistory, watchEdits, shown } from './history.js';
 import { detailToggle, detailRow, findDetail } from './event-details.js';
 
 const LABELS = {
-  month: '월', owner: '누구', name: '이벤트', expected: '예상 지출', confirmed: '확정 지출', source: '돈 나가는 곳',
+  month: '월', owner: '누구', category: '분류', name: '이벤트', expected: '예상 지출', confirmed: '확정 지출', source: '돈 나가는 곳',
   note: '잔액/비고',
   detailName: '이름', detailExpected: '예상', detailConfirmed: '확정',
 };
-const COLUMN_COUNT = 9; // 표 칸 수 (세부 항목 줄이 이만큼 가로로 걸침)
+const COLUMN_COUNT = 10; // 표 칸 수 (세부 항목 줄이 이만큼 가로로 걸침)
 const SOURCE_OPTIONS = [['', '—'], ...EVENT_SOURCES];
+const ADD_CATEGORY = '__add__'; // 분류 칸의 "＋ 새로 추가…" 값
+
+// 분류 고르는 칸의 목록: 선택 안 함 / 분류 목록 / ＋ 새로 추가…
+// 목록에 없는 분류(예: 백업에서 불러온 것)도 이 이벤트에 고른 값이면 보여 줌
+function categoryOptions(event) {
+  const names = state.data.eventCategories.slice();
+  if (event.category && !names.includes(event.category)) names.push(event.category);
+  return [['', '—'], ...names.map((name) => [name, name]), [ADD_CATEGORY, '＋ 새로 추가…']];
+}
 
 // 누구 것인지 고르는 칸의 목록: 공통 / 유진 / 남편 (이름은 ⚙️ 설정에서)
 function ownerOptions() {
@@ -87,7 +96,7 @@ function describeEdit(input, before, after) {
 
 export function renderEvents() {
   renderHeadRow(thead, [
-    ['월'], ['누구'], ['이벤트'], ['예상 지출', true], ['확정 지출', true], ['돈 나가는 곳'], ['잔액/비고'], [''], [''],
+    ['월'], ['누구'], ['분류'], ['이벤트'], ['예상 지출', true], ['확정 지출', true], ['돈 나가는 곳'], ['잔액/비고'], [''], [''],
   ]);
   const visible = state.data.events.filter((event) => showDone || !event.done);
   const rows = [];
@@ -119,6 +128,7 @@ function eventRow(event) {
   tr.append(
     areaCell('month', '', textInput('month', event.month, '월', '2027.01 / 상시')),
     areaCell('owner', '', selectInput('owner', event.owner, '누구 것인지', ownerOptions())),
+    areaCell('category', '분류', selectInput('category', event.category, '분류', categoryOptions(event))),
     areaCell('name', '', nameBox),
     areaCell('expected', '예상 지출', expected, 'num'),
     areaCell('confirmed', '확정 지출', confirmed, 'num'),
@@ -186,6 +196,10 @@ function handleInput(event) {
     return;
   }
 
+  if (field === 'category' && event.target.value === ADD_CATEGORY) {
+    addCategory(item);
+    return;
+  }
   if (field === 'expected' || field === 'confirmed') item[field] = parseAmount(event.target.value);
   else item[field] = event.target.value;
   // 누구 것인지 바꾸면 줄 왼쪽 색 표시도 바꿈
@@ -230,6 +244,23 @@ function handleClick(event) {
   addHistory(state.data, `[큰돈 캘린더] "${item.name || '이름 없는 이벤트'}" 지움`);
   save();
   renderEvents();
+}
+
+// "＋ 새로 추가…": 이름을 물어서 분류 목록에 넣고 이 이벤트에 고름 (다음부터 다른 이벤트에서도 고를 수 있음)
+function addCategory(item) {
+  const name = (window.prompt('새 분류 이름 (예: 이사, 명품, 취미)') || '').trim();
+  if (name) {
+    const list = state.data.eventCategories;
+    if (!list.includes(name)) list.push(name);
+    const before = item.category;
+    item.category = name;
+    // 칸을 다시 그려서 change 이력이 안 남으므로 여기서 남김
+    addHistory(state.data, `[큰돈 캘린더] ${item.name || '이름 없는 이벤트'} 분류: ${shown(before)} → ${name}`);
+    save();
+  }
+  // 새 분류가 모든 칸의 목록에 들어가도록 다시 그림 (취소했으면 원래 값으로 돌아감)
+  renderEvents();
+  focusIn(item.id, '[data-field="category"]');
 }
 
 function addDetail(item) {
@@ -298,7 +329,7 @@ function renderFoot() {
     const tr = document.createElement('tr');
     tr.className = className;
     const label = areaCell('name', '', labelText);
-    label.colSpan = 3;
+    label.colSpan = 4;
     const rest = areaCell('rest', '', '');
     rest.colSpan = 4;
     tr.append(

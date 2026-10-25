@@ -5,7 +5,8 @@ export const ADD_PAYMENT = '__add__'; // "＋ 새로 추가…" 칸의 값
 export const PAYMENT_FIELDS = { paymentA: 'a', paymentB: 'b' }; // 칸 이름 → 사람
 
 // 한 사람의 결제 수단 고르는 칸: 선택 안 함 / 그 사람 목록 / ＋ 새로 추가…
-export function paymentSelect(data, item, field) {
+// blankText: 선택 안 했을 때 글자 (표에는 열 머리줄에 이름이 있어 "—", 세부 항목은 "유진 —")
+export function paymentSelect(data, item, field, blankText) {
   const person = PAYMENT_FIELDS[field];
   const personName = data.names[person];
   const select = document.createElement('select');
@@ -18,7 +19,7 @@ export function paymentSelect(data, item, field) {
   if (item[field] && !names.includes(item[field])) names.push(item[field]);
   // 누구 것인지는 열 머리줄("유진 결제")에 있으니 카드 이름만
   const options = [
-    ['', '—'],
+    ['', blankText || '—'],
     ...names.map((name) => [name, name]),
     [ADD_PAYMENT, '＋ 새로 추가…'],
   ];

@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="css/actual.css">
   <link rel="stylesheet" href="css/wealth.css">
   <link rel="stylesheet" href="css/memo.css">
+  <link rel="stylesheet" href="css/allowance.css">
 </head>
 <body>
   <header class="app-header">
@@ -85,7 +86,8 @@
       <button type="button" role="tab" id="tab-actual" data-tab="actual" aria-controls="panel-actual">② 실제 사용</button>
       <button type="button" role="tab" id="tab-events" data-tab="events" aria-controls="panel-events">③ 큰돈 캘린더</button>
       <button type="button" role="tab" id="tab-annual" data-tab="annual" aria-controls="panel-annual">④ 연간 요약</button>
-      <button type="button" role="tab" id="tab-backup" data-tab="backup" aria-controls="panel-backup">⑤ 백업·이력</button>
+      <button type="button" role="tab" id="tab-allowance" data-tab="allowance" aria-controls="panel-allowance">⑤ 용돈</button>
+      <button type="button" role="tab" id="tab-backup" data-tab="backup" aria-controls="panel-backup">⑥ 백업·이력</button>
     </div>
 
     <!-- ① 월 가계부 -->
@@ -134,6 +136,10 @@
     <section id="panel-events" class="card" role="tabpanel" aria-labelledby="tab-events" hidden>
       <p class="hint">웨딩·신혼여행·가전·자동차 보험·성과급처럼 월 가계부에 섞으면 망가지는 돈은 여기서 따로 관리해요. 성과급은 생활비에 섞지 말고 결혼·대출상환·투자처럼 목적을 정해 두세요. "돈 나가는 곳"을 비상금·저축이나 성과급으로 고른 확정 지출은 ④ 연간 요약에서 자산에서 빠져요 (특별비 적립금은 이미 매달 지출로 빠져서 빼지 않아요).</p>
 
+      <!-- 이벤트 추가: 월 가계부처럼 표 바깥 오른쪽 위 -->
+      <div class="table-actions">
+        <button type="button" id="events-add" class="add-button" aria-label="이벤트 추가" title="이벤트 추가">＋</button>
+      </div>
       <div class="table-wrap">
         <table class="budget-table card-table events-table">
           <thead id="events-head"></thead>
@@ -142,7 +148,6 @@
         </table>
       </div>
       <div class="row">
-        <button type="button" id="events-add" class="button">＋ 이벤트 추가</button>
         <button type="button" id="events-show-done" class="button" aria-pressed="false" hidden>완료된 이벤트 보기</button>
       </div>
     </section>
@@ -184,7 +189,13 @@
       <p class="hint">위 "지금 저금액"에서 시작해 매달 같은 금액을 넣고 연 수익률이 그대로라고 가정한 어림값이에요. 물가·세금·큰돈 지출은 빼고 계산해요.</p>
     </section>
 
-    <!-- ⑤ 백업·이력 -->
+    <!-- ⑤ 용돈: 사람마다 비밀번호로 잠금 -->
+    <section id="panel-allowance" class="card" role="tabpanel" aria-labelledby="tab-allowance" hidden>
+      <p class="hint">각자 용돈을 어디에 쓸지 적어요. 비밀번호로 잠가 저장해서, 비밀번호를 모르면 백업 파일로도 내용을 볼 수 없어요. 다른 탭으로 가면 다시 잠겨요. 용돈 예산은 ① 월 가계부의 개인지출에서 가져와요.</p>
+      <div id="allowance-people" class="allowance-people"></div>
+    </section>
+
+    <!-- ⑥ 백업·이력 -->
     <section id="panel-backup" class="card" role="tabpanel" aria-labelledby="tab-backup" hidden>
       <h2 class="section-title">백업</h2>
       <p id="backup-status"></p>
