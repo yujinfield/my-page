@@ -13,6 +13,7 @@ import { detailToggle, findDetail } from './event-details.js';
 import { itemDetailRow } from './item-details.js';
 import { paymentSelect, PAYMENT_FIELDS, ADD_PAYMENT } from './payment-select.js';
 import { setupMonthMemo, renderMonthMemo } from './month-memo.js';
+import { renderCardGoals } from './card-goals.js';
 
 const COLUMN_COUNT = 12; // 표 칸 수 (세부 항목 줄이 이만큼 가로로 걸침)
 const DETAIL_FIELDS = { detailName: 'name', detailAmount: 'amount', detailA: 'a', detailB: 'b' }; // 칸 이름 → 세부 항목 값
@@ -251,6 +252,7 @@ function choosePayment(owner, field, value, itemId) {
     owner[field] = value;
     // 세부 항목의 결제 수단이 바뀌면 위 항목 줄의 요약("신한카드 외")도 바꿈
     if (owner !== findItemById(itemId)) renderPaymentSummary(itemId);
+    renderCardGoals(state);
   }
   save();
 }
@@ -387,6 +389,7 @@ function refreshNumbers() {
   const totals = summarize(state.data.items, actualMap);
   renderFoot(totals);
   renderPlanSummary(state, totals, actualMap);
+  renderCardGoals(state);
   missingNote.textContent = totals.missing > 0
     ? `${formatMonth(state.month)} 실제액을 아직 안 적은 항목이 ${totals.missing}개 있어요. ② 실제 사용에서 적어 주세요.`
     : `${formatMonth(state.month)} 실제액을 모두 적었어요.`;

@@ -36,6 +36,8 @@
 | `js/plan.js` | ① 월 가계부 표 (예산 입력, 실제액은 보기만, 항목 세부 항목) |
 | `js/plan-summary.js` | ① 월 가계부 위쪽 요약 카드·"이대로 가면?"·그래프 |
 | `js/item-details.js` | ① 월 가계부 항목의 세부 항목 줄 만들기 |
+| `js/card-goals.js` | ① 월 가계부 표 아래 "카드 실적": 실적까지 예산·실제로 얼마 더 써야 하는지 |
+| `js/cards.js` | 카드별 쓴 돈 계산 `cardUsage` (순수 함수). 공동 항목은 두 사람 모두 카드를 골랐으면 반씩 |
 | `js/payment-select.js` | ① 월 가계부의 사람별 결제 수단 고르는 칸 |
 | `js/month-memo.js` | ① 월 가계부 표 위 이번 달 메모 |
 | `js/actual.js` | ② 실제 사용 (그 달 실제액을 두 사람이 나눠 입력, 합계는 `actual`에) |
@@ -47,7 +49,8 @@
 | `js/allowance.js` | ⑤ 용돈: 잠금 화면(비밀번호 정하기·열기), 푼 뒤 쓸 곳·금액·메모. 탭을 떠나면 잠김, 내용은 이력에 안 남김 |
 | `js/allowance-lock.js` | 용돈 잠그기·풀기 (Web Crypto: PBKDF2 → AES-GCM, DOM 사용 안 함) |
 | `js/backup.js` | ⑥ 백업 파일 내려받기·불러오기, 이력 보기 |
-| `js/settings.js` | ⚙️ 설정 창: 두 사람 이름, 사람마다 결제 수단 목록, 시작 저금액, 부채(`debt-editor.js`) |
+| `js/settings.js` | ⚙️ 설정 창: 두 사람 이름, 결제 수단(`payment-editor.js`), 시작 저금액, 부채(`debt-editor.js`) |
+| `js/payment-editor.js` | ⚙️ 설정 창의 결제 수단 목록: 한 줄씩 [이름] [☐ 실적] [실적 금액] [✕]. 이름을 바꾸면 이미 고른 칸·실적 설정도 같이 바뀜 |
 | `js/memo.js` | 📝 메모: 쓰고 Enter → 날짜와 함께 포스트잇이 쌓임 (Shift+Enter 줄 바꿈, 한글 조합 중 Enter 무시) |
 | `js/theme.js` | 라이트·다크 전환 |
 | `js/app.js` | 진입점. 상태(데이터, 보고 있는 달, 탭)를 들고 화면을 연결 |
@@ -60,7 +63,7 @@
   version: 10,
   names: { a: "유진", b: "남편" },
   payments: { a: ["신한카드", …], b: ["삼성카드", …] },      // 사람마다 결제 수단 목록 (⚙️ 설정에서 고침)
-  cardGoals: { a: { 신한카드: 30 }, b: {} },                 // 예전 카드 실적 화면의 목표(화면 없음, 보존만)
+  cardGoals: { a: { 신한카드: 30 }, b: {} },                 // 카드 실적: 실적을 체크한 카드만 들어 있음, 값은 한 달 실적 금액(아직 안 적었으면 null)
   items: [{ id, group, name, a, b, joint, amount, paymentA, paymentB, note,   // 예산 (모든 달 공통), paymentA·B는 사람마다 결제 수단 이름
              details: [{ id, name, amount, a, b, paymentA, paymentB }] }], // 세부 항목: 공동이면 amount, 개인이면 a·b, 결제 수단도 따로
   months: { "2026-11": { actual: { [itemId]: 금액 }, actualBy: { [itemId]: { a, b } }, memo, depositA, depositB } },  // memo: 그 달 메모(① 표 위), deposit은 예전 공동통장 기록(화면 없음, 보존만)

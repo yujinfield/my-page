@@ -231,3 +231,69 @@
   color: var(--text-soft);
   font-size: 12px;
 }
+
+/* ① 월 가계부 표 아래 "카드 실적": 카드마다 [이름 · 실적] / 예산 막대 / 실제 막대 */
+.card-goal-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-s);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card-goal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-s);
+  background: var(--surface-soft);
+}
+
+.card-goal-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-s);
+  margin: 0;
+}
+
+.card-goal-head span {
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+}
+
+.card-goal-line {
+  display: grid;
+  grid-template-columns: 7.5em minmax(40px, 1fr); /* 이름표 너비를 정해 둬야 예산·실제 막대 시작이 맞음 */
+  align-items: center;
+  gap: 2px var(--space-s);
+  font-size: var(--font-size-small);
+}
+
+.card-goal-label {
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+
+.card-goal-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+.card-goal-fill {
+  display: block;
+  height: 100%;
+  background: var(--series-plan);
+}
+
+.card-goal-line.actual .card-goal-fill {
+  background: var(--series-1);
+}
+
+.card-goal-result {
+  grid-column: 2;
+  font-variant-numeric: tabular-nums;
+}

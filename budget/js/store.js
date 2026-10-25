@@ -312,7 +312,7 @@ export function loadData() {
 }
 
 // 결제 수단 이름 목록 하나 다듬기: 빈 이름·중복은 빼고, 목록이 없으면 기본 목록
-export function normalizePaymentList(saved) {
+function normalizePaymentList(saved) {
   if (!Array.isArray(saved)) return DEFAULT_PAYMENTS.slice();
   const list = [];
   for (const name of saved) {
@@ -361,8 +361,9 @@ function normalizeCardGoals(saved) {
   for (const person of ['a', 'b']) {
     const list = isObject(saved[person]) ? saved[person] : {};
     for (const card of Object.keys(list)) {
+      // null: 실적을 체크했지만 금액은 아직 안 적음
       const value = toAmount(list[card]);
-      if (value !== null) goals[person][card] = value;
+      if (value !== null || list[card] === null) goals[person][card] = value;
     }
   }
   return goals;
