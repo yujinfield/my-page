@@ -233,9 +233,22 @@
 }
 
 /* ① 월 가계부 표 아래 "카드 실적": 카드마다 [이름 · 실적] / 예산 막대 / 실제 막대 */
-.card-goal-list {
+/* 유진 | 영규 두 열 (휴대폰은 위아래) */
+.card-goal-columns {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-m);
+}
+
+.card-goal-person {
+  margin: 0 0 var(--space-xs);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+}
+
+.card-goal-list {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-s);
   margin: 0;
   padding: 0;
@@ -296,4 +309,45 @@
 .card-goal-result {
   grid-column: 2;
   font-variant-numeric: tabular-nums;
+}
+
+/* 카드마다 "쓰기로 한 것 N개" 펼치는 목록 */
+.card-goal-items summary {
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  cursor: pointer;
+}
+
+.card-goal-items ul {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: var(--space-xs) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-small);
+}
+
+.card-goal-items li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-s);
+  padding: 2px var(--space-s);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+}
+
+.card-goal-items .num {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.card-goal-items p {
+  margin: var(--space-xs) 0 0;
+}
+
+@media (max-width: 768px) {
+  .card-goal-columns {
+    grid-template-columns: 1fr;
+  }
 }
