@@ -1,7 +1,12 @@
 // 금액 계산 (순수 함수, DOM 사용 안 함)
 // 금액 단위는 모두 "만원"이고, 비어 있는 칸은 null 입니다.
 
-export const GROUPS = ['수입', '고정지출', '개인지출', '가족', '생활비', '특별지출', '저축·투자'];
+export const GROUPS = ['수입', '고정지출', '개인지출', '가족', '생활비', '특별비', '저축·투자'];
+
+// 구분마다 색 이름 (css/base.css의 --group-* 변수, 월 가계부 줄 색·원형 그래프 색)
+export const GROUP_COLORS = {
+  수입: 'income', 고정지출: 'fixed', 개인지출: 'personal', 가족: 'family', 생활비: 'living', 특별비: 'special', '저축·투자': 'saving',
+};
 
 const INCOME = '수입';
 const SAVING = '저축·투자';
@@ -267,4 +272,14 @@ export function monthsBetween(fromKey, toKey) {
 export function monthKeyFromText(text) {
   const match = String(text || '').match(/^(\d{4})\D(\d{1,2})/);
   return match ? `${match[1]}-${match[2].padStart(2, '0')}` : null;
+}
+
+// 항목의 결제 수단 (field: paymentA·paymentB). 세부 항목이 있으면 세부 항목들의 결제 수단을 모아서
+// 하나면 그 이름, 여러 개면 "신한카드 외", 없으면 빈 글
+export function itemPayment(item, field) {
+  const details = item.details || [];
+  if (details.length === 0) return item[field];
+  const names = [...new Set(details.map((detail) => detail[field]).filter(Boolean))];
+  if (names.length === 0) return '';
+  return names.length === 1 ? names[0] : `${names[0]} 외`;
 }

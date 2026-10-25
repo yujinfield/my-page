@@ -18,13 +18,14 @@
 
 | 파일 | 역할 |
 | --- | --- |
-| `index.html` | 마크업 뼈대 (달 이동, 탭 5개, 📝 메모 창, ⚙️ 설정 창) |
+| `index.html` | 마크업 뼈대 (달 이동, 탭 6개, 📝 메모 창, ⚙️ 설정 창) |
 | `css/base.css` | CSS 변수(색상·간격·폰트), 리셋, 다크 모드 |
 | `css/layout.css` | 머리말, 탭, 카드, 요약 카드, 버튼, 반응형 |
 | `css/table.css` | 가계부 표, 입력칸, 합계 줄, 휴대폰(768px 이하) 카드 배치 |
 | `css/charts.css` | 원형·막대 그래프, 범례 |
 | `css/actual.css` | ② 실제 사용 목록 |
 | `css/memo.css` | 📝 메모 창, 포스트잇 |
+| `css/allowance.css` | ⑤ 용돈 (사람마다 한 칸, 잠금 화면) |
 | `css/wealth.css` | 저금액·부채 (연간 요약 보기, 설정 창 부채 카드) |
 | `js/calc.js` | 금액 계산·월 계산·연간 합계·큰돈 합계 `eventTotals`·`assetSpendByMonth`·달마다 저금액 `savingsTrack`·지금 저금액 `currentSavings` (순수 함수, DOM 사용 안 함) |
 | `js/forecast.js` | "이대로 가면 N년 뒤 M억" 계산·코멘트, 부채 상환 `debtPayoff`·지금 남은 부채 `debtBalanceNow`·코멘트 `debtLines`, 억 단위 표시 (순수 함수) |
@@ -38,12 +39,14 @@
 | `js/payment-select.js` | ① 월 가계부의 사람별 결제 수단 고르는 칸 |
 | `js/month-memo.js` | ① 월 가계부 표 위 이번 달 메모 |
 | `js/actual.js` | ② 실제 사용 (그 달 실제액 입력) |
-| `js/events.js` | ③ 큰돈 캘린더 |
+| `js/events.js` | ③ 큰돈 캘린더 (분류 고르기·＋ 새 분류) |
 | `js/event-details.js` | ③ 큰돈 캘린더의 세부 항목 줄, "세부 ▾" 버튼·세부 항목 찾기(월 가계부도 같이 씀) |
 | `js/annual.js` | ④ 연간 요약, 목표·예측 |
 | `js/wealth.js` | ④ 연간 요약의 지금 저금액·지금 남은 부채(보기만), 빚 빨리 갚기 코멘트 |
 | `js/debt-editor.js` | ⚙️ 설정 창의 부채 목록 (이름·남은 금액·이율·매달 갚는 돈·상환 기한·중도 상환) |
-| `js/backup.js` | ⑤ 백업 파일 내려받기·불러오기, 이력 보기 |
+| `js/allowance.js` | ⑤ 용돈: 잠금 화면(비밀번호 정하기·열기), 푼 뒤 쓸 곳·금액·메모. 탭을 떠나면 잠김, 내용은 이력에 안 남김 |
+| `js/allowance-lock.js` | 용돈 잠그기·풀기 (Web Crypto: PBKDF2 → AES-GCM, DOM 사용 안 함) |
+| `js/backup.js` | ⑥ 백업 파일 내려받기·불러오기, 이력 보기 |
 | `js/settings.js` | ⚙️ 설정 창: 두 사람 이름, 사람마다 결제 수단 목록, 시작 저금액, 부채(`debt-editor.js`) |
 | `js/memo.js` | 📝 메모: 쓰고 Enter → 날짜와 함께 포스트잇이 쌓임 (Shift+Enter 줄 바꿈, 한글 조합 중 Enter 무시) |
 | `js/theme.js` | 라이트·다크 전환 |
@@ -54,15 +57,17 @@
 ```js
 // localStorage 키: "budget-data" (금액 단위: 만원, 빈칸은 null)
 {
-  version: 8,
+  version: 9,
   names: { a: "유진", b: "남편" },
   payments: { a: ["신한카드", …], b: ["삼성카드", …] },      // 사람마다 결제 수단 목록 (⚙️ 설정에서 고침)
   cardGoals: { a: { 신한카드: 30 }, b: {} },                 // 예전 카드 실적 화면의 목표(화면 없음, 보존만)
   items: [{ id, group, name, a, b, joint, amount, paymentA, paymentB, note,   // 예산 (모든 달 공통), paymentA·B는 사람마다 결제 수단 이름
-             details: [{ id, name, amount, a, b }] }],                     // 세부 항목: 공동이면 amount, 개인이면 a·b
+             details: [{ id, name, amount, a, b, paymentA, paymentB }] }], // 세부 항목: 공동이면 amount, 개인이면 a·b, 결제 수단도 따로
   months: { "2026-11": { actual: { [itemId]: 금액 }, memo, depositA, depositB } },  // memo: 그 달 메모(① 표 위), deposit은 예전 공동통장 기록(화면 없음, 보존만)
-  events: [{ id, month, owner, name, expected, confirmed, source, note, done,   // owner: joint·a·b, done: 완료해서 숨김
+  events: [{ id, month, owner, category, name, expected, confirmed, source, note, done,   // owner: joint·a·b, done: 완료해서 숨김
              details: [{ id, name, expected, confirmed }] }],   // source: special(특별비 적립금)·savings(비상금·저축)·bonus(성과급), details: 세부 항목
+  eventCategories: ["결혼", "여행", …, "기타"],   // 큰돈 분류 목록 ("＋ 새로 추가…"로 늘어남)
+  allowance: { a: { salt, iv, data } | null, b: … },  // 용돈 기록: 사람마다 비밀번호로 잠근 글(base64). 푼 내용 = { months: { "2026-11": { rows: [{ id, name, amount }], memo } } }
   goal: { target, rate },               // 목표(만원), 연 수익률(%)
   wealth: { savings, savingsAsOf,                // 시작 저금액과 그 기준 달(⚙️ 설정에서 적은 달)
             debts: [{ id, name, balance, balanceAsOf, rate, payment, dueMonth, prepay, prepayFee }] },
@@ -73,6 +78,7 @@
 }
 ```
 
+- 구분: 수입·고정지출·개인지출·가족·생활비·특별비·저축·투자. 줄 색은 `GROUP_COLORS`(calc.js) → `--group-*`(base.css).
 - 월 예상액은 저장하지 않고 계산합니다: 공동이면 `amount`, 아니면 `a + b` (세부 항목이 있으면 세부 항목 합).
 - 버전 1 → 2: `goal`·`history`·`lastBackupAt`이 없으면 기본값을 채웁니다 (`normalizeData`). 백업 파일을 불러올 때도 같은 함수를 씁니다.
 - 버전 2 → 3: `payments`가 없으면 두 사람 모두 기본 목록, `paymentA·B`는 빈칸(선택 안 함), `event.done`은 false, `cardGoals`는 빈 목표로 채웁니다.
@@ -81,6 +87,8 @@
 - 버전 5 → 6: `goal.current`(현재 자산)는 `wealth.savings`(저금액)로 옮기고 기준 달은 옮긴 달로 합니다. `memos`는 빈 목록으로 채웁니다.
 - 버전 6 → 7: 달마다 `memo`가 없으면 빈 글로 채웁니다.
 - 버전 7 → 8: 항목의 `details`가 없으면 빈 목록으로 채웁니다.
+- 버전 8 → 9: 구분 "특별지출"은 "특별비"로, 세부 항목 `paymentA·B`는 빈칸, `event.category`는 빈칸, `eventCategories`는 기본 목록, `allowance`는 둘 다 null로 채웁니다.
+- 세부 항목이 있는 항목의 결제 수단은 세부 항목들의 결제 수단을 모아서 보여 줍니다 (`itemPayment`: 하나면 그 이름, 여러 개면 "신한카드 외").
 - 월 가계부 항목에 세부 항목이 있으면 예상액(공동)·두 사람 금액(개인)은 세부 항목 합계입니다 (`planAmount`·`personAmounts`). 처음 세부 항목을 넣을 때 항목에 적힌 금액은 "기존 금액" 세부 항목으로 옮깁니다. 실제액은 ② 실제 사용에서 항목 단위로만 적습니다.
 - 저금액: ⚙️ 설정에 한 번 적은 시작 저금액(기준 달 말)에서 그 뒤 달마다 (자산으로 쌓인 돈 − 자산에서 나간 큰돈)을 더해 계산합니다. 연간 요약 표의 "저금액" 칸, "이대로 가면" 예측, 순자산 모두 지금 저금액 기준입니다.
 - 부채: ⚙️ 설정에 적은 남은 금액(적은 달 기준)에서 매달 갚는 돈만큼 줄어든 걸로 지금 남은 금액을 계산합니다. 코멘트는 상환 기한(못 맞추면 필요한 금액, 만기 일시 상환이면 모아 둘 돈), 중도 상환 불가면 더 갚기 권하지 않음, 수수료가 있으면 수수료와 아끼는 이자를 비교합니다.

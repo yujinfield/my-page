@@ -1,4 +1,4 @@
-// 진입점: 상태를 들고 다섯 화면(월 가계부 / 실제 사용 / 큰돈 캘린더 / 연간 요약 / 백업·이력)을 연결합니다.
+// 진입점: 상태를 들고 여섯 화면(월 가계부 / 실제 사용 / 큰돈 캘린더 / 연간 요약 / 용돈 / 백업·이력)을 연결합니다.
 
 import { loadData, saveData } from './store.js';
 import { monthKeyOf, formatMonth, shiftMonth } from './calc.js';
@@ -7,6 +7,7 @@ import { setupPlan, renderPlan } from './plan.js';
 import { setupActual, renderActual } from './actual.js';
 import { setupEvents, renderEvents } from './events.js';
 import { setupAnnual, renderAnnual } from './annual.js';
+import { setupAllowance, renderAllowance, lockAllowance } from './allowance.js';
 import { setupBackup, renderBackup } from './backup.js';
 import { setupSettings, fillSettings } from './settings.js';
 import { setupMemo } from './memo.js';
@@ -15,7 +16,7 @@ import { setupMemo } from './memo.js';
 const state = { data: loadData(), month: monthKeyOf(new Date()), tab: 'plan' };
 
 const RENDER = {
-  plan: renderPlan, actual: renderActual, events: renderEvents, annual: renderAnnual, backup: renderBackup,
+  plan: renderPlan, actual: renderActual, events: renderEvents, annual: renderAnnual, allowance: renderAllowance, backup: renderBackup,
 };
 
 const saveStatus = document.getElementById('save-status');
@@ -36,6 +37,8 @@ function render() {
 const tabButtons = document.querySelectorAll('[role="tab"]');
 
 function showTab(tab) {
+  // 용돈 화면을 떠나면 다시 잠금 (다른 사람이 이어서 보지 못하게)
+  if (state.tab === 'allowance' && tab !== 'allowance') lockAllowance();
   state.tab = tab;
   for (const button of tabButtons) {
     const selected = button.dataset.tab === tab;
@@ -77,8 +80,10 @@ setupEvents(state, save);
 setupAnnual(state, save, render);
 setupSettings(state, save, render);
 setupMemo(state, save);
+setupAllowance(state, save);
 // 백업 파일을 불러와 데이터가 통째로 바뀌면 설정 칸과 화면을 새로 고침
 setupBackup(state, save, () => {
+  lockAllowance();
   fillSettings();
   render();
 });

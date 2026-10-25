@@ -16,7 +16,9 @@ const THEME_KEY = 'budget-theme';
 // 5 → 6: 저금액·부채(wealth), 메모(memos) 추가. 목표의 "현재 자산"(goal.current)은 저금액(wealth.savings)으로 옮김
 // 6 → 7: 달마다 메모(months[달].memo) 추가 (① 월 가계부 표 위)
 // 7 → 8: 월 가계부 항목의 세부 항목(item.details) 추가
-const DATA_VERSION = 8;
+// 8 → 9: 구분 "특별지출" → "특별비", 세부 항목의 결제 수단(detail.paymentA·B), 큰돈 분류(event.category·eventCategories),
+//        용돈 기록(allowance, 사람마다 비밀번호로 암호화)
+const DATA_VERSION = 9;
 
 // 큰돈이 어디서 나가는지 (연간 요약에서 비상금·저축·성과급으로 낸 것은 자산에서 뺌, calc.js의 assetSpendByMonth)
 export const EVENT_SOURCES = [
@@ -29,6 +31,9 @@ const EVENT_OWNERS = ['joint', 'a', 'b'];
 
 // 결제 수단 기본 목록 (두 사람 모두 이걸로 시작, 설정에서 사람마다 바꿀 수 있음)
 const DEFAULT_PAYMENTS = ['신한카드', '삼성카드', '현금', '계좌이체'];
+
+// 큰돈 분류 기본 목록 (＋ 새로 추가하면 data.eventCategories 끝에 붙음)
+const DEFAULT_EVENT_CATEGORIES = ['결혼', '여행', '미용', '사치', '가전·가구', '차·보험·세금', '경조사', '기타'];
 
 // 이력은 최근 것만 남김 (너무 커지지 않게)
 export const HISTORY_LIMIT = 300;
@@ -61,18 +66,20 @@ export function newId(prefix) {
 }
 
 // 월 가계부 항목의 세부 항목: 공동 항목이면 amount, 개인 항목이면 a·b (예: 식비 → 장보기, 배달)
-export function newItemDetail(name, amount, a, b) {
-  return { id: newId('d'), name, amount: amount ?? null, a: a ?? null, b: b ?? null };
+export function newItemDetail(name, amount, a, b, paymentA, paymentB) {
+  return {
+    id: newId('d'), name, amount: amount ?? null, a: a ?? null, b: b ?? null, paymentA: paymentA || '', paymentB: paymentB || '',
+  };
 }
 
 export function newItem(group, name, joint, note) {
   return { id: newId('i'), group, name, a: null, b: null, joint, amount: null, paymentA: '', paymentB: '', note: note || '', details: [] };
 }
 
-export function newEvent(month, name, source) {
+export function newEvent(month, name, source, category) {
   return {
-    id: newId('e'), month, name, owner: 'joint', expected: null, confirmed: null, source: source || '', note: '', done: false,
-    details: [],
+    id: newId('e'), month, name, owner: 'joint', category: category || '', expected: null, confirmed: null, source: source || '',
+    note: '', done: false, details: [],
   };
 }
 
@@ -97,7 +104,7 @@ function defaultData() {
       newItem('생활비', '식비·배달·장보기', true),
       newItem('생활비', '교통·차량', true),
       newItem('생활비', '관리비·공과금', true),
-      newItem('특별지출', '여행·경조사·가전', true, '따로 적립 추천'),
+      newItem('특별비', '여행·경조사·가전', true, '따로 적립 추천'),
       newItem('저축·투자', '비상금', true),
       newItem('저축·투자', 'ISA·연금·ETF 등', true),
     ],
@@ -108,11 +115,13 @@ function defaultData() {
     history: [],
     lastBackupAt: null,
     events: [
-      newEvent('2026.11', '결혼 준비', 'savings'),
-      newEvent('2027.01', '본식·신혼여행', 'bonus'),
-      newEvent('2027.02', '자동차 보험·세금', 'special'),
-      newEvent('상시', '가전 교체·집 수리', 'special'),
+      newEvent('2026.11', '결혼 준비', 'savings', '결혼'),
+      newEvent('2027.01', '본식·신혼여행', 'bonus', '여행'),
+      newEvent('2027.02', '자동차 보험·세금', 'special', '차·보험·세금'),
+      newEvent('상시', '가전 교체·집 수리', 'special', '가전·가구'),
     ],
+    eventCategories: DEFAULT_EVENT_CATEGORIES.slice(),
+    allowance: { a: null, b: null },
   };
 }
 
@@ -150,13 +159,16 @@ function normalizeItemDetail(saved) {
     amount: toAmount(saved.amount),
     a: toAmount(saved.a),
     b: toAmount(saved.b),
+    paymentA: toText(saved.paymentA),
+    paymentB: toText(saved.paymentB),
   };
 }
 
 function normalizeItem(saved) {
   return {
     id: toText(saved.id) || newId('i'),
-    group: GROUPS.includes(saved.group) ? saved.group : '생활비',
+    // 버전 8까지의 "특별지출"은 "특별비"로
+    group: saved.group === '특별지출' ? '특별비' : GROUPS.includes(saved.group) ? saved.group : '생활비',
     name: toText(saved.name),
     a: toAmount(saved.a),
     b: toAmount(saved.b),
@@ -207,6 +219,7 @@ function normalizeEvent(saved) {
     month: toText(saved.month),
     name: toText(saved.name),
     owner: EVENT_OWNERS.includes(saved.owner) ? saved.owner : 'joint',
+    category: toText(saved.category),
     expected: toAmount(saved.expected),
     confirmed: toAmount(saved.confirmed),
     source,
@@ -301,6 +314,31 @@ export function normalizePaymentList(saved) {
 }
 
 // 사람별 결제 수단 목록 { a: [...], b: [...] } (예전 데이터에 없으면 둘 다 기본 목록)
+// 큰돈 분류 목록. 버전 8까지는 없어서 기본 목록
+function normalizeCategories(saved) {
+  if (!Array.isArray(saved)) return DEFAULT_EVENT_CATEGORIES.slice();
+  const list = [];
+  for (const name of saved) {
+    const text = toText(name).trim();
+    if (text && !list.includes(text)) list.push(text);
+  }
+  return list;
+}
+
+// 용돈 기록: 사람마다 비밀번호로 잠근 글 { salt, iv, data } (모두 base64 글자). 없으면 null
+// 여기서는 모양만 확인하고, 잠그기·풀기는 allowance-lock.js에서 함
+function normalizeAllowance(saved) {
+  const result = { a: null, b: null };
+  if (!isObject(saved)) return result;
+  for (const person of ['a', 'b']) {
+    const box = saved[person];
+    if (isObject(box) && ['salt', 'iv', 'data'].every((key) => typeof box[key] === 'string')) {
+      result[person] = { salt: box.salt, iv: box.iv, data: box.data };
+    }
+  }
+  return result;
+}
+
 function normalizePayments(saved) {
   const payments = isObject(saved) ? saved : {};
   return { a: normalizePaymentList(payments.a), b: normalizePaymentList(payments.b) };
@@ -339,6 +377,8 @@ export function normalizeData(saved) {
     items: Array.isArray(saved.items) ? saved.items.filter(isObject).map(normalizeItem) : [],
     months,
     events: Array.isArray(saved.events) ? saved.events.filter(isObject).map(normalizeEvent) : [],
+    eventCategories: normalizeCategories(saved.eventCategories),
+    allowance: normalizeAllowance(saved.allowance),
     goal: normalizeGoal(saved.goal),
     wealth: normalizeWealth(saved.wealth, saved.goal),
     memos: normalizeMemos(saved.memos),

@@ -1,7 +1,7 @@
 // ① 월 가계부 위쪽: 요약 카드, "이대로 가면?" 코멘트, 그래프 (원형·막대)
 // 표(plan.js)에서 숫자가 바뀔 때마다 renderPlanSummary를 불러 다시 그립니다.
 
-import { formatMoney, formatMonth, diffOf, groupTotals, currentSavings, monthKeyOf } from './calc.js';
+import { formatMoney, formatMonth, diffOf, groupTotals, currentSavings, monthKeyOf, GROUP_COLORS } from './calc.js';
 import { showDiff } from './cells.js';
 import { donutChart, barChart, seriesColor } from './charts.js';
 import { forecastLines } from './forecast.js';
@@ -78,14 +78,12 @@ function renderForecast(totals) {
 
 /* ── 그래프 ── */
 
-// 원형 그래프 조각: 구분마다 색을 고정 (예산·실제 그래프에서 같은 색)
-const SLICES = [
-  ['고정지출', 1], ['개인지출', 2], ['가족', 3], ['생활비', 4], ['특별지출', 5], ['저축·투자', 6],
-];
+// 원형 그래프 조각: 구분마다 색을 고정 (월 가계부 줄 색과 같은 --group-* 색)
+const SLICES = ['고정지출', '개인지출', '가족', '생활비', '특별비', '저축·투자'];
 const LEFT_SLOT = 7; // 남는 돈
 
 function allocation(groups, key, left) {
-  const slices = SLICES.map(([group, slot]) => ({ label: group, value: groups[group][key], color: seriesColor(slot) }));
+  const slices = SLICES.map((group) => ({ label: group, value: groups[group][key], color: `var(--group-${GROUP_COLORS[group]})` }));
   slices.push({ label: '남는 돈', value: left, color: seriesColor(LEFT_SLOT) });
   return slices;
 }
@@ -108,7 +106,7 @@ function renderCharts(totals, actualMap) {
     charts.push(empty);
   }
 
-  const rows = SLICES.map(([group]) => ({
+  const rows = SLICES.map((group) => ({
     label: group,
     values: [groups[group].plan, groups[group].hasActual ? groups[group].actual : null],
   }));
