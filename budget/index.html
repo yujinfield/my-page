@@ -54,11 +54,8 @@
     </div>
 
     <h3 class="settings-section">결제 수단</h3>
-    <label class="settings-field"><span id="payments-a-label">결제 수단</span>
-      <input type="text" id="payments-a" class="text-input text-input-wide" placeholder="신한카드, 현금"></label>
-    <label class="settings-field"><span id="payments-b-label">결제 수단</span>
-      <input type="text" id="payments-b" class="text-input text-input-wide" placeholder="삼성카드, 계좌이체"></label>
-    <p class="hint">쉼표(,)로 나눠 적어요. ① 월 가계부의 결제 칸에서 사람마다 고를 수 있어요.</p>
+    <div id="payment-editor" class="payment-editor"></div>
+    <p class="hint">① 월 가계부의 결제 칸에서 사람마다 고를 수 있어요. 이름을 바꾸면 이미 고른 칸도 같이 바뀌어요. "실적"을 체크하고 한 달 실적 금액을 적으면 ① 월 가계부 표 아래에서 얼마 더 써야 하는지 보여 줘요.</p>
 
     <h3 class="settings-section">시작 저금액</h3>
     <label class="savings-start">지금 저금액 <input type="text" inputmode="decimal" id="savings-input" class="text-input" data-field="savings" placeholder="0"> 만원</label>
@@ -119,6 +116,9 @@
           </table>
         </div>
       </div>
+
+      <!-- 카드 실적: 휴대폰에서도 "수정하기"를 안 눌러도 보이게 입력칸 묶음 바깥에 둠 -->
+      <section id="card-goals" class="card-goals" aria-label="카드 실적"></section>
 
       <h2 class="section-title">그래프</h2>
       <div id="plan-charts" class="charts"></div>
