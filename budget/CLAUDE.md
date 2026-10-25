@@ -26,6 +26,7 @@
 | `css/actual.css` | ② 실제 사용 목록 |
 | `css/memo.css` | 📝 메모 창, 포스트잇 |
 | `css/allowance.css` | ⑤ 용돈 (사람마다 한 칸, 잠금 화면) |
+| `css/flow.css` | ① 두 사람 돈 흐름 (계층도 선, 정산 상자) |
 | `css/wealth.css` | 저금액·부채 (연간 요약 보기, 설정 창 부채 카드) |
 | `js/calc.js` | 금액 계산·월 계산·연간 합계·큰돈 합계 `eventTotals`·`assetSpendByMonth`·달마다 저금액 `savingsTrack`·지금 저금액 `currentSavings` (순수 함수, DOM 사용 안 함) |
 | `js/forecast.js` | "이대로 가면 N년 뒤 M억" 계산·코멘트, 부채 상환 `debtPayoff`·지금 남은 부채 `debtBalanceNow`·코멘트 `debtLines`, 억 단위 표시 (순수 함수) |
@@ -38,6 +39,8 @@
 | `js/item-details.js` | ① 월 가계부 항목의 세부 항목 줄 만들기 |
 | `js/card-goals.js` | ① 월 가계부 표 아래 "카드 실적": 두 사람 2열, 카드마다 실적까지 예산·실제로 얼마 더 써야 하는지, "쓰기로 한 것" 펼치는 목록 |
 | `js/cards.js` | 카드별 쓴 돈 계산 `cardUsage` (순수 함수). 공동 항목은 두 사람 모두 카드를 골랐으면 반씩 |
+| `js/flow.js` | 두 사람 돈 흐름 계산 `moneyFlow` (순수 함수): 사람마다 수입·자기 지출·자기 저축·공동 몫·남는 돈, 누가 누구에게 얼마 보낼지 |
+| `js/money-flow.js` | ① 월 가계부 아래 "두 사람 돈 흐름" 계층도, 공동 몫 나누기(반반/수입 비율), 정산 |
 | `js/payment-select.js` | ① 월 가계부의 사람별 결제 수단 고르는 칸 |
 | `js/month-memo.js` | ① 월 가계부 표 위 이번 달 메모 |
 | `js/actual.js` | ② 실제 사용 (그 달 실제액을 두 사람이 나눠 입력, 합계는 `actual`에) |
@@ -60,9 +63,10 @@
 ```js
 // localStorage 키: "budget-data" (금액 단위: 만원, 빈칸은 null)
 {
-  version: 10,
+  version: 11,
   names: { a: "유진", b: "남편" },
   payments: { a: ["신한카드", …], b: ["삼성카드", …] },      // 사람마다 결제 수단 목록 (⚙️ 설정에서 고침)
+  splitRule: "half",                                       // 공동 몫 나누기: half(반반) / income(수입 비율)
   cardGoals: { a: { 신한카드: 30 }, b: {} },                 // 카드 실적: 실적을 체크한 카드만 들어 있음, 값은 한 달 실적 금액(아직 안 적었으면 null)
   items: [{ id, group, name, a, b, joint, amount, paymentA, paymentB, note,   // 예산 (모든 달 공통), paymentA·B는 사람마다 결제 수단 이름
              details: [{ id, name, amount, a, b, paymentA, paymentB }] }], // 세부 항목: 공동이면 amount, 개인이면 a·b, 결제 수단도 따로
@@ -92,6 +96,8 @@
 - 버전 7 → 8: 항목의 `details`가 없으면 빈 목록으로 채웁니다.
 - 버전 8 → 9: 구분 "특별지출"은 "특별비"로, 세부 항목 `paymentA·B`는 빈칸, `event.category`는 빈칸, `eventCategories`는 기본 목록, `allowance`는 둘 다 null로 채웁니다.
 - 버전 9 → 10: 달마다 `actualBy`가 없으면 빈 것으로 채웁니다. 예전에 합계로만 적은 `actual`은 그대로 두고 ②에서 "예전에 합계로 적은 금액"으로 보여 줍니다. 나눠 적으면 `actual` = a + b.
+- 버전 10 → 11: `splitRule`이 없으면 반반(half).
+- 정산(`moneyFlow`): 공동 지출 중 누가 냈는지 아는 것만 셈. 예산 기준은 ① 결제 칸에서 고른 사람(둘 다 골랐으면 반씩), 실제 기준은 ② 사람마다 적은 금액. 누가 낼지 안 정한 공동 지출·공동 저축은 각자 자기 몫을 낸다고 보고 뺌.
 - 결제 칸은 필요한 곳만 보입니다 (`needsPayment`): 수입·특별비·저축·투자는 없음, 공동 항목은 두 사람 모두, 개인 항목(세부 항목 포함)은 금액을 적은 사람만.
 - 세부 항목이 있는 항목의 결제 수단은 세부 항목들의 결제 수단을 모아서 보여 줍니다 (`itemPayment`: 하나면 그 이름, 여러 개면 "신한카드 외").
 - 월 가계부 항목에 세부 항목이 있으면 예상액(공동)·두 사람 금액(개인)은 세부 항목 합계입니다 (`planAmount`·`personAmounts`). 처음 세부 항목을 넣을 때 항목에 적힌 금액은 "기존 금액" 세부 항목으로 옮깁니다. 실제액은 ② 실제 사용에서 항목 단위로만 적습니다.
