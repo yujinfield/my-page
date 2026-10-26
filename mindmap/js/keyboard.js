@@ -2,9 +2,11 @@
 //
 // 편집 중에는 동작하지 않고, 버튼에 초점이 있을 때 Tab·Enter·Space는 브라우저 기본 동작으로 둡니다.
 
+import { isEditing } from "./edit.js";
+
 export function setupKeyboard(canvas, api) {
   document.addEventListener("keydown", (event) => {
-    if (event.target.isContentEditable) return; // 편집 중에는 브라우저의 글자 되돌리기 사용
+    if (isEditing(event.target)) return; // 편집 중에는 브라우저의 글자 되돌리기 사용
 
     // 따라가기 재생 중: 다음/이전/끝내기만
     if (api.state.play) {

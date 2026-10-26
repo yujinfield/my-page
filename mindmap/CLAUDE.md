@@ -30,7 +30,7 @@
 | `js/sequence.js` | 화살표를 따라가는 순서 (번호·재생에 씀, DOM 사용 안 함) |
 | `js/geometry.js` | 화면↔캔버스 좌표, 확대, 전체 보기, 새 주제 자리, 연결선 모양, 방향키 이웃 찾기 (DOM 사용 안 함) |
 | `js/render.js` | 주제·연결선·라벨 그리기. 그린 뒤 주제 크기를 재서 `getBoxes`로 알려 줌 (숨은 주제는 빠짐) |
-| `js/edit.js` | 주제·라벨을 그 자리에서 고치기 (contenteditable, 한글 조합 중 Enter 무시) |
+| `js/edit.js` | 주제·라벨을 그 자리에서 고치기 (휴대폰 키보드를 위해 `<textarea>`를 겹침, 한글 조합 중 Enter 무시) |
 | `js/canvas.js` | 포인터 조작: 화면 이동, 휠·핀치 확대, 주제 끌기, 손잡이로 화살표 잇기, 두 번 누르기 |
 | `js/history.js` | 실행 취소/다시 실행. 지도를 바꾸기 **직전에** `remember(map)`을 부름 (DOM 사용 안 함) |
 | `js/viewport.js` | 화면 이동·확대 (`setView`, `zoomBy`, `fitAll`, `ensureVisible`) |

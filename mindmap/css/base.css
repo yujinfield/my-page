@@ -126,6 +126,9 @@ body {
 button {
   font: inherit;
   color: inherit;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent; /* 휴대폰에서 누른 뒤 파란 덮개가 남지 않게 */
 }
 
 :focus-visible {

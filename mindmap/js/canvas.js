@@ -4,6 +4,7 @@
 
 import * as geo from "./geometry.js";
 import { subtreeOf } from "./model.js";
+import { isEditing } from "./edit.js";
 
 export function setupCanvas(canvas, api) {
   const pointers = new Map(); // 화면에 닿아 있는 손가락·마우스 { id → 점 }
@@ -21,12 +22,12 @@ export function setupCanvas(canvas, api) {
   }
 
   canvas.addEventListener("pointerdown", (event) => {
-    if (event.target.isContentEditable) return; // 편집 중인 글자 안에서는 커서만 옮김
+    if (isEditing(event.target)) return; // 편집 중인 입력칸 안에서는 커서만 옮김
     if (event.target.closest(".play-bar")) return; // 재생 막대 버튼은 그대로 누르게
     if (event.button !== 0 && event.button !== 1) return;
 
     // 다른 곳을 누르면 하던 편집을 마침
-    if (document.activeElement && document.activeElement.isContentEditable) {
+    if (isEditing(document.activeElement)) {
       document.activeElement.blur();
     }
     event.preventDefault();
@@ -160,7 +161,7 @@ export function setupCanvas(canvas, api) {
 
   // 두 번 누르기: 주제·라벨은 편집, 빈 곳은 새 주제
   canvas.addEventListener("dblclick", (event) => {
-    if (event.target.isContentEditable || api.state.play) return;
+    if (isEditing(event.target) || api.state.play) return;
     const nodeEl = event.target.closest(".node");
     const edgeEl = event.target.closest("[data-edge-id]");
     if (nodeEl) api.editNode(nodeEl.dataset.id);
