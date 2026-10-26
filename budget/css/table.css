@@ -207,6 +207,11 @@ select.cell-input {
   font-weight: 400;
 }
 
+/* 돈 나가는 곳별 합계: 누구별 합계와 선으로 나눔 */
+.events-table tfoot tr.source-first td {
+  border-top: 1px solid var(--line);
+}
+
 /* 월 가계부: 구분마다 색 (왼쪽 띠 + 옅은 배경). 색은 base.css의 --group-* */
 .plan-table tr.g-income { --row-color: var(--group-income); }
 .plan-table tr.g-fixed { --row-color: var(--group-fixed); }

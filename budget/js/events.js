@@ -1,6 +1,6 @@
 // ③ 연간 큰돈 캘린더: 월 가계부에 섞으면 안 되는 큰돈(결혼, 여행, 보험, 성과급 등)
 
-import { parseAmount, formatMoney, eventTotals } from './calc.js';
+import { parseAmount, formatMoney, eventTotals, planAmount } from './calc.js';
 import { newEvent, newDetail, EVENT_SOURCES } from './store.js';
 import {
   areaCell, textInput, amountInput, selectInput, computed, setMoney, deleteButton, renderHeadRow,
@@ -362,6 +362,15 @@ function toggleDone(item) {
   renderEvents();
 }
 
+// 돈 나가는 곳 이름. 특별비 적립금은 ① 월 가계부 특별비 예산(매달 모으는 돈)도 같이
+function sourceLabel(value, text) {
+  if (value !== 'special') return `💰 ${text}`;
+  const monthly = state.data.items
+    .filter((item) => item.group === '특별비')
+    .reduce((sum, item) => sum + (planAmount(item) || 0), 0);
+  return monthly > 0 ? `💰 ${text} (매달 ${formatMoney(monthly)} 적립)` : `💰 ${text}`;
+}
+
 function addEvent() {
   const item = newEvent('', '', '');
   state.data.events.push(item);
@@ -371,19 +380,26 @@ function addEvent() {
   if (input) input.focus();
 }
 
-// 합계 줄 + 누구별 합계 줄 (완료한 것도 포함)
+// 합계 줄 + 누구별 합계 줄 + 돈 나가는 곳별 합계 줄 (완료한 것도 포함)
 function renderFoot() {
   const total = { expected: 0, confirmed: 0 };
   const byOwner = { joint: { expected: 0, confirmed: 0 }, a: { expected: 0, confirmed: 0 }, b: { expected: 0, confirmed: 0 } };
+  const bySource = {}; // special·savings·bonus·'' (안 정함)
+  for (const [value] of SOURCE_OPTIONS) bySource[value] = { expected: 0, confirmed: 0 };
   for (const event of state.data.events) {
     const totals = eventTotals(event);
-    for (const sum of [total, byOwner[event.owner]]) {
+    for (const sum of [total, byOwner[event.owner], bySource[event.source]]) {
       sum.expected += totals.expected || 0;
       sum.confirmed += totals.confirmed || 0;
     }
   }
   const rows = [['합계 (완료 포함)', total, 'total-row']];
   for (const [owner, name] of ownerOptions()) rows.push([name, byOwner[owner], `owner-${owner}`]);
+  // 돈 나가는 곳별: 비상금·특별비 적립금 중 얼마를 쓸지. 안 정한 것은 있을 때만
+  const sourceRows = EVENT_SOURCES.map(([value, text]) => [sourceLabel(value, text), bySource[value], 'source-row']);
+  if (bySource[''].expected || bySource[''].confirmed) sourceRows.push(['돈 나가는 곳 안 정함', bySource[''], 'source-row']);
+  sourceRows[0][2] += ' source-first';
+  rows.push(...sourceRows);
 
   tfoot.replaceChildren(...rows.map(([labelText, sum, className]) => {
     const tr = document.createElement('tr');
