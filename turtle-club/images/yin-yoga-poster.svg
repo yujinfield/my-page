@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" font-family="AppleMyungjo, 'Nanum Myeongjo', serif">
+  <rect width="800" height="1000" fill="#ece7dc"/>
+  <circle cx="400" cy="380" r="220" fill="#d9ceb6"/>
+  <circle cx="400" cy="380" r="150" fill="#4f6b52" opacity="0.15"/>
+  <text x="400" y="140" text-anchor="middle" font-size="28" letter-spacing="8" fill="#4f6b52">TURTLE CLUB</text>
+  <text x="400" y="400" text-anchor="middle" font-size="96" font-weight="700" fill="#2b2f2a">인요가</text>
+  <text x="400" y="470" text-anchor="middle" font-size="34" fill="#4f6b52">ONLINE CLASS</text>
+  <line x1="200" y1="680" x2="600" y2="680" stroke="#c9a96e" stroke-width="2"/>
+  <text x="400" y="750" text-anchor="middle" font-size="34" fill="#2b2f2a">매주 ○요일 저녁 9시</text>
+  <text x="400" y="810" text-anchor="middle" font-size="34" fill="#2b2f2a">월 ○○,○○○원</text>
+  <text x="400" y="920" text-anchor="middle" font-size="22" fill="#646b61">이 이미지를 실제 안내 포스터로 바꿔 주세요</text>
+</svg>
