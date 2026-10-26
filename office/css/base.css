@@ -1,0 +1,125 @@
+/* 색상·간격·폰트 변수, 리셋, 다크 모드 */
+
+:root {
+  --bg: #f6f5f2;
+  --surface: #ffffff;
+  --surface-soft: #efede8;
+  --text: #2a2826;
+  --text-soft: #7a756f;
+  --line: #e4e1db;
+
+  --accent: #dd4c4f;
+  --accent-soft: #fbeaea;
+  --accent-text: #ffffff;
+
+  --bubble-bg: #ffffff;
+  --bubble-text: #2a5ca8;
+  --bubble-edge: #2a2826;
+  --tag-bg: rgba(0, 0, 0, 0.55);
+  --tag-text: #ffffff;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.06);
+
+  --space-xs: 4px;
+  --space-s: 8px;
+  --space-m: 16px;
+  --space-l: 24px;
+
+  --radius-s: 8px;
+  --radius-m: 12px;
+
+  --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --font-size: 16px;
+  --font-size-small: 14px;
+  --font-size-tiny: 12px;
+
+  color-scheme: light;
+}
+
+/* 시스템이 다크 모드이고, 직접 라이트로 고르지 않았을 때 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1c1b1a;
+    --surface: #2a2826;
+    --surface-soft: #33312e;
+    --text: #eeebe6;
+    --text-soft: #a8a29b;
+    --line: #3d3b38;
+
+    --accent: #ec6f71;
+    --accent-soft: #3a2a2a;
+    --accent-text: #1c1b1a;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+
+    color-scheme: dark;
+  }
+}
+
+/* 직접 다크 모드를 골랐을 때 */
+:root[data-theme="dark"] {
+  --bg: #1c1b1a;
+  --surface: #2a2826;
+  --surface-soft: #33312e;
+  --text: #eeebe6;
+  --text-soft: #a8a29b;
+  --line: #3d3b38;
+
+  --accent: #ec6f71;
+  --accent-soft: #3a2a2a;
+  --accent-text: #1c1b1a;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--font-size);
+  line-height: 1.5;
+}
+
+h1, h2, h3, p, ul, ol, dl, dd, blockquote {
+  margin: 0;
+}
+
+ul, ol {
+  padding: 0;
+  list-style: none;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--text-soft);
+}
+
+.small {
+  font-size: var(--font-size-small);
+}
