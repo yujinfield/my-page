@@ -3,173 +3,130 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>거북이 클럽 · Turtle Club</title>
-  <meta name="description" content="느릿하고 여유로운 삶을 지향하는 사람들이 모이는 곳. 독서모임과 인요가를 함께합니다.">
+  <title>거북이 클럽 · 천천히 살아가는 사람들의 월간 클럽</title>
+  <meta name="description" content="책을 읽고 몸을 풀며, 조금 덜 서두르는 사람들의 작은 월간 클럽.">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- 상단 메뉴 -->
   <header class="site-header">
     <div class="container header-inner">
-      <a href="#top" class="logo" aria-label="거북이 클럽 처음으로">
+      <a href="index.html" class="logo" aria-label="거북이 클럽 홈">
         <img src="images/turtle.svg" alt="" class="logo-mark" width="32" height="32">
         <span>거북이 클럽</span>
       </a>
       <button type="button" class="menu-button" id="menu-button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="site-nav">☰</button>
       <nav class="site-nav" id="site-nav" aria-label="주요 메뉴">
-        <a href="#about">소개</a>
-        <a href="#host">모임장</a>
-        <a href="#programs">프로그램</a>
-        <a href="#join" class="nav-cta">신청하기</a>
+        <a href="index.html#about">클럽 소개</a>
+        <a href="yoga.html">온라인 인요가</a>
+        <a href="book.html">독서모임</a>
+        <a href="index.html#this-month" class="nav-cta">이번 달 모임</a>
       </nav>
     </div>
   </header>
 
-  <main id="top">
-    <!-- 첫 화면 -->
+  <main>
+    <!-- 첫 화면: 차분하게, 문장 하나와 사진 한 장 -->
     <section class="hero">
-      <div class="container hero-inner">
-        <p class="eyebrow">Slow Living Community</p>
-        <h1 class="hero-title">천천히 가도<br>괜찮은 곳</h1>
-        <p class="hero-text">거북이 클럽은 느릿하고 여유로운 삶을 지향하는 사람들이 모이는 곳입니다.</p>
+      <div class="container">
+        <h1 class="hero-title">느려도,<br>나만의 속도로.</h1>
+        <p class="hero-text">책을 읽고 몸을 풀며<br>조금 덜 서두르는 사람들의 작은 월간 클럽</p>
         <div class="hero-buttons">
-          <a href="#join" class="button button-primary">모임 신청하기</a>
-          <a href="#programs" class="button button-ghost">프로그램 둘러보기</a>
+          <a href="#this-month" class="button button-primary">이번 달 모임 <span aria-hidden="true">›</span></a>
+          <a href="#about" class="button button-ghost">클럽 소개 <span aria-hidden="true">›</span></a>
         </div>
       </div>
+      <img src="images/hero.jpg" alt="나무 탁자 위에 놓인 책과 찻잔, 요가 매트" class="hero-photo">
     </section>
 
-    <!-- 거북이 클럽 소개 -->
+    <!-- 브랜드 문장 -->
     <section class="section" id="about">
-      <div class="container two-column">
-        <div>
-          <p class="eyebrow">About</p>
-          <h2 class="section-title">거북이 클럽을 소개합니다</h2>
+      <div class="container narrow center">
+        <p class="eyebrow">About</p>
+        <h2 class="section-title">천천히 살아가는 사람들의<br>리듬을 연결하는 곳</h2>
+        <p class="lead">거북이 클럽은 무언가를 완벽히 해내는 곳이 아니에요.
+          한 달에 한 권을 같이 읽고, 일주일에 한 번 몸을 늘리며,
+          각자의 속도를 지키는 사람들이 느슨하게 이어지는 곳이에요.</p>
+      </div>
+    </section>
+
+    <!-- 이번 달의 모임 -->
+    <section class="section section-tinted" id="this-month">
+      <div class="container">
+        <div class="section-head">
+          <h2 class="section-title">이번 달의 모임</h2>
+          <span class="section-line" aria-hidden="true"></span>
         </div>
-        <div class="about-text">
-          <p>빠르게 달리는 하루 속에서 잠시 멈추고, 숨을 고르고, 나에게 맞는 속도를 찾아가는 사람들의 모임입니다.</p>
-          <p>책을 천천히 읽고, 몸을 천천히 늘리고, 이야기를 천천히 나눕니다. 서두르지 않아도 충분히 멀리 갈 수 있다고 믿습니다.</p>
-          <ul class="values">
-            <li><strong>느리게</strong><span>나만의 속도를 존중해요</span></li>
-            <li><strong>깊이</strong><span>하나를 오래 들여다봐요</span></li>
-            <li><strong>함께</strong><span>조용히, 하지만 함께해요</span></li>
-          </ul>
+        <div class="program-grid">
+          <a href="yoga.html" class="program-card">
+            <img src="images/card-yoga.jpg" alt="창가에 깔린 요가 매트와 방석">
+            <div class="program-body">
+              <h3>온라인 인요가</h3>
+              <span class="program-bar bar-accent" aria-hidden="true"></span>
+              <p>호흡을 따라, 조금 더 느리게.<br>지친 몸과 마음을 풀어 주는 한 시간</p>
+              <span class="program-arrow arrow-accent" aria-hidden="true">›</span>
+            </div>
+          </a>
+          <a href="book.html" class="program-card">
+            <img src="images/card-book.jpg" alt="탁자 위에 쌓인 책과 머그잔">
+            <div class="program-body">
+              <h3><span class="js-month">이번 달</span> 독서모임</h3>
+              <span class="program-bar bar-primary" aria-hidden="true"></span>
+              <p>좋은 책을, 좋은 사람들과.<br>깊이 읽고 천천히 나누는 시간</p>
+              <span class="program-arrow arrow-primary" aria-hidden="true">›</span>
+            </div>
+          </a>
         </div>
       </div>
     </section>
 
-    <!-- 모임장 소개 -->
+    <!-- 우리가 하는 일 -->
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <h2 class="section-title">우리가 하는 일</h2>
+          <span class="section-line" aria-hidden="true"></span>
+        </div>
+        <div class="ritual-grid">
+          <div class="ritual">
+            <span class="ritual-icon" aria-hidden="true">📚</span>
+            <h3>독서모임</h3>
+            <p>한 달 한 권,<br>각자의 문장</p>
+          </div>
+          <div class="ritual">
+            <span class="ritual-icon" aria-hidden="true">🧘</span>
+            <h3>온라인 인요가</h3>
+            <p>몸과 마음을<br>천천히 풀기</p>
+          </div>
+          <div class="ritual">
+            <span class="ritual-icon" aria-hidden="true">✉️</span>
+            <h3>느슨한 안부</h3>
+            <p>일상에 남는<br>작은 기록</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 모임장 -->
     <section class="section section-tinted" id="host">
       <div class="container host">
-        <div class="host-photo" aria-hidden="true">
-          <!-- 모임장 사진이 있으면 images/host.jpg로 넣고 아래 img로 바꿔 주세요 -->
-          <!-- <img src="images/host.jpg" alt="모임장 사진"> -->
-          <img src="images/turtle.svg" alt="" width="96" height="96">
-        </div>
+        <img src="images/host.jpg" alt="창가에 앉아 차를 마시는 모임장" class="host-photo">
         <div>
           <p class="eyebrow">Host</p>
-          <h2 class="section-title">모임장 소개</h2>
-          <p class="host-name">○○○ <span>거북이 클럽 모임장</span></p>
-          <!-- TODO: 모임장 소개글로 바꿔 주세요 -->
-          <p>블라 블라. 여기에 모임장의 이야기를 적어 주세요. 어떤 계기로 이 모임을 시작했는지, 어떤 시간을 함께 만들고 싶은지 2~3문장이면 충분합니다.</p>
-          <ul class="host-facts">
-            <li>인요가 지도자 자격 (예시)</li>
-            <li>독서모임 ○년째 운영 (예시)</li>
-          </ul>
+          <h2 class="section-title">모임장 예원입니다.</h2>
+          <p class="lead">조금 느려도, 괜찮은 하루를 함께 만들어요.</p>
+          <!-- TODO: 모임장 소개글 -->
+          <p>읽고, 움직이고, 잠깐 멈추는 시간을 좋아해요.
+            거북이 클럽에서 각자의 속도를 함께 찾아가요.</p>
         </div>
       </div>
     </section>
 
-    <!-- 무엇을 하는 곳? -->
-    <section class="section" id="programs">
-      <div class="container">
-        <p class="eyebrow">Programs</p>
-        <h2 class="section-title">무엇을 하나요?</h2>
-        <div class="cards">
-          <article class="card">
-            <span class="card-icon" aria-hidden="true">📖</span>
-            <h3>독서모임</h3>
-            <p>한 달에 한 권, 같은 책을 천천히 읽고 느낀 점을 나눕니다. 다 못 읽어도 괜찮아요.</p>
-          </article>
-          <article class="card">
-            <span class="card-icon" aria-hidden="true">🧘</span>
-            <h3>인요가</h3>
-            <p>한 자세에 오래 머무르며 몸과 마음의 긴장을 풀어 주는 느린 요가입니다. 온라인으로 함께해요.</p>
-          </article>
-          <article class="card">
-            <span class="card-icon" aria-hidden="true">🍵</span>
-            <h3>그 밖의 모임</h3>
-            <p>산책, 차 마시기, 필사처럼 느린 일상을 함께하는 작은 모임을 수시로 엽니다.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- 신청 방법 -->
-    <section class="section section-tinted" id="join">
-      <div class="container">
-        <p class="eyebrow">How to Join</p>
-        <h2 class="section-title">신청 방법</h2>
-
-        <div class="join-grid">
-          <!-- 인요가 -->
-          <article class="join-card">
-            <div class="join-head">
-              <span class="badge">온라인</span>
-              <h3>인요가 클래스</h3>
-            </div>
-            <!-- 안내 포스터 사진: images/yin-yoga.jpg 로 저장하고 src를 바꾸면 됩니다 -->
-            <button type="button" class="poster-button" id="poster-button" aria-label="포스터 크게 보기">
-              <img src="images/yin-yoga-poster.svg" alt="인요가 온라인 클래스 안내 포스터" class="poster" id="yoga-poster">
-            </button>
-            <dl class="info-list">
-              <div>
-                <dt>가격</dt>
-                <dd>월 ○○,○○○원 (주 1회 · 4회)</dd>
-              </div>
-              <div>
-                <dt>일정</dt>
-                <dd>매주 ○요일 저녁 9시 – 10시</dd>
-              </div>
-              <div>
-                <dt>장소</dt>
-                <dd>Zoom (신청 후 링크 안내)</dd>
-              </div>
-            </dl>
-            <!-- TODO: 신청 링크(구글폼, 카카오톡 오픈채팅 등)로 바꿔 주세요 -->
-            <a href="#" class="button button-primary button-block">인요가 신청하기</a>
-          </article>
-
-          <!-- 독서모임 -->
-          <article class="join-card">
-            <div class="join-head">
-              <span class="badge">이달의 책</span>
-              <h3>독서모임</h3>
-            </div>
-            <div class="book">
-              <div class="book-cover" aria-hidden="true">
-                <span>이달의<br>책</span>
-              </div>
-              <div>
-                <p class="book-month" id="book-month">이번 달</p>
-                <!-- TODO: 이달의 책 정보로 바꿔 주세요 -->
-                <p class="book-title">『책 제목』</p>
-                <p class="book-author">지은이 · 출판사</p>
-                <p class="book-note">이 책을 고른 이유를 한두 줄로 적어 주세요.</p>
-              </div>
-            </div>
-            <dl class="info-list">
-              <div>
-                <dt>모임</dt>
-                <dd>매월 마지막 주 ○요일</dd>
-              </div>
-              <div>
-                <dt>참가비</dt>
-                <dd>○,○○○원</dd>
-              </div>
-            </dl>
-            <a href="#" class="button button-primary button-block">독서모임 신청하기</a>
-          </article>
+    <section class="section">
+      <div class="container center">
+        <h2 class="section-title">이번 달, 천천히 함께해요</h2>
+        <div class="hero-buttons">
+          <a href="yoga.html" class="button button-primary">인요가 보기</a>
+          <a href="book.html" class="button button-primary">독서모임 보기</a>
         </div>
       </div>
     </section>
@@ -177,12 +134,8 @@
 
   <footer class="site-footer">
     <div class="container footer-inner">
-      <p class="logo">
-        <img src="images/turtle.svg" alt="" class="logo-mark" width="28" height="28">
-        <span>거북이 클럽</span>
-      </p>
-      <p class="footer-text">천천히, 그러나 꾸준히.</p>
-      <p class="footer-copy">© <span id="year">2026</span> Turtle Club</p>
+      <p class="footer-quote">조금 느린 하루가<br>더 좋은 삶을 만듭니다.</p>
+      <p class="footer-copy">© <span id="year">2026</span> 거북이 클럽 Turtle Club</p>
     </div>
   </footer>
 

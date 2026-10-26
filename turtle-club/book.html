@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>독서모임 · 거북이 클럽</title>
+  <meta name="description" content="이번 달, 같이 읽을 한 권. 거북이 클럽 독서모임.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo" aria-label="거북이 클럽 홈">
+        <img src="images/turtle.svg" alt="" class="logo-mark" width="32" height="32">
+        <span>거북이 클럽</span>
+      </a>
+      <button type="button" class="menu-button" id="menu-button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="site-nav">☰</button>
+      <nav class="site-nav" id="site-nav" aria-label="주요 메뉴">
+        <a href="index.html#about">클럽 소개</a>
+        <a href="yoga.html">온라인 인요가</a>
+        <a href="book.html" aria-current="page">독서모임</a>
+        <a href="index.html#this-month" class="nav-cta">이번 달 모임</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1. 이달의 책 -->
+    <section class="detail-hero center">
+      <div class="container narrow">
+        <p class="tag tag-line"><span class="js-month">이번 달</span> 독서모임</p>
+        <h1 class="detail-title">이번 달, 같이 읽을 한 권</h1>
+        <p class="lead">조금 느리게, 조금 더 깊이.<br>좋은 질문이 있는 한 권의 책으로 만나요.</p>
+
+        <div class="book-feature">
+          <div class="book-cover" aria-hidden="true">
+            <!-- TODO: 표지 이미지가 있으면 <img>로 교체 -->
+            <span class="book-cover-title">책 제목</span>
+            <span class="book-cover-author">지은이</span>
+          </div>
+          <p class="book-label">이달의 책</p>
+          <!-- TODO: 이달의 책 -->
+          <p class="book-title">『책 제목』</p>
+          <p class="book-author">지은이 지음 · 출판사</p>
+        </div>
+
+        <blockquote class="quote-card">
+          끝까지 읽지 않아도 괜찮아요.<br>읽어온 만큼만 나눠요.
+        </blockquote>
+      </div>
+    </section>
+
+    <div class="container detail-layout">
+      <div class="detail-main">
+        <!-- 2. 이런 이야기를 나눠요 -->
+        <section class="block">
+          <h2 class="block-title">이런 이야기를 나눠요</h2>
+          <p class="note">각자의 속도로, 편안하게.</p>
+          <ul class="chip-list">
+            <li>💬 마음에 남은 문장</li>
+            <li>🌱 나의 요즘</li>
+            <li>⛰️ 천천히 사는 법</li>
+          </ul>
+        </section>
+
+        <section class="block photo-row">
+          <img src="images/book-open.jpg" alt="연필이 놓인 펼친 책">
+          <img src="images/reading.jpg" alt="둥근 탁자에 둘러앉아 책을 읽는 사람들">
+        </section>
+
+        <!-- 모임은 이렇게 -->
+        <section class="block">
+          <h2 class="block-title">모임은 이렇게 진행돼요</h2>
+          <ol class="flow-list">
+            <li><strong>30분</strong><span>차 한 잔과 근황 나누기</span></li>
+            <li><strong>60분</strong><span>마음에 남은 문장과 질문으로 이야기</span></li>
+            <li><strong>30분</strong><span>다음 달 책 고르기, 느슨한 안부</span></li>
+          </ol>
+        </section>
+
+        <!-- 3. 모임장 -->
+        <section class="block host-mini">
+          <img src="images/host.jpg" alt="" class="avatar">
+          <div>
+            <h2 class="block-title">모임장 예원</h2>
+            <!-- TODO: 책을 고른 이유 -->
+            <p>이 책을 고른 이유를 2~3줄로 적어 주세요.</p>
+          </div>
+        </section>
+      </div>
+
+      <!-- 4. 일정·신청 -->
+      <aside class="info-box" aria-labelledby="book-info-title">
+        <h2 id="book-info-title" class="info-title">일정 · 신청</h2>
+        <!-- TODO: 실제 일정 -->
+        <dl class="info-list">
+          <div><dt>날짜</dt><dd>○월 ○일 토요일</dd></div>
+          <div><dt>시간</dt><dd>오후 2:00 (2시간)</dd></div>
+          <div><dt>장소</dt><dd>성수의 작은 책방</dd></div>
+          <div><dt>참가비</dt><dd>10,000원</dd></div>
+          <div><dt>정원</dt><dd>8명</dd></div>
+        </dl>
+        <!-- TODO: 신청 폼 링크 -->
+        <a href="#" class="button button-primary button-block">독서모임 신청하기 <span aria-hidden="true">›</span></a>
+        <p class="info-note">책은 각자 준비해 주세요.</p>
+        <details class="policy">
+          <summary>취소·환불 안내</summary>
+          <!-- TODO: 실제 규정 -->
+          <ul>
+            <li>모임 3일 전까지: 전액 환불</li>
+            <li>모임 2일 전 ~ 당일: 환불 불가</li>
+          </ul>
+        </details>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="footer-quote">조금 느린 하루가<br>더 좋은 삶을 만듭니다.</p>
+      <p class="footer-copy">© <span id="year">2026</span> 거북이 클럽 Turtle Club</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
