@@ -1,0 +1,50 @@
+/* 위 막대, 사무실 화면 │ 오른쪽 패널 배치, 휴대폰 */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-s) var(--space-m);
+}
+
+.app-title {
+  font-size: 20px;
+}
+
+.topbar-buttons {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: var(--space-m);
+  padding: 0 var(--space-m) var(--space-m);
+  align-items: start;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 80px);
+  min-height: 480px;
+  background: var(--surface);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* 휴대폰: 사무실이 위, 패널이 아래 */
+@media (max-width: 768px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0 var(--space-s) var(--space-s);
+    gap: var(--space-s);
+  }
+
+  .panel {
+    height: auto;
+    min-height: 60vh;
+  }
+}

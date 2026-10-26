@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 보안: 이 사이트의 파일만 쓰고, 바깥으로는 OpenAI API에만 연결 -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://api.openai.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>AI 사무실</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/office.css">
+  <link rel="stylesheet" href="css/panels.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="app-title">AI 사무실</h1>
+    <div class="topbar-buttons">
+      <button id="btn-theme" class="icon-button" type="button" aria-label="라이트/다크 모드 전환" title="라이트/다크 모드">◐</button>
+      <button id="btn-settings" class="icon-button" type="button" aria-label="설정 (API 키)" title="설정">⚙︎</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- 사무실 화면: 캔버스 위에 직원 버튼과 말풍선을 올림 -->
+    <section class="office" aria-label="사무실">
+      <canvas id="office-canvas" aria-hidden="true"></canvas>
+      <div id="office-overlay" class="office-overlay"></div>
+    </section>
+
+    <section class="panel">
+      <div class="tabs" role="tablist" aria-label="메뉴">
+        <button type="button" role="tab" data-tab="messenger" aria-controls="messenger-panel">메신저 <span id="messenger-badge" class="badge" hidden>0</span></button>
+        <button type="button" role="tab" data-tab="hire" aria-controls="hire-panel">채용</button>
+        <button type="button" role="tab" data-tab="meeting" aria-controls="meeting-panel">회의실</button>
+      </div>
+
+      <!-- 메신저 -->
+      <div id="messenger-panel" class="tab-panel" role="tabpanel" hidden>
+        <p id="chat-empty" class="muted">아직 직원이 없어요. 채용 탭에서 공고를 올려 보세요.</p>
+        <ul id="chat-list" class="chat-list"></ul>
+        <div id="chat-room" class="chat-room" hidden>
+          <div class="chat-room-header">
+            <button id="chat-back" class="icon-button" type="button" aria-label="대화 목록으로">←</button>
+            <h2 id="chat-title" class="chat-title"></h2>
+            <button id="chat-fire" class="text-button" type="button" aria-label="이 직원 퇴사 처리">퇴사</button>
+          </div>
+          <ul id="chat-log" class="chat-log" aria-live="polite"></ul>
+          <p id="chat-status" class="status" aria-live="polite"></p>
+          <form id="chat-form" class="chat-form">
+            <label class="visually-hidden" for="chat-text">메시지</label>
+            <textarea id="chat-text" name="text" rows="2" placeholder="메시지 또는 시킬 일 (Enter 보내기, Shift+Enter 줄바꿈)"></textarea>
+            <div class="chat-buttons">
+              <button id="chat-task" type="button">업무 지시</button>
+              <button type="submit" class="primary">보내기</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- 채용 -->
+      <div id="hire-panel" class="tab-panel" role="tabpanel" hidden>
+        <form id="hire-form" class="stack-form">
+          <h2 class="section-title">채용 공고</h2>
+          <label>팀
+            <select name="team">
+              <option value="blog">블로그팀</option>
+              <option value="insta">인스타팀</option>
+            </select>
+          </label>
+          <label>모집 직무
+            <input name="role" type="text" required placeholder="예: 블로그 글쓰기 담당">
+          </label>
+          <label>공고 내용
+            <textarea name="details" rows="3" placeholder="예: 맛집 블로그 글을 꾸준히 써 줄 사람. 네이버 검색 노출을 잘 아는 분 우대"></textarea>
+          </label>
+          <button type="submit" class="primary">공고 올리기</button>
+          <p id="hire-status" class="status" aria-live="polite"></p>
+        </form>
+        <div id="applicant-list" class="applicant-list"></div>
+      </div>
+
+      <!-- 회의실 -->
+      <div id="meeting-panel" class="tab-panel" role="tabpanel" hidden>
+        <form id="meeting-form" class="stack-form">
+          <h2 class="section-title">새 회의</h2>
+          <label>참석
+            <select name="team">
+              <option value="blog">블로그팀</option>
+              <option value="insta">인스타팀</option>
+              <option value="all">전체</option>
+            </select>
+          </label>
+          <label>안건
+            <input name="topic" type="text" required placeholder="예: 내 블로그에 부족한 게 뭘까?">
+          </label>
+          <label>참고 자료 (최근 글, 캡션, 통계 등을 붙여 넣기)
+            <textarea name="material" rows="4"></textarea>
+          </label>
+          <button type="submit" class="primary">회의 시작</button>
+          <p id="meeting-status" class="status" aria-live="polite"></p>
+        </form>
+
+        <label class="history-label" hidden>지난 회의
+          <select id="meeting-history"></select>
+        </label>
+
+        <div id="meeting-room" class="meeting-room" hidden>
+          <h2 id="meeting-title" class="section-title"></h2>
+          <ol id="meeting-transcript" class="transcript"></ol>
+          <form id="meeting-comment-form" class="stack-form">
+            <label>대표 한마디 (비워 두면 그냥 계속)
+              <input name="comment" type="text" placeholder="예: 예산은 없으니 무료로 할 수 있는 것만">
+            </label>
+            <div class="row-buttons">
+              <button type="submit">한 번 더 토론</button>
+              <button id="meeting-summary" type="button" class="primary">결론 정리</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <button id="toast" class="toast" type="button" hidden></button>
+
+  <dialog id="settings-dialog" class="dialog">
+    <form id="settings-form" method="dialog" class="stack-form">
+      <h2 class="section-title">설정</h2>
+      <label>OpenAI API 키
+        <input name="apiKey" type="password" autocomplete="off" placeholder="sk-...">
+      </label>
+      <p class="muted small">키는 이 브라우저에만 저장되고 OpenAI에만 보내져요. 공용 컴퓨터에서는 넣지 마세요.</p>
+      <label>모델 이름
+        <input name="model" type="text" autocomplete="off">
+      </label>
+      <label>내 블로그·인스타 소개 (직원들이 참고해요)
+        <textarea name="about" rows="3" placeholder="예: 서울 동네 카페 리뷰 블로그, 인스타는 카페 사진 위주"></textarea>
+      </label>
+      <div class="row-buttons">
+        <button type="submit" value="cancel" formnovalidate>취소</button>
+        <button type="submit" value="save" class="primary">저장</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>
