@@ -3,6 +3,7 @@
 import { askGpt } from "./gpt.js";
 import { TEAMS, chatMessages, taskMessages } from "./employees.js";
 import { makeAvatar } from "./sprites.js";
+import { uplikaTools } from "./uplika.js";
 
 const chatList = document.getElementById("chat-list");
 const chatRoom = document.getElementById("chat-room");
@@ -106,7 +107,9 @@ async function runTask(employee, task) {
   let kind = "report";
   try {
     const history = app.state.data.messages.filter((message) => message !== task);
-    reply = await askGpt(app.state.settings, taskMessages(employee, history, task.text, app.state.settings.about));
+    const tools = await uplikaTools();
+    const messages = taskMessages(employee, history, task.text, app.state.settings.about, Boolean(tools));
+    reply = await askGpt(app.state.settings, messages, { tools });
   } catch (error) {
     reply = `죄송해요 대표님, 일을 끝내지 못했어요. (${error.message})`;
     kind = "chat";

@@ -5,6 +5,7 @@ import { initScene, renderScene, say } from "./scene.js";
 import { initHire, renderHire } from "./hire.js";
 import { initMeeting, renderMeeting } from "./meeting.js";
 import { initMessenger, renderMessenger, openChat, unreadCount, isChatVisible } from "./messenger.js";
+import { startConnect, finishConnect, isUplikaConnected, disconnectUplika } from "./uplika.js";
 
 const state = {
   data: loadData(),
@@ -110,17 +111,53 @@ document.getElementById("btn-settings").addEventListener("click", () => {
   settingsForm.elements.apiKey.value = state.settings.apiKey;
   settingsForm.elements.model.value = state.settings.model;
   settingsForm.elements.about.value = state.settings.about;
+  settingsForm.elements.uplikaUrl.value = state.settings.uplikaUrl;
+  renderUplikaStatus();
   settingsDialog.showModal();
 });
 
-settingsForm.addEventListener("submit", (event) => {
-  if (event.submitter && event.submitter.value === "cancel") return;
+function saveSettingsForm() {
   state.settings = {
     apiKey: settingsForm.elements.apiKey.value.trim(),
     model: settingsForm.elements.model.value.trim() || DEFAULT_MODEL,
     about: settingsForm.elements.about.value.trim(),
+    uplikaUrl: settingsForm.elements.uplikaUrl.value.trim(),
   };
   saveSettings(state.settings);
+}
+
+settingsForm.addEventListener("submit", (event) => {
+  if (event.submitter && event.submitter.value === "cancel") return;
+  saveSettingsForm();
+});
+
+// ---- Uplika 연결 ----
+
+const uplikaStatus = document.getElementById("uplika-status");
+
+function renderUplikaStatus() {
+  const connected = isUplikaConnected();
+  uplikaStatus.textContent = connected ? "✅ 연결됨: 회의와 업무 때 직원들이 조회해요. (발행은 못 해요)" : "연결 안 됨";
+  document.getElementById("btn-uplika-disconnect").hidden = !connected;
+}
+
+document.getElementById("btn-uplika-connect").addEventListener("click", async () => {
+  if (!settingsForm.elements.uplikaUrl.value.trim()) {
+    uplikaStatus.textContent = "서버 주소를 먼저 넣어 주세요.";
+    return;
+  }
+  saveSettingsForm();
+  uplikaStatus.textContent = "Uplika 승인 화면으로 이동하는 중…";
+  try {
+    await startConnect(state.settings.uplikaUrl);
+  } catch (error) {
+    uplikaStatus.textContent = error.message;
+  }
+});
+
+document.getElementById("btn-uplika-disconnect").addEventListener("click", () => {
+  disconnectUplika();
+  renderUplikaStatus();
 });
 
 // ---- 테마 ----
@@ -147,3 +184,9 @@ initMessenger(app);
 showTab(state.data.employees.length ? "messenger" : "hire");
 renderUnread();
 if (!state.settings.apiKey) notify("⚙︎ 설정에서 OpenAI API 키를 넣으면 직원들이 일을 시작해요.");
+// Uplika 승인 화면에서 돌아왔으면 연결 마무리
+finishConnect()
+  .then((message) => {
+    if (message) notify(message);
+  })
+  .catch((error) => notify(error.message));

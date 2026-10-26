@@ -73,7 +73,10 @@ export function parseApplicants(text) {
 
 // ---- 직원 성격 ----
 
-function personaPrompt(employee, about) {
+// Uplika가 연결돼 있을 때 덧붙이는 말
+const LOOKUP_RULE = "Uplika 도구로 대표님의 실제 블로그·인스타 데이터(인사이트, 게시물, 네이버 노출·키워드)를 조회할 수 있습니다. 필요하면 먼저 조회하고, 숫자는 조회한 것만 씁니다.";
+
+function personaPrompt(employee, about, lookup = false) {
   const team = TEAMS[employee.team];
   return [
     `당신은 대표 한 명이 운영하는 작은 회사의 ${team.name} 직원 ${employee.name}(${employee.role})입니다.`,
@@ -84,6 +87,7 @@ function personaPrompt(employee, about) {
     about ? `대표님의 블로그·인스타 소개: ${about}` : "",
     "사용자를 '대표님'이라고 부르고, 한국어로 실제 직원처럼 자연스럽게 말합니다.",
     "실제 조회수·팔로워 수처럼 모르는 정보는 지어내지 말고, 필요하면 대표님께 자료를 달라고 합니다.",
+    lookup ? LOOKUP_RULE : "",
   ].filter(Boolean).join("\n");
 }
 
@@ -108,13 +112,13 @@ export function chatMessages(employee, messages, about) {
   ];
 }
 
-export function taskMessages(employee, messages, task, about) {
+export function taskMessages(employee, messages, task, about, lookup = false) {
   const instructions = [
     "대표님이 업무를 지시했습니다. 결과물을 직접 완성해서 보고하세요.",
     "첫 줄에 한 문장으로 무엇을 했는지 쓰고, 그 아래에 결과물(글 초안, 목록, 아이디어 등)을 씁니다.",
   ].join("\n");
   return [
-    { role: "system", content: `${personaPrompt(employee, about)}\n\n${instructions}` },
+    { role: "system", content: `${personaPrompt(employee, about, lookup)}\n\n${instructions}` },
     ...historyMessages(messages, employee.id, 10),
     { role: "user", content: KIND_PREFIX.task + task },
   ];
@@ -143,18 +147,18 @@ function meetingInfo(meeting, employees) {
   ].join("\n");
 }
 
-export function meetingMessages(employee, meeting, employees, about) {
+export function meetingMessages(employee, meeting, employees, about, lookup = false) {
   const rule = "지금은 회의 중입니다. 다른 사람 말에 동의하거나 반박하면서 구체적인 의견을 2~4문장으로 말하세요. 앞에 이름을 붙이지 말고 할 말만 쓰세요.";
   return [
-    { role: "system", content: `${personaPrompt(employee, about)}\n\n${rule}` },
+    { role: "system", content: `${personaPrompt(employee, about, lookup)}\n\n${rule}` },
     { role: "user", content: `${meetingInfo(meeting, employees)}\n\n${employee.name} 님이 말할 차례입니다.` },
   ];
 }
 
-export function summaryMessages(employee, meeting, employees, about) {
+export function summaryMessages(employee, meeting, employees, about, lookup = false) {
   const rule = "회의를 정리하는 역할입니다. '결론:' 한 줄과 '할 일:' 3가지(담당자 이름 포함)를 짧게 쓰세요.";
   return [
-    { role: "system", content: `${personaPrompt(employee, about)}\n\n${rule}` },
+    { role: "system", content: `${personaPrompt(employee, about, lookup)}\n\n${rule}` },
     { role: "user", content: meetingInfo(meeting, employees) },
   ];
 }
