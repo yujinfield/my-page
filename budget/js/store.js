@@ -22,7 +22,8 @@ const SYNC_KEY = 'budget-sync'; // ☁️ 동기화 설정 (이 기기에만, �
 // 9 → 10: 실제액을 사람마다 나눠 적기(months[달].actualBy). 예전에 합계로 적은 실제액(actual)은 그대로 둠
 // 10 → 11: 공동 몫 나누는 방법(splitRule: half 반반 / income 수입 비율) 추가
 // 11 → 12: 큰돈 분류마다 추천 세부 항목 목록(categoryDetails) 추가
-const DATA_VERSION = 12;
+// 12 → 13: ② 가계부 작성에서 세부 항목마다 실제액(months[달].detailActual) 추가
+const DATA_VERSION = 13;
 
 // 큰돈이 어디서 나가는지 (연간 요약에서 비상금·저축·성과급으로 낸 것은 자산에서 뺌, calc.js의 assetSpendByMonth)
 export const EVENT_SOURCES = [
@@ -201,6 +202,19 @@ function normalizeItem(saved) {
 }
 
 // depositA·depositB는 예전 "공동통장" 화면의 입금 기록. 화면은 없어졌지만 기록이 사라지지 않게 그대로 둠
+// { [id]: { a, b } } 다듬기: 둘 다 빈칸이면 뺌
+function readSplits(saved) {
+  const result = {};
+  if (!saved || typeof saved !== 'object') return result;
+  for (const id of Object.keys(saved)) {
+    const split = saved[id] || {};
+    const a = toAmount(split.a);
+    const b = toAmount(split.b);
+    if (a !== null || b !== null) result[id] = { a, b };
+  }
+  return result;
+}
+
 function normalizeMonth(saved) {
   const month = emptyMonth();
   if (!saved || typeof saved !== 'object') return month;
@@ -210,14 +224,8 @@ function normalizeMonth(saved) {
       if (value !== null) month.actual[id] = value;
     }
   }
-  if (saved.actualBy && typeof saved.actualBy === 'object') {
-    for (const id of Object.keys(saved.actualBy)) {
-      const split = saved.actualBy[id] || {};
-      const a = toAmount(split.a);
-      const b = toAmount(split.b);
-      if (a !== null || b !== null) month.actualBy[id] = { a, b };
-    }
-  }
+  month.actualBy = readSplits(saved.actualBy);
+  month.detailActual = readSplits(saved.detailActual);
   month.depositA = toAmount(saved.depositA);
   month.depositB = toAmount(saved.depositB);
   month.memo = toText(saved.memo);

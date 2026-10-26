@@ -23,7 +23,7 @@
 | `css/layout.css` | 머리말, 탭, 카드, 요약 카드, 버튼, 반응형 |
 | `css/table.css` | 가계부 표, 입력칸, 합계 줄, 휴대폰(768px 이하) 카드 배치 |
 | `css/charts.css` | 원형·막대 그래프, 범례 |
-| `css/actual.css` | ② 실제 사용 목록 |
+| `css/actual.css` | ② 가계부 작성 목록 |
 | `css/memo.css` | 📝 메모 창, 포스트잇 |
 | `css/allowance.css` | ⑤ 용돈 (사람마다 한 칸, 잠금 화면) |
 | `css/flow.css` | ① 두 사람 돈 흐름 (계층도 선, 정산 상자) |
@@ -43,7 +43,7 @@
 | `js/money-flow.js` | ① 월 가계부 아래 "두 사람 돈 흐름" 계층도, 공동 몫 나누기(반반/수입 비율), 정산 |
 | `js/payment-select.js` | ① 월 가계부의 사람별 결제 수단 고르는 칸 |
 | `js/month-memo.js` | ① 월 가계부 표 위 이번 달 메모 |
-| `js/actual.js` | ② 실제 사용 (그 달 실제액을 두 사람이 나눠 입력, 합계는 `actual`에) |
+| `js/actual.js` | ② 가계부 작성 (그 달 실제액을 두 사람이 나눠 입력, 합계는 `actual`에. 세부 항목이 있으면 세부 항목마다 입력) |
 | `js/events.js` | ③ 큰돈 캘린더 (분류 고르기·＋ 새 분류, 분류를 고르면 추천 세부 항목 펼침) |
 | `js/event-details.js` | ③ 큰돈 캘린더의 세부 항목 줄, "✨ 추천 세부 항목" 체크 목록, "세부 ▾" 버튼·세부 항목 찾기(월 가계부도 같이 씀) |
 | `js/annual.js` | ④ 연간 요약, 목표·예측 |
@@ -66,14 +66,14 @@
 ```js
 // localStorage 키: "budget-data" (금액 단위: 만원, 빈칸은 null)
 {
-  version: 12,
+  version: 13,
   names: { a: "유진", b: "남편" },
   payments: { a: ["신한카드", …], b: ["삼성카드", …] },      // 사람마다 결제 수단 목록 (⚙️ 설정에서 고침)
   splitRule: "half",                                       // 공동 몫 나누기: half(반반) / income(수입 비율)
   cardGoals: { a: { 신한카드: 30 }, b: {} },                 // 카드 실적: 실적을 체크한 카드만 들어 있음, 값은 한 달 실적 금액(아직 안 적었으면 null)
   items: [{ id, group, name, a, b, joint, amount, paymentA, paymentB, note,   // 예산 (모든 달 공통), paymentA·B는 사람마다 결제 수단 이름
              details: [{ id, name, amount, a, b, paymentA, paymentB }] }], // 세부 항목: 공동이면 amount, 개인이면 a·b, 결제 수단도 따로
-  months: { "2026-11": { actual: { [itemId]: 금액 }, actualBy: { [itemId]: { a, b } }, memo, depositA, depositB } },  // memo: 그 달 메모(① 표 위), deposit은 예전 공동통장 기록(화면 없음, 보존만)
+  months: { "2026-11": { actual: { [itemId]: 금액 }, actualBy: { [itemId]: { a, b } }, detailActual: { [detailId]: { a, b } }, memo, depositA, depositB } },  // memo: 그 달 메모(① 표 위), deposit은 예전 공동통장 기록(화면 없음, 보존만)
   events: [{ id, month, owner, category, name, expected, confirmed, source, note, done,   // owner: joint·a·b, done: 완료해서 숨김
              details: [{ id, name, expected, confirmed }] }],   // source: special(특별비 적립금)·savings(비상금·저축)·bonus(성과급), details: 세부 항목
   eventCategories: ["결혼", "여행", …, "기타"],   // 큰돈 분류 목록 ("＋ 새로 추가…"로 늘어남)
@@ -101,12 +101,13 @@
 - 버전 8 → 9: 구분 "특별지출"은 "특별비"로, 세부 항목 `paymentA·B`는 빈칸, `event.category`는 빈칸, `eventCategories`는 기본 목록, `allowance`는 둘 다 null로 채웁니다.
 - 버전 9 → 10: 달마다 `actualBy`가 없으면 빈 것으로 채웁니다. 예전에 합계로만 적은 `actual`은 그대로 두고 ②에서 "예전에 합계로 적은 금액"으로 보여 줍니다. 나눠 적으면 `actual` = a + b.
 - 버전 10 → 11: `splitRule`이 없으면 반반(half).
+- 버전 12 → 13: 달마다 `detailActual`이 없으면 빈 것으로 채웁니다. 세부 항목이 있는 항목은 ②에서 세부 항목마다 적고, 그 합이 항목의 `actualBy`·`actual`이 됩니다. 항목 전체로만 적은 예전 기록은 그대로 두고 안내합니다.
 - 버전 11 → 12: `categoryDetails`가 없으면 기본 추천 목록(store.js의 `DEFAULT_CATEGORY_DETAILS`).
 - 큰돈 추천 세부 항목은 금액 없이 이름만 넣습니다. 처음 넣을 때 이벤트에 적힌 금액은 "기존 금액"으로 옮깁니다.
 - 정산(`moneyFlow`): 공동 지출 중 누가 냈는지 아는 것만 셈. 예산 기준은 ① 결제 칸에서 고른 사람(둘 다 골랐으면 반씩), 실제 기준은 ② 사람마다 적은 금액. 누가 낼지 안 정한 공동 지출·공동 저축은 각자 자기 몫을 낸다고 보고 뺌.
 - 결제 칸은 필요한 곳만 보입니다 (`needsPayment`): 수입·특별비·저축·투자는 없음, 공동 항목은 두 사람 모두, 개인 항목(세부 항목 포함)은 금액을 적은 사람만.
 - 세부 항목이 있는 항목의 결제 수단은 세부 항목들의 결제 수단을 모아서 보여 줍니다 (`itemPayment`: 하나면 그 이름, 여러 개면 "신한카드 외").
-- 월 가계부 항목에 세부 항목이 있으면 예상액(공동)·두 사람 금액(개인)은 세부 항목 합계입니다 (`planAmount`·`personAmounts`). 처음 세부 항목을 넣을 때 항목에 적힌 금액은 "기존 금액" 세부 항목으로 옮깁니다. 실제액은 ② 실제 사용에서 항목 단위로만 적습니다.
+- 월 가계부 항목에 세부 항목이 있으면 예상액(공동)·두 사람 금액(개인)은 세부 항목 합계입니다 (`planAmount`·`personAmounts`). 처음 세부 항목을 넣을 때 항목에 적힌 금액은 "기존 금액" 세부 항목으로 옮깁니다. 실제액은 ② 가계부 작성에서 세부 항목마다 적습니다(합이 항목 실제액).
 - 저금액: ⚙️ 설정에 한 번 적은 시작 저금액(기준 달 말)에서 그 뒤 달마다 (자산으로 쌓인 돈 − 자산에서 나간 큰돈)을 더해 계산합니다. 연간 요약 표의 "저금액" 칸, "이대로 가면" 예측, 순자산 모두 지금 저금액 기준입니다.
 - 부채: ⚙️ 설정에 적은 남은 금액(적은 달 기준)에서 매달 갚는 돈만큼 줄어든 걸로 지금 남은 금액을 계산합니다. 코멘트는 상환 기한(못 맞추면 필요한 금액, 만기 일시 상환이면 모아 둘 돈), 중도 상환 불가면 더 갚기 권하지 않음, 수수료가 있으면 수수료와 아끼는 이자를 비교합니다.
 - 연간 요약: 큰돈 중 돈 나가는 곳이 비상금·저축·성과급인 확정 지출은 그 달 자산에서 뺍니다 (성과급은 월 가계부에 수입으로 적어 이미 자산에 쌓였기 때문). 특별비 적립금은 매달 지출로 이미 빠져서 빼지 않습니다.

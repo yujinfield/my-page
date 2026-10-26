@@ -114,7 +114,7 @@ function transferBox(flow, names) {
 
   if (flow.actualTransfer !== null) {
     const actual = document.createElement('p');
-    actual.textContent = `실제 (${formatMonth(state.month)}, ② 실제 사용 기준): ${transferText(flow.actualTransfer, names)}`;
+    actual.textContent = `실제 (${formatMonth(state.month)}, ② 가계부 작성 기준): ${transferText(flow.actualTransfer, names)}`;
     div.append(actual);
   }
   if (flow.joint.unassigned > 0) {

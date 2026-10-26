@@ -4,7 +4,7 @@
 // 공동 몫: 공동 항목(지출·저축)을 나누는 비율 rule — half(반반) / income(수입 비율)
 // 정산: 공동 지출 중 "누가 냈는지" 알 수 있는 것만 셈
 //   예산 기준 — ① 결제 칸에서 고른 사람 (두 사람 다 골랐으면 반씩)
-//   실제 기준 — ② 실제 사용에 사람마다 적은 금액
+//   실제 기준 — ② 가계부 작성에 사람마다 적은 금액
 //   누가 낼지 안 정한 공동 지출과 공동 저축은 각자 자기 몫을 직접 낸다고 보고 정산에서 뺌
 
 import { itemKind, personAmounts, planAmount, monthRecord, needsPayment } from './calc.js';
@@ -95,7 +95,7 @@ function jointPaid(item) {
   return { a: paid.a / total, b: paid.b / total };
 }
 
-// 실제 기준: 이번 달 ② 실제 사용에 공동 지출을 사람마다 적은 금액으로 정산
+// 실제 기준: 이번 달 ② 가계부 작성에 공동 지출을 사람마다 적은 금액으로 정산
 function actualTransfer(data, monthKey, ratio) {
   const record = monthRecord(data, monthKey);
   let transfer = 0;

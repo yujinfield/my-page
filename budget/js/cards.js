@@ -6,7 +6,7 @@ import { needsPayment, monthRecord } from './calc.js';
 const PAYMENT_FIELD = { a: 'paymentA', b: 'paymentB' };
 
 // → { a: { 신한카드: { plan, actual, items } }, b: { … } }
-// plan: 예산(모든 달 같음), actual: monthKey 달에 그 사람이 ② 실제 사용에 적은 금액
+// plan: 예산(모든 달 같음), actual: monthKey 달에 그 사람이 ② 가계부 작성에 적은 금액
 // items: 이 카드로 쓰기로 한 것 [{ name: "식비" 또는 "용돈 › 운동", amount }]
 export function cardUsage(data, monthKey) {
   const usage = { a: {}, b: {} };
@@ -31,7 +31,15 @@ export function cardUsage(data, monthKey) {
         if (box) box.items.push({ name: owner === item ? name : `${name} › ${owner.name || '세부 항목'}`, amount });
       }
 
-      // 실제액은 항목 단위로만 적으니, 쓰는 칸이 모두 같은 카드일 때만 그 카드로 셈
+      // 실제액: ②에서 세부 항목마다 적었으면 세부 항목마다 그 카드로.
+      // 항목 전체로만 적었으면, 쓰는 칸이 모두 같은 카드일 때만 그 카드로 셈
+      if (item.details.length > 0 && used.some((detail) => record.detailActual[detail.id])) {
+        for (const detail of used) {
+          const detailSplit = record.detailActual[detail.id];
+          if (detailSplit) add(person, detail[field], 'actual', detailSplit[person]);
+        }
+        continue;
+      }
       const split = record.actualBy[item.id];
       const cards = new Set(used.map((owner) => owner[field]));
       if (split && cards.size === 1 && !cards.has('')) add(person, [...cards][0], 'actual', split[person]);

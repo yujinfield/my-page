@@ -98,3 +98,78 @@
   min-height: 1.4em;
   font-size: var(--font-size-small);
 }
+
+/* 세부 항목이 있는 항목: 아래에 세부 항목마다 [이름 / 예산] [유진] [남편] */
+.actual-item.has-details {
+  flex-wrap: wrap;
+}
+
+.actual-sum {
+  display: block;
+  width: 6em;
+  padding: var(--space-xs) var(--space-s);
+  color: var(--text);
+  font-size: var(--font-size);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.actual-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  width: 100%;
+  margin: 0;
+  padding: var(--space-xs) 0 0 var(--space-m);
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+
+.actual-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-m);
+}
+
+.actual-detail-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.actual-detail-name {
+  font-size: var(--font-size-small);
+}
+
+.actual-detail .cell-input {
+  width: 6em;
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--font-size); /* 16px 이상: 아이폰에서 누를 때 확대되지 않게 */
+}
+
+@media (max-width: 768px) {
+  .actual-sum {
+    width: 100%;
+  }
+
+  .actual-details {
+    padding-left: var(--space-s);
+  }
+
+  .actual-detail {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .actual-detail .actual-people {
+    width: 100%;
+  }
+
+  .actual-detail .cell-input {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+}
