@@ -23,7 +23,8 @@ const SYNC_KEY = 'budget-sync'; // ☁️ 동기화 설정 (이 기기에만, �
 // 10 → 11: 공동 몫 나누는 방법(splitRule: half 반반 / income 수입 비율) 추가
 // 11 → 12: 큰돈 분류마다 추천 세부 항목 목록(categoryDetails) 추가
 // 12 → 13: ② 가계부 작성에서 세부 항목마다 실제액(months[달].detailActual) 추가
-const DATA_VERSION = 13;
+// 13 → 14: 큰돈 세부 항목의 결제 수단(detail.payment: "a:신한카드"처럼 사람:이름)
+const DATA_VERSION = 14;
 
 // 큰돈이 어디서 나가는지 (연간 요약에서 비상금·저축·성과급으로 낸 것은 자산에서 뺌, calc.js의 assetSpendByMonth)
 export const EVENT_SOURCES = [
@@ -102,8 +103,9 @@ export function newEvent(month, name, source, category) {
 }
 
 // 큰돈 이벤트의 세부 항목 (예: 여행 → 숙소, 비행기, 경비)
+// payment: 누구의 어떤 결제 수단으로 낼지 "a:신한카드" (안 골랐으면 빈 글)
 export function newDetail(name, expected, confirmed) {
-  return { id: newId('d'), name, expected: expected ?? null, confirmed: confirmed ?? null };
+  return { id: newId('d'), name, expected: expected ?? null, confirmed: confirmed ?? null, payment: '' };
 }
 
 // 처음 열었을 때 보여 줄 기본 표 (금액은 비워 둠)
@@ -270,6 +272,7 @@ function normalizeDetail(saved) {
     name: toText(saved.name),
     expected: toAmount(saved.expected),
     confirmed: toAmount(saved.confirmed),
+    payment: /^[ab]:./.test(saved.payment) ? saved.payment : '',
   };
 }
 

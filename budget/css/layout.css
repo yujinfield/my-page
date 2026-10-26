@@ -508,13 +508,31 @@ summary:focus-visible {
 
 .suggest-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 32px;
+  grid-template-columns: minmax(0, 1fr) 28px;
   align-items: center;
   gap: var(--space-xs);
 }
 
+/* 펼친 토글 안은 2px 작게 (휴대폰 입력칸은 확대 방지로 16px) */
 .suggest-row .cell-input {
+  padding: 2px 6px;
   background: var(--surface);
+  font-size: 14px;
+}
+
+.suggest-row .delete-button {
+  width: 28px;
+  height: 28px;
+}
+
+.suggest-category .payment-add {
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .suggest-row .cell-input {
+    font-size: var(--font-size);
+  }
 }
 
 /* ⚙️ 설정: ☁️ 같이 쓰기 */

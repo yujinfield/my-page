@@ -66,7 +66,7 @@
 ```js
 // localStorage 키: "budget-data" (금액 단위: 만원, 빈칸은 null)
 {
-  version: 13,
+  version: 14,
   names: { a: "유진", b: "남편" },
   payments: { a: ["신한카드", …], b: ["삼성카드", …] },      // 사람마다 결제 수단 목록 (⚙️ 설정에서 고침)
   splitRule: "half",                                       // 공동 몫 나누기: half(반반) / income(수입 비율)
@@ -75,7 +75,7 @@
              details: [{ id, name, amount, a, b, paymentA, paymentB }] }], // 세부 항목: 공동이면 amount, 개인이면 a·b, 결제 수단도 따로
   months: { "2026-11": { actual: { [itemId]: 금액 }, actualBy: { [itemId]: { a, b } }, detailActual: { [detailId]: { a, b } }, memo, depositA, depositB } },  // memo: 그 달 메모(① 표 위), deposit은 예전 공동통장 기록(화면 없음, 보존만)
   events: [{ id, month, owner, category, name, expected, confirmed, source, note, done,   // owner: joint·a·b, done: 완료해서 숨김
-             details: [{ id, name, expected, confirmed }] }],   // source: special(특별비 적립금)·savings(비상금·저축)·bonus(성과급), details: 세부 항목
+             details: [{ id, name, expected, confirmed, payment }] }],   // payment: 세부 항목 결제 수단 "a:신한카드"(사람:이름), source: special(특별비 적립금)·savings(비상금·저축)·bonus(성과급), details: 세부 항목
   eventCategories: ["결혼", "여행", …, "기타"],   // 큰돈 분류 목록 ("＋ 새로 추가…"로 늘어남)
   categoryDetails: { 결혼: ["예식장 대관·식대", …], … },   // 분류마다 추천 세부 항목 이름 (⚙️ 설정에서 고침)
   allowance: { a: { salt, iv, data } | null, b: … },  // 용돈 기록: 사람마다 비밀번호로 잠근 글(base64). 푼 내용 = { months: { "2026-11": { rows: [{ id, name, amount }], memo } } }
@@ -103,6 +103,9 @@
 - 버전 10 → 11: `splitRule`이 없으면 반반(half).
 - 버전 11 → 12: `categoryDetails`가 없으면 기본 추천 목록(store.js의 `DEFAULT_CATEGORY_DETAILS`).
 - 버전 12 → 13: 달마다 `detailActual`이 없으면 빈 것으로 채웁니다. 세부 항목이 있는 항목은 ②에서 세부 항목마다 적고, 그 합이 항목의 `actualBy`·`actual`이 됩니다. 항목 전체로만 적은 예전 기록은 그대로 두고 안내합니다.
+- 버전 13 → 14: 큰돈 세부 항목의 `payment`가 없으면 빈 글로 채웁니다. 결제 칸 목록은 이벤트 주인이 공통이면 두 사람 것, 한 사람이면 그 사람 것.
+- 펼친 토글 안(세부 항목·추천 목록·쓰기로 한 것)은 글자를 2px 작게 씁니다. 단 휴대폰 입력칸은 16px 그대로(아이폰 확대 방지).
+- 두 사람 금액 칸의 흐린 글자(이름)는 둘 다 비었을 때만 보여 주고, 한 사람이라도 적었으면 빈칸입니다.
 - 큰돈 추천 세부 항목은 금액 없이 이름만 넣습니다. 처음 넣을 때 이벤트에 적힌 금액은 "기존 금액"으로 옮깁니다.
 - 정산(`moneyFlow`): 공동 지출 중 누가 냈는지 아는 것만 셈. 예산 기준은 ① 결제 칸에서 고른 사람(둘 다 골랐으면 반씩), 실제 기준은 ② 사람마다 적은 금액. 누가 낼지 안 정한 공동 지출·공동 저축은 각자 자기 몫을 낸다고 보고 뺌.
 - 결제 칸은 필요한 곳만 보입니다 (`needsPayment`): 수입·특별비·저축·투자는 없음, 공동 항목은 두 사람 모두, 개인 항목(세부 항목 포함)은 금액을 적은 사람만.

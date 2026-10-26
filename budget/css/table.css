@@ -274,18 +274,18 @@ select.cell-input {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  max-width: 560px;
+  max-width: 640px;
   margin: 0 0 var(--space-xs);
   padding: var(--space-s);
   border-left: 3px solid var(--highlight);
   list-style: none;
 }
 
-/* [이름] [예상] [확정] [✕] */
+/* 큰돈: [이름] [예상] [확정] [결제] [✕] */
 .detail-item {
   display: grid;
   /* 너비는 rem: 머리줄은 글자가 작아서 em이면 칸이 좁아져 아래 줄과 어긋남 */
-  grid-template-columns: minmax(0, 1fr) 6rem 6rem 32px;
+  grid-template-columns: minmax(0, 1fr) 5.25rem 5.25rem 8rem 28px;
   align-items: center;
   gap: var(--space-xs);
 }
@@ -297,11 +297,11 @@ select.cell-input {
 }
 
 .item-details .detail-item {
-  grid-template-columns: minmax(0, 1fr) 5.5rem 5.5rem 7rem 7rem 32px;
+  grid-template-columns: minmax(0, 1fr) 4.8rem 4.8rem 6.1rem 6.1rem 28px;
 }
 
 .item-details.detail-joint .detail-item {
-  grid-template-columns: minmax(0, 1fr) 6rem 7rem 7rem 32px;
+  grid-template-columns: minmax(0, 1fr) 5.25rem 6.1rem 6.1rem 28px;
 }
 
 .item-details .is-blank {
@@ -330,7 +330,7 @@ select.cell-input {
 
 .detail-head {
   color: var(--text-soft);
-  font-size: 12px;
+  font-size: 10px;
 }
 
 .detail-head span:nth-child(2),
@@ -340,8 +340,29 @@ select.cell-input {
 }
 
 .detail-add {
-  padding: var(--space-xs) var(--space-m);
-  font-size: var(--font-size-small);
+  padding: 2px var(--space-s);
+  font-size: 12px;
+}
+
+/* 펼친 토글 안(세부 항목·추천 목록)은 글자를 2px 작게, 칸·버튼도 그만큼 작게 */
+.event-details {
+  font-size: 14px;
+}
+
+.event-details .cell-input {
+  padding: 2px 6px;
+  font-size: 14px;
+}
+
+.event-details .delete-button {
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+}
+
+.event-details .detail-head span:nth-child(2),
+.event-details .detail-head span:nth-child(3) {
+  padding-right: 6px;
 }
 
 /* 표 바로 위 오른쪽 ＋ (항목 추가) */
@@ -648,6 +669,28 @@ select.cell-input {
     min-width: 0;
   }
 
+  /* 큰돈 세부 항목: [이름 ✕] / [예상] [확정] / [결제] 세 줄로 */
+  .events-table .event-details .detail-item {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 28px;
+    padding: var(--space-xs) 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .events-table .event-details .detail-head {
+    display: none;
+  }
+
+  .events-table .d-name { grid-column: 1 / 3; grid-row: 1; }
+  .events-table .d-delete { grid-column: 3; grid-row: 1; }
+  .events-table .d-expected { grid-column: 1; grid-row: 2; }
+  .events-table .d-confirmed { grid-column: 2; grid-row: 2; }
+  .events-table .d-pay { grid-column: 1 / 3; grid-row: 3; width: 100%; min-width: 0; }
+
+  /* 휴대폰 입력칸은 16px 그대로 (아이폰은 16px보다 작은 칸을 누르면 화면이 확대됨) */
+  .event-details .cell-input {
+    font-size: var(--font-size);
+  }
+
   /* 세부 항목 줄: 바로 위 이벤트 카드에 붙여서 보여 줌 */
   .card-table tbody tr.detail-row {
     display: block;
@@ -704,7 +747,7 @@ select.cell-input {
   display: flex;
   align-items: center;
   gap: 2px;
-  font-size: var(--font-size-small);
+  font-size: 12px;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -715,4 +758,10 @@ select.cell-input {
 
 .suggest-panel .hint {
   margin: 0;
+  font-size: 12px;
+}
+
+.suggest-panel .button {
+  padding: var(--space-xs) var(--space-m);
+  font-size: 12px;
 }

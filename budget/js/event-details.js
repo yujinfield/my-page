@@ -16,10 +16,11 @@ export function detailToggle(event, open, short) {
   return button;
 }
 
-// 이벤트 바로 아래 줄: 세부 항목 목록 [이름] [예상] [확정] [✕] + "＋ 세부 항목 추가"
-// suggestions: 이 이벤트 분류의 추천 세부 항목 이름들 (큰돈 캘린더만, 있으면 "✨ 추천 세부 항목" 버튼)
+// 이벤트 바로 아래 줄: 세부 항목 목록 [이름] [예상] [확정] [결제] [✕] + "＋ 세부 항목 추가"
+// data: 전체 데이터 (두 사람 이름·결제 수단 목록)
+// suggestions: 이 이벤트 분류의 추천 세부 항목 이름들 (있으면 "✨ 추천 세부 항목" 버튼)
 // suggestOpen: 추천 목록(체크칸)을 펼쳤는지
-export function detailRow(event, columnCount, suggestions = [], suggestOpen = false) {
+export function detailRow(event, data, columnCount, suggestions = [], suggestOpen = false) {
   const tr = document.createElement('tr');
   tr.dataset.id = event.id;
   tr.className = event.done ? 'detail-row is-done' : 'detail-row';
@@ -31,7 +32,7 @@ export function detailRow(event, columnCount, suggestions = [], suggestOpen = fa
   const head = document.createElement('li');
   head.className = 'detail-item detail-head';
   head.setAttribute('aria-hidden', 'true');
-  for (const text of ['세부 항목', '예상', '확정', '']) {
+  for (const text of ['세부 항목', '예상', '확정', '결제', '']) {
     const span = document.createElement('span');
     span.textContent = text;
     head.append(span);
@@ -44,11 +45,17 @@ export function detailRow(event, columnCount, suggestions = [], suggestOpen = fa
     item.dataset.detailId = detail.id;
     const remove = deleteButton('세부 항목 지우기');
     remove.dataset.action = 'detail-delete';
+    // 칸마다 클래스(d-…): 휴대폰에서 줄을 나눠 배치할 때 씀 (table.css)
+    const cell = (element, className) => {
+      element.classList.add(className);
+      return element;
+    };
     item.append(
-      textInput('detailName', detail.name, '세부 항목 이름', '예: 숙소'),
-      amountInput('detailExpected', detail.expected, `${detail.name || '세부 항목'} 예상`, '예상'),
-      amountInput('detailConfirmed', detail.confirmed, `${detail.name || '세부 항목'} 확정`, '확정'),
-      remove,
+      cell(textInput('detailName', detail.name, '세부 항목 이름', '예: 숙소'), 'd-name'),
+      cell(amountInput('detailExpected', detail.expected, `${detail.name || '세부 항목'} 예상`, '예상'), 'd-expected'),
+      cell(amountInput('detailConfirmed', detail.confirmed, `${detail.name || '세부 항목'} 확정`, '확정'), 'd-confirmed'),
+      cell(eventPaymentSelect(event, detail, data), 'd-pay'),
+      cell(remove, 'd-delete'),
     );
     list.append(item);
   }
@@ -108,6 +115,54 @@ function suggestPanel(event, suggestions) {
   hint.textContent = '금액은 비워서 넣어요. 추천 목록은 ⚙️ 설정에서 고칠 수 있어요.';
   panel.append(list, addSelected, hint);
   return panel;
+}
+
+// 큰돈 세부 항목의 결제 수단 고르는 칸: 이벤트 주인이 공통이면 두 사람 것 모두, 한 사람이면 그 사람 것만
+// 값은 "a:신한카드"처럼 사람:이름 (사람마다 같은 카드 이름이 있어도 구분되게)
+function eventPaymentSelect(event, detail, data) {
+  const select = document.createElement('select');
+  select.className = 'cell-input';
+  select.dataset.field = 'detailPayment';
+  select.setAttribute('aria-label', `${detail.name || '세부 항목'} 결제 수단`);
+  const blank = document.createElement('option');
+  blank.value = '';
+  blank.textContent = '결제 —';
+  select.append(blank);
+
+  const people = event.owner === 'joint' ? ['a', 'b'] : [event.owner];
+  // 이벤트 주인을 바꿨어도 이미 고른 다른 사람 카드는 목록에 남김
+  const [savedPerson] = splitPayment(detail.payment);
+  if (savedPerson && !people.includes(savedPerson)) people.push(savedPerson);
+  const showNames = people.length > 1;
+  for (const person of people) {
+    const group = document.createElement('optgroup');
+    group.label = data.names[person];
+    const names = data.payments[person].slice();
+    // 설정에서 지웠어도 이미 고른 값은 보여 줌
+    const [, savedName] = splitPayment(detail.payment);
+    if (savedPerson === person && savedName && !names.includes(savedName)) names.push(savedName);
+    for (const name of names) {
+      const option = document.createElement('option');
+      option.value = `${person}:${name}`;
+      option.textContent = showNames ? `${data.names[person]} ${name}` : name;
+      group.append(option);
+    }
+    select.append(group);
+  }
+  select.value = detail.payment;
+  return select;
+}
+
+// "a:신한카드" → ["a", "신한카드"]
+export function splitPayment(value) {
+  const index = (value || '').indexOf(':');
+  return index < 0 ? ['', ''] : [value.slice(0, index), value.slice(index + 1)];
+}
+
+// 이력·보기용 글자: "a:신한카드" → "유진 신한카드"
+export function paymentText(value, names) {
+  const [person, name] = splitPayment(value);
+  return person ? `${names[person]} ${name}` : '';
 }
 
 export function findDetail(item, element) {
