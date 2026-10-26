@@ -10,7 +10,7 @@ import {
 } from './cells.js';
 import { renderPlanSummary } from './plan-summary.js';
 import { detailToggle, findDetail } from './event-details.js';
-import { itemDetailRow } from './item-details.js';
+import { itemDetailRow, refreshPairPlaceholders } from './item-details.js';
 import { paymentSelect, PAYMENT_FIELDS, ADD_PAYMENT } from './payment-select.js';
 import { setupMonthMemo, renderMonthMemo } from './month-memo.js';
 import { renderCardGoals } from './card-goals.js';
@@ -202,6 +202,7 @@ function handleInput(event) {
   if (detail) {
     const key = DETAIL_FIELDS[field];
     detail[key] = key === 'name' ? event.target.value : parseAmount(event.target.value);
+    if (key === 'a' || key === 'b') refreshPairPlaceholders(event.target.closest('[data-detail-id]'), detail, state.data.names);
     save();
     refreshNumbers();
     return;

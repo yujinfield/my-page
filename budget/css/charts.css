@@ -325,7 +325,7 @@
   margin: var(--space-xs) 0 0;
   padding: 0;
   list-style: none;
-  font-size: var(--font-size-small);
+  font-size: 12px; /* 펼친 토글 안은 2px 작게 */
 }
 
 .card-goal-items li {
@@ -344,6 +344,7 @@
 
 .card-goal-items p {
   margin: var(--space-xs) 0 0;
+  font-size: 12px;
 }
 
 @media (max-width: 768px) {

@@ -50,10 +50,11 @@ export function itemDetailRow(item, data, columnCount) {
       row.append(cell(amountInput('detailAmount', detail.amount, `${label} 금액`, '금액'), 'd-amount'));
     } else {
       row.append(
-        cell(amountInput('detailA', detail.a, `${label} ${names.a} 금액`, names.a), 'd-a'),
-        cell(amountInput('detailB', detail.b, `${label} ${names.b} 금액`, names.b), 'd-b'),
+        cell(amountInput('detailA', detail.a, `${label} ${names.a} 금액`, ''), 'd-a'),
+        cell(amountInput('detailB', detail.b, `${label} ${names.b} 금액`, ''), 'd-b'),
       );
     }
+    if (!item.joint) refreshPairPlaceholders(row, detail, names);
     row.append(
       cell(paymentSelect(data, detail, 'paymentA', `${names.a} —`), 'd-pay-a'),
       cell(paymentSelect(data, detail, 'paymentB', `${names.b} —`), 'd-pay-b'),
@@ -71,4 +72,12 @@ export function itemDetailRow(item, data, columnCount) {
   td.append(list, add);
   tr.append(td);
   return tr;
+}
+
+// 두 사람 칸의 흐린 글자: 둘 다 비었을 때만 이름("유진"/"영규")을 보여 주고,
+// 한 사람이라도 적었으면 빈 칸은 그냥 빈칸 (안 쓴 사람 칸에 이름이 남아 헷갈리지 않게)
+export function refreshPairPlaceholders(line, detail, names) {
+  const empty = detail.a === null && detail.b === null;
+  line.querySelector('[data-field="detailA"]').placeholder = empty ? names.a : '';
+  line.querySelector('[data-field="detailB"]').placeholder = empty ? names.b : '';
 }

@@ -6,12 +6,12 @@ import {
   areaCell, textInput, amountInput, selectInput, computed, setMoney, deleteButton, renderHeadRow,
 } from './cells.js';
 import { addHistory, watchEdits, shown } from './history.js';
-import { detailToggle, detailRow, findDetail } from './event-details.js';
+import { detailToggle, detailRow, findDetail, paymentText } from './event-details.js';
 
 const LABELS = {
   month: '월', owner: '누구', category: '분류', name: '이벤트', expected: '예상 지출', confirmed: '확정 지출', source: '돈 나가는 곳',
   note: '잔액/비고',
-  detailName: '이름', detailExpected: '예상', detailConfirmed: '확정',
+  detailName: '이름', detailExpected: '예상', detailConfirmed: '확정', detailPayment: '결제',
 };
 const COLUMN_COUNT = 10; // 표 칸 수 (세부 항목 줄이 이만큼 가로로 걸침)
 const SOURCE_OPTIONS = [['', '—'], ...EVENT_SOURCES];
@@ -94,7 +94,8 @@ function describeEdit(input, before, after) {
   const detail = findDetail(item, input);
   if (detail) {
     const detailName = (input.dataset.field === 'detailName' ? before : detail.name) || '세부 항목';
-    return `[큰돈 캘린더] ${eventName} › ${detailName} ${LABELS[input.dataset.field]}: ${shown(before)} → ${shown(after)}`;
+    const show = (value) => shown(input.dataset.field === 'detailPayment' ? paymentText(value, state.data.names) : value);
+    return `[큰돈 캘린더] ${eventName} › ${detailName} ${LABELS[input.dataset.field]}: ${show(before)} → ${show(after)}`;
   }
   const field = input.dataset.field;
   return `[큰돈 캘린더] ${eventName} ${LABELS[field]}: ${shown(optionText(field, before))} → ${shown(optionText(field, after))}`;
@@ -108,7 +109,7 @@ export function renderEvents() {
   const rows = [];
   for (const event of sortByMonth(visible)) {
     rows.push(eventRow(event));
-    if (openIds.has(event.id)) rows.push(detailRow(event, COLUMN_COUNT, suggestionsFor(event), suggestIds.has(event.id)));
+    if (openIds.has(event.id)) rows.push(detailRow(event, state.data, COLUMN_COUNT, suggestionsFor(event), suggestIds.has(event.id)));
   }
   tbody.replaceChildren(...rows);
   renderFoot();
@@ -196,6 +197,7 @@ function handleInput(event) {
     if (field === 'detailName') detail.name = event.target.value;
     if (field === 'detailExpected') detail.expected = parseAmount(event.target.value);
     if (field === 'detailConfirmed') detail.confirmed = parseAmount(event.target.value);
+    if (field === 'detailPayment') detail.payment = event.target.value;
     save();
     refreshTotals(tbody.querySelector(`tr[data-id="${item.id}"]:not(.detail-row)`), item);
     renderFoot();
@@ -213,6 +215,13 @@ function handleInput(event) {
     const row = event.target.closest('tr');
     row.classList.remove('owner-joint', 'owner-a', 'owner-b');
     row.classList.add(`owner-${item.owner}`);
+    // 세부 항목을 펼쳐 놨으면 결제 칸 목록(누구 카드인지)도 바꿔야 해서 다시 그림 (이력이 먼저 남도록 다음 차례에)
+    if (openIds.has(item.id)) {
+      setTimeout(() => {
+        renderEvents();
+        focusIn(item.id, '[data-field="owner"]');
+      }, 0);
+    }
   }
   save();
   renderFoot();

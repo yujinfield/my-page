@@ -172,14 +172,26 @@ function detailList(item, record) {
     const inputs = document.createElement('div');
     inputs.className = 'actual-people';
     for (const [field, person] of Object.entries(DETAIL_FIELDS)) {
-      const placeholder = !item.joint && detail[person] ? `예산 ${formatMoney(detail[person])}` : names[person];
       inputs.append(amountInput(field, split ? split[person] : null,
-        `${item.name || '이름 없는 항목'} ${detail.name || '세부 항목'} ${names[person]} 실제 금액`, placeholder));
+        `${item.name || '이름 없는 항목'} ${detail.name || '세부 항목'} ${names[person]} 실제 금액`, ''));
     }
     line.append(info, inputs);
+    refreshDetailPlaceholders(line, item, detail, split);
     list.append(line);
   }
   return list;
+}
+
+// 세부 항목 칸의 흐린 글자: 개인 항목은 그 사람 세부 예산("예산 30"),
+// 아니면 두 칸 다 비었을 때만 이름. 한 사람이라도 적었으면 안 적은 칸은 그냥 빈칸
+function refreshDetailPlaceholders(line, item, detail, split) {
+  const hasBudget = !item.joint && (detail.a || detail.b);
+  const empty = !hasBudget && (!split || (split.a === null && split.b === null));
+  for (const [field, person] of Object.entries(DETAIL_FIELDS)) {
+    const input = line.querySelector(`[data-field="${field}"]`);
+    if (!item.joint && detail[person]) input.placeholder = `예산 ${formatMoney(detail[person])}`;
+    else input.placeholder = empty ? state.data.names[person] : '';
+  }
 }
 
 // 세부 항목들에 적은 실제액의 합 → { a, b } (아무것도 안 적었으면 null)
@@ -209,6 +221,7 @@ function handleInput(event) {
     detailSplit[DETAIL_FIELDS[field]] = parseAmount(event.target.value);
     if (detailSplit.a === null && detailSplit.b === null) delete record.detailActual[detail.id];
     else record.detailActual[detail.id] = detailSplit;
+    refreshDetailPlaceholders(event.target.closest('[data-detail-id]'), item, detail, record.detailActual[detail.id]);
     setItemActual(item, record, sumDetails(item, record));
     save();
     refreshNumbers();
