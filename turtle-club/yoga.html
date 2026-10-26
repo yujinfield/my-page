@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>온라인 인요가 · 거북이 클럽</title>
+  <meta name="description" content="오늘 60분, 나를 돌보기. 거북이 클럽의 온라인 인요가.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo" aria-label="거북이 클럽 홈">
+        <img src="images/turtle.svg" alt="" class="logo-mark" width="32" height="32">
+        <span>거북이 클럽</span>
+      </a>
+      <button type="button" class="menu-button" id="menu-button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="site-nav">☰</button>
+      <nav class="site-nav" id="site-nav" aria-label="주요 메뉴">
+        <a href="index.html#about">클럽 소개</a>
+        <a href="yoga.html" aria-current="page">온라인 인요가</a>
+        <a href="book.html">독서모임</a>
+        <a href="index.html#this-month" class="nav-cta">이번 달 모임</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="detail-hero">
+      <div class="container narrow">
+        <p class="tag"><span class="dot" aria-hidden="true"></span>온라인 인요가</p>
+        <h1 class="detail-title">오늘 60분,<br>나를 돌보기</h1>
+        <p class="lead">완벽히 해내지 않아도 괜찮은 시간.<br>
+          한 자세에 가만히 머무르며, 천천히 나에게 돌아와요.</p>
+      </div>
+      <div class="container">
+        <img src="images/yoga.jpg" alt="햇살 드는 바닥에 펼친 요가 매트와 수건, 찻잔" class="detail-photo">
+      </div>
+    </section>
+
+    <div class="container detail-layout">
+      <div class="detail-main">
+        <!-- 이런 날 -->
+        <section class="block">
+          <h2 class="block-title">이런 날, 함께해요</h2>
+          <ul class="check-list">
+            <li>몸이 잔뜩 굳은 날</li>
+            <li>생각이 너무 많은 날</li>
+            <li>잠들기 전 나를 돌보고 싶은 날</li>
+          </ul>
+        </section>
+
+        <!-- 작은 리추얼: 수업 흐름 -->
+        <section class="block">
+          <h2 class="block-title">60분은 이렇게 흘러가요</h2>
+          <ol class="flow-list">
+            <li><strong>10분</strong><span>숨 고르기 — 오늘의 몸 상태 살피기</span></li>
+            <li><strong>40분</strong><span>머무르기 — 한 자세에 3~5분씩 가만히</span></li>
+            <li><strong>10분</strong><span>쉬어 가기 — 누워서 긴장 내려놓기</span></li>
+          </ol>
+          <p class="note">요가가 처음이어도 괜찮아요. 매트 한 장, 쿠션이나 담요 하나면 충분해요.</p>
+        </section>
+
+        <!-- 모임장 -->
+        <section class="block host-mini">
+          <img src="images/host.jpg" alt="" class="avatar">
+          <div>
+            <h2 class="block-title">모임장 예원</h2>
+            <!-- TODO: 모임장 요가 경력 -->
+            <p>읽고, 움직이고, 잠깐 멈추는 시간을 좋아해요. 각자의 속도로 편안하게 이끌어요.</p>
+          </div>
+        </section>
+      </div>
+
+      <!-- 신청 직전 정보 박스 -->
+      <aside class="info-box" aria-labelledby="yoga-info-title">
+        <h2 id="yoga-info-title" class="info-title"><span class="js-month">이번 달</span> 인요가</h2>
+        <dl class="info-list">
+          <div><dt>일정</dt><dd>매주 수요일 20:30</dd></div>
+          <div><dt>시간</dt><dd>60분</dd></div>
+          <div><dt>장소</dt><dd>온라인 Zoom</dd></div>
+          <div><dt>참가비</dt><dd>회당 15,000원</dd></div>
+        </dl>
+        <!-- TODO: 신청 폼 링크 -->
+        <a href="#" class="button button-primary button-block">이번 달 수업 신청하기 <span aria-hidden="true">›</span></a>
+        <p class="info-note">수업 당일, Zoom 링크를 문자로 보내드려요.</p>
+        <details class="policy">
+          <summary>취소·환불 안내</summary>
+          <!-- TODO: 실제 규정 -->
+          <ul>
+            <li>수업 2일 전까지: 전액 환불</li>
+            <li>수업 1일 전: 50% 환불</li>
+            <li>수업 당일: 환불 불가 (다음 수업으로 1회 이월 가능)</li>
+          </ul>
+        </details>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="footer-quote">조금 느린 하루가<br>더 좋은 삶을 만듭니다.</p>
+      <p class="footer-copy">© <span id="year">2026</span> 거북이 클럽 Turtle Club</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
