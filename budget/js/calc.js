@@ -116,7 +116,8 @@ function withLeft(total) {
 
 export function emptyMonth() {
   // actual: 항목별 실제액(합계), actualBy: 사람마다 나눠 적은 실제액 { a, b } (합이 actual)
-  return { actual: {}, actualBy: {}, depositA: null, depositB: null, memo: '' };
+  // detailActual: 세부 항목마다 사람별 실제액 { [세부 항목 id]: { a, b } } (세부 항목이 있는 항목은 이 합이 actualBy)
+  return { actual: {}, actualBy: {}, detailActual: {}, depositA: null, depositB: null, memo: '' };
 }
 
 // 읽기만 할 때: 없는 달이면 빈 기록 (저장하지 않음)

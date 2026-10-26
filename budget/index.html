@@ -90,7 +90,7 @@
 
     <div class="tabs" role="tablist" aria-label="가계부 화면">
       <button type="button" role="tab" id="tab-plan" data-tab="plan" aria-controls="panel-plan">① 월 가계부</button>
-      <button type="button" role="tab" id="tab-actual" data-tab="actual" aria-controls="panel-actual">② 실제 사용</button>
+      <button type="button" role="tab" id="tab-actual" data-tab="actual" aria-controls="panel-actual">② 가계부 작성</button>
       <button type="button" role="tab" id="tab-events" data-tab="events" aria-controls="panel-events">③ 큰돈 캘린더</button>
       <button type="button" role="tab" id="tab-annual" data-tab="annual" aria-controls="panel-annual">④ 연간 요약</button>
       <button type="button" role="tab" id="tab-allowance" data-tab="allowance" aria-controls="panel-allowance">⑤ 용돈</button>
@@ -112,7 +112,7 @@
       <button type="button" id="plan-edit-toggle" class="button button-primary edit-toggle" aria-expanded="false" aria-controls="plan-editor">✏️ 수정하기</button>
 
       <div id="plan-editor" class="plan-editor">
-        <p class="hint">예산(월 예상액)은 한 번 정해 두고, 달마다 실제액은 ② 실제 사용에서 적어요. 공동 항목은 예상액을 직접, 개인 항목은 두 사람 금액을 적으면 합이 예상액이 돼요. 표 오른쪽 위 ＋로 항목을 추가하고, 표는 구분 순서로 자동 정렬돼요.</p>
+        <p class="hint">예산(월 예상액)은 한 번 정해 두고, 달마다 실제액은 ② 가계부 작성에서 적어요. 공동 항목은 예상액을 직접, 개인 항목은 두 사람 금액을 적으면 합이 예상액이 돼요. 표 오른쪽 위 ＋로 항목을 추가하고, 표는 구분 순서로 자동 정렬돼요.</p>
 
         <!-- 항목 추가: 표가 넓어 옆으로 밀려도 항상 보이게 표 바깥 오른쪽 위에 둠 -->
         <div class="table-actions">
@@ -137,10 +137,10 @@
       <div id="plan-charts" class="charts"></div>
     </section>
 
-    <!-- ② 실제 사용 -->
+    <!-- ② 가계부 작성 -->
     <section id="panel-actual" class="card" role="tabpanel" aria-labelledby="tab-actual" hidden>
       <div id="actual-summary" class="summary"></div>
-      <p class="hint">이 달에 실제로 받은·쓴 금액을 항목마다 두 사람이 나눠 적어요. 합계가 그 항목의 실제액이에요. 예산과 항목은 ① 월 가계부에서 바꿔요.</p>
+      <p class="hint">이 달에 실제로 받은·쓴 금액을 항목마다 두 사람이 나눠 적어요. 합계가 그 항목의 실제액이에요. 세부 항목이 있는 항목은 세부 항목마다 적으면 그 합이 돼요. 예산과 항목은 ① 월 가계부에서 바꿔요.</p>
       <p id="actual-progress" class="hint" aria-live="polite"></p>
       <div id="actual-list" class="actual-list"></div>
     </section>
@@ -182,7 +182,7 @@
           <tfoot id="annual-foot"></tfoot>
         </table>
       </div>
-      <p class="hint">② 실제 사용에 적은 실제액으로 계산해요. 실제액을 일부만 적은 달은 적은 만큼만 더해져요.</p>
+      <p class="hint">② 가계부 작성에 적은 실제액으로 계산해요. 실제액을 일부만 적은 달은 적은 만큼만 더해져요.</p>
       <p id="annual-events" class="hint"></p>
 
       <h2 class="section-title">저금액 · 부채</h2>

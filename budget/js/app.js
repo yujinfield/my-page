@@ -1,4 +1,4 @@
-// 진입점: 상태를 들고 여섯 화면(월 가계부 / 실제 사용 / 큰돈 캘린더 / 연간 요약 / 용돈 / 백업·이력)을 연결합니다.
+// 진입점: 상태를 들고 여섯 화면(월 가계부 / 가계부 작성 / 큰돈 캘린더 / 연간 요약 / 용돈 / 백업·이력)을 연결합니다.
 
 import { loadData, saveData } from './store.js';
 import { monthKeyOf, formatMonth, shiftMonth } from './calc.js';

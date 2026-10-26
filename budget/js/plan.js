@@ -1,4 +1,4 @@
-// ① 월 가계부: 예산(월 예상액)을 정하고, 그 달 실제액(② 실제 사용에서 입력)과 차이를 봅니다.
+// ① 월 가계부: 예산(월 예상액)을 정하고, 그 달 실제액(② 가계부 작성에서 입력)과 차이를 봅니다.
 
 import {
   GROUPS, GROUP_COLORS, itemKind, itemPayment, parseAmount, formatMoney, formatMonth, planAmount, personAmounts,
@@ -163,7 +163,7 @@ function buildRow(item, isGroupStart) {
     ['b', names.b, inputB, 'num'],
     ['joint', '공동', jointBox, 'center'],
     ['plan', '예상', planCell, 'num'],
-    // 실제액은 ② 실제 사용에서 적고, 여기서는 보기만 함
+    // 실제액은 ② 가계부 작성에서 적고, 여기서는 보기만 함
     ['actual', `실제 (${formatMonth(state.month)})`, computed('actual'), 'num'],
     ['diff', '차이', computed('diff'), 'num'],
     ['paymentA', `${names.a} 결제`, paymentCell(item, 'paymentA'), ''],
@@ -395,7 +395,7 @@ function refreshNumbers() {
   renderCardGoals(state);
   renderMoneyFlow();
   missingNote.textContent = totals.missing > 0
-    ? `${formatMonth(state.month)} 실제액을 아직 안 적은 항목이 ${totals.missing}개 있어요. ② 실제 사용에서 적어 주세요.`
+    ? `${formatMonth(state.month)} 실제액을 아직 안 적은 항목이 ${totals.missing}개 있어요. ② 가계부 작성에서 적어 주세요.`
     : `${formatMonth(state.month)} 실제액을 모두 적었어요.`;
 }
 
