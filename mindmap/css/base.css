@@ -13,7 +13,16 @@
   --accent-text: #ffffff;
 
   --branch: #b9b4ad;     /* 마인드맵 가지 선 */
-  --grid-dot: #dcd8d1;   /* 캔버스 바탕 점 */
+  --grid-dot: #e4e0d9;   /* 캔버스 바탕 점 */
+
+  /* 주제 색 (옅은 바탕색) */
+  --node-red: #fbe3e1;
+  --node-orange: #fdebd8;
+  --node-yellow: #faf1c8;
+  --node-green: #dff1e3;
+  --node-blue: #dfeafa;
+  --node-purple: #ebe5f8;
+
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.06);
 
   --space-xs: 4px;
@@ -47,7 +56,15 @@
     --accent-text: #1c1b1a;
 
     --branch: #6b665f;
-    --grid-dot: #34322f;
+    --grid-dot: #2d2b29;
+
+    --node-red: #4a2b2b;
+    --node-orange: #4a3625;
+    --node-yellow: #443e20;
+    --node-green: #253a2b;
+    --node-blue: #23344a;
+    --node-purple: #362d48;
+
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
 
     color-scheme: dark;
@@ -68,7 +85,15 @@
   --accent-text: #1c1b1a;
 
   --branch: #6b665f;
-  --grid-dot: #34322f;
+  --grid-dot: #2d2b29;
+
+  --node-red: #4a2b2b;
+  --node-orange: #4a3625;
+  --node-yellow: #443e20;
+  --node-green: #253a2b;
+  --node-blue: #23344a;
+  --node-purple: #362d48;
+
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
 
   color-scheme: dark;

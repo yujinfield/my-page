@@ -4,6 +4,12 @@
 //   branch: 마인드맵 가지 (부모 → 자식). 주제마다 부모는 하나뿐
 //   flow:   논리·순서 화살표 (아무 주제끼리나). 라벨을 달 수 있음
 
+// 주제 모양: shape 없음 또는 "topic"은 둥근 사각형, "decision"은 마름모(결정)
+// 주제 색: color 없음(null) 또는 아래 중 하나
+export const NODE_COLORS = ["red", "orange", "yellow", "green", "blue", "purple"];
+
+const DECISION_LABELS = ["예", "아니오"];
+
 let idCount = 0;
 
 export function makeId(prefix) {
@@ -69,6 +75,14 @@ export function addFlow(map, from, to) {
   const edge = { id: makeId("e"), from, to, type: "flow", label: "" };
   map.edges.push(edge);
   return edge;
+}
+
+// 결정 주제에서 새로 나가는 화살표에 붙일 라벨 ("예" → "아니오" 순서, 둘 다 있으면 빈 칸)
+export function nextDecisionLabel(map, id) {
+  const used = map.edges
+    .filter((e) => e.type === "flow" && e.from === id)
+    .map((e) => e.label);
+  return DECISION_LABELS.find((label) => !used.includes(label)) || "";
 }
 
 // 주제를 지우면 이어진 연결선도 함께 지움

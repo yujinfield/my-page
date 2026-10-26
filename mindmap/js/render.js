@@ -1,7 +1,7 @@
 // 주제·연결선을 화면에 그림
 
 import * as geo from "./geometry.js";
-import { parentOf } from "./model.js";
+import { NODE_COLORS } from "./model.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const GRID_SIZE = 24;
@@ -45,7 +45,7 @@ export function getBoxes(map) {
   const boxes = {};
   for (const node of map.nodes) {
     const size = sizes.get(node.id) || { w: 120, h: 44 };
-    boxes[node.id] = { x: node.x, y: node.y, w: size.w, h: size.h };
+    boxes[node.id] = { x: node.x, y: node.y, w: size.w, h: size.h, shape: node.shape };
   }
   return boxes;
 }
@@ -58,7 +58,8 @@ export function renderAll(state) {
   labelEls.clear();
 
   for (const node of map.nodes) {
-    const isRoot = parentOf(map, node.id) === null;
+    // 들어오는 선이 하나도 없는 주제는 굵게 (중심 주제)
+    const isRoot = !map.edges.some((e) => e.to === node.id);
     const el = createNodeElement(node, isRoot);
     nodeEls.set(node.id, el);
     nodesLayer.append(el);
@@ -110,7 +111,9 @@ export function markSelection(state) {
 export function applyView(view) {
   worldEl.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`;
   // 바탕 점도 함께 움직여서 캔버스가 끝없이 이어져 보이게
-  const grid = GRID_SIZE * view.zoom;
+  // 많이 축소해도 점이 너무 빽빽해지지 않게 간격을 두 배씩 넓힘
+  let grid = GRID_SIZE * view.zoom;
+  while (grid < 12) grid *= 2;
   canvasEl.style.backgroundSize = `${grid}px ${grid}px`;
   canvasEl.style.backgroundPosition = `${view.x}px ${view.y}px`;
 }
@@ -126,7 +129,10 @@ export function labelElement(id) {
 
 function createNodeElement(node, isRoot) {
   const el = document.createElement("div");
-  el.className = isRoot ? "node node-root" : "node";
+  el.className = "node";
+  if (isRoot) el.classList.add("node-root");
+  if (node.shape === "decision") el.classList.add("node-decision");
+  if (NODE_COLORS.includes(node.color)) el.classList.add(`color-${node.color}`);
   el.dataset.id = node.id;
   placeAt(el, node.x, node.y);
 

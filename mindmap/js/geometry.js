@@ -73,12 +73,25 @@ export function branchPath(fromBox, toBox) {
   return `M ${sx} ${sy} C ${sx + bend} ${sy}, ${ex - bend} ${ey}, ${ex} ${ey}`;
 }
 
+// 결정 주제의 "예"(오른쪽)·"아니오"(아래) 갈래 자리
+export function decisionBranchPositions(box) {
+  return {
+    yes: { x: box.x + box.w + GAP_X, y: box.y + box.h / 2 - 22 },
+    no: { x: box.x + box.w / 2 - NEW_NODE_WIDTH / 2, y: box.y + box.h + GAP_X },
+  };
+}
+
 // 상자 가운데에서 target 쪽으로 나갈 때 상자 테두리(+gap)와 만나는 점
+// 마름모(결정 주제)는 |dx|/가로반 + |dy|/세로반 = 1 인 테두리와 만나는 점
 export function boxEdgePoint(box, target, gap = 4) {
   const c = centerOf(box);
   const dx = target.x - c.x;
   const dy = target.y - c.y;
   if (dx === 0 && dy === 0) return c;
+  if (box.shape === "decision") {
+    const t = 1 / (Math.abs(dx) / (box.w / 2 + gap) + Math.abs(dy) / (box.h / 2 + gap));
+    return { x: c.x + dx * t, y: c.y + dy * t };
+  }
   const tx = dx === 0 ? Infinity : (box.w / 2 + gap) / Math.abs(dx);
   const ty = dy === 0 ? Infinity : (box.h / 2 + gap) / Math.abs(dy);
   const t = Math.min(tx, ty);

@@ -29,6 +29,11 @@
 | `js/render.js` | 주제·연결선·라벨 그리기. 그린 뒤 주제 크기를 재서 `getBoxes`로 알려 줌 |
 | `js/edit.js` | 주제·라벨을 그 자리에서 고치기 (contenteditable, 한글 조합 중 Enter 무시) |
 | `js/canvas.js` | 포인터 조작: 화면 이동, 휠·핀치 확대, 주제 끌기, 손잡이로 화살표 잇기, 두 번 누르기 |
+| `js/history.js` | 실행 취소/다시 실행. 지도를 바꾸기 **직전에** `remember(map)`을 부름 (DOM 사용 안 함) |
+| `js/viewport.js` | 화면 이동·확대 (`setView`, `zoomBy`, `fitAll`, `ensureVisible`) |
+| `js/linking.js` | 화살표 잇기 (연결 모드, 점선 미리보기, 결정 주제의 예/아니오 라벨) |
+| `js/palette.js` | 주제 색 고르는 작은 창 |
+| `js/theme.js` | 라이트/다크 전환 |
 | `js/keyboard.js` | 키보드 단축키 (편집 중·버튼 초점일 때는 기본 동작 유지) |
 | `js/app.js` | 진입점. 상태(`state`)와 동작 함수를 들고 도구 막대·각 모듈을 연결 |
 
@@ -46,18 +51,20 @@
 // localStorage 키: "mindmap-data"
 {
   version: 1,
-  nodes: [{ id: "n_<timestamp>_<n>", text: "...", x: 0, y: 0 }],
+  nodes: [{ id: "n_<timestamp>_<n>", text: "...", x: 0, y: 0, shape: "decision", color: "blue" }], // shape·color는 없어도 됨
   edges: [{ id: "e_...", from: "n_...", to: "n_...", type: "branch" | "flow", label: "" }],
   view: { x: 0, y: 0, zoom: 1 } // 마지막 화면 위치
 }
 ```
 
+- 데이터를 바꾸는 동작을 새로 만들면 바꾸기 전에 `history.remember(state.map)`을 불러 되돌릴 수 있게 합니다.
 - 부모는 `branch` 연결선으로 알아냅니다. 주제마다 부모는 하나뿐(나무 구조)이어야 합니다.
 - 읽을 수 없는 저장 데이터는 `mindmap-data-broken` 키에 보관한 뒤 새 지도로 시작합니다.
 
 ## 디자인
 
 - Bear 느낌: 조용한 바탕, 테두리보다 배경색·그림자 차이. 강조색은 `--accent` 하나. 가지는 회색, 화살표는 강조색.
+- 주제 색은 사용자가 고르는 옅은 바탕색(`--node-*`)이고, `.color-*` 클래스가 `--node-bg`를 바꿉니다.
 - 색상·간격은 `base.css` 변수로만. 다크 모드는 `prefers-color-scheme` + `[data-theme]`.
 - 본문 16px 이상, 버튼에 `aria-label`, 키보드로 모든 기능 사용 가능.
 
@@ -67,6 +74,7 @@
 
 - [ ] Tab/Enter로 주제 추가, Space로 편집(한글 입력 후 Enter), 새로고침해도 남아 있는가
 - [ ] 손잡이 끌기와 `L`로 화살표가 생기고, 라벨을 달 수 있는가
+- [ ] `D` 결정 주제(예/아니오 갈래), `C`·● 색, `Ctrl+Z`/`Ctrl+Shift+Z`가 동작하는가
 - [ ] 화면 끌기·휠·`Ctrl`+휠·전체 보기가 동작하는가
 - [ ] 다크 모드와 휴대폰 폭(375px)에서 깨지지 않는가, 콘솔 에러가 없는가
 

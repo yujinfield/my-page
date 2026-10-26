@@ -4,7 +4,15 @@
 
 export function setupKeyboard(canvas, api) {
   document.addEventListener("keydown", (event) => {
-    if (event.target.isContentEditable) return;
+    if (event.target.isContentEditable) return; // 편집 중에는 브라우저의 글자 되돌리기 사용
+
+    // Ctrl/⌘+Z 되돌리기, Ctrl/⌘+Shift+Z 또는 Ctrl+Y 다시 실행
+    if ((event.ctrlKey || event.metaKey) && (event.code === "KeyZ" || event.code === "KeyY")) {
+      event.preventDefault();
+      if (event.code === "KeyZ" && !event.shiftKey) api.undo();
+      else api.redo();
+      return;
+    }
     if (event.ctrlKey || event.metaKey || event.altKey) return;
 
     if (event.key === "Escape") {
@@ -36,6 +44,10 @@ export function setupKeyboard(canvas, api) {
       api.moveSelection(key);
     } else if (event.code === "KeyL") {
       api.startConnectMode();
+    } else if (event.code === "KeyD") {
+      api.toggleDecision();
+    } else if (event.code === "KeyC") {
+      api.cycleColor();
     } else if (key === "+" || key === "=") {
       api.zoomBy(1.2);
     } else if (key === "-") {

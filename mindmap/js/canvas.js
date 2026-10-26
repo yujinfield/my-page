@@ -53,7 +53,8 @@ export function setupCanvas(canvas, api) {
         return;
       }
       api.select("node", id);
-      drag = { type: "node", ids: subtreeOf(api.state.map, id), last: world, moved: false };
+      // before: 실행 취소용으로 옮기기 전 지도를 찍어 둠
+      drag = { type: "node", ids: subtreeOf(api.state.map, id), last: world, moved: false, before: api.snapshot() };
     } else if (edgeEl) {
       if (api.state.connectMode) api.stopConnectMode();
       api.select("edge", edgeEl.dataset.edgeId);
@@ -107,7 +108,7 @@ export function setupCanvas(canvas, api) {
       if (nodeEl) api.connect(drag.from, nodeEl.dataset.id);
       else api.hidePreview();
     } else if (drag.type === "node" && drag.moved) {
-      api.finishMove();
+      api.finishMove(drag.before);
     }
 
     if (drag.type !== "pinch" || pointers.size < 2) drag = null;

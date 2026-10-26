@@ -44,6 +44,21 @@ body {
   color: var(--accent);
 }
 
+.tool-group .icon-button {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.tool-group button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.tool-group button:disabled:hover {
+  background: var(--surface-soft);
+  color: inherit;
+}
+
 .tool-group button[aria-pressed="true"] {
   background: var(--accent);
   color: var(--accent-text);
