@@ -5,6 +5,7 @@
 //   flow:   논리·순서 화살표 (아무 주제끼리나). 라벨을 달 수 있음
 
 // 주제 모양: shape 없음 또는 "topic"은 둥근 사각형, "decision"은 마름모(결정)
+// 가지 접기: collapsed가 true면 자손을 숨김
 // 주제 색: color 없음(null) 또는 아래 중 하나
 export const NODE_COLORS = ["red", "orange", "yellow", "green", "blue", "purple"];
 
@@ -53,6 +54,23 @@ export function subtreeOf(map, id) {
     result.push(...childrenOf(map, result[i]));
   }
   return result;
+}
+
+// 가장 위 주제(부모가 없는 주제) id
+export function rootOf(map, id) {
+  let current = id;
+  while (parentOf(map, current)) current = parentOf(map, current);
+  return current;
+}
+
+// 접힌 주제 아래에 숨은 주제 id 모음 (접힌 주제 자신은 보임)
+export function hiddenIds(map) {
+  const hidden = new Set();
+  for (const node of map.nodes) {
+    if (!node.collapsed) continue;
+    for (const id of subtreeOf(map, node.id).slice(1)) hidden.add(id);
+  }
+  return hidden;
 }
 
 export function addNode(map, x, y, text = "") {

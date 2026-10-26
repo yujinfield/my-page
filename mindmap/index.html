@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/canvas.css">
+  <link rel="stylesheet" href="css/overlay.css">
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
@@ -24,6 +25,13 @@
       <button id="btn-decision" type="button" aria-label="결정 주제로 바꾸기 (D)" title="결정 주제로 바꾸기 (D)">◇ 결정</button>
       <button id="btn-color" type="button" aria-label="주제 색 (C)" title="주제 색 (C)" aria-haspopup="true" aria-expanded="false">● 색</button>
       <button id="btn-delete" type="button" aria-label="고른 것 삭제 (Delete)" title="고른 것 삭제 (Delete)">삭제</button>
+    </div>
+
+    <div class="tool-group" role="group" aria-label="정리">
+      <button id="btn-layout" type="button" aria-label="자동 정렬 (A)" title="자동 정렬 (A)">정렬</button>
+      <button id="btn-fold" type="button" aria-label="가지 접기/펼치기 (F)" title="가지 접기/펼치기 (F)">접기</button>
+      <button id="btn-numbers" type="button" aria-label="화살표 순서 번호 보기 (N)" title="화살표 순서 번호 보기 (N)" aria-pressed="false">번호</button>
+      <button id="btn-play" type="button" aria-label="화살표 따라가기 재생 (P)" title="화살표 따라가기 재생 (P)">▶ 재생</button>
     </div>
 
     <div class="tool-group" role="group" aria-label="기록">
@@ -47,6 +55,12 @@
       <div id="nodes" class="nodes"></div>
     </div>
     <p id="status" class="status" role="status" aria-live="polite" hidden></p>
+    <div id="play-bar" class="play-bar" role="group" aria-label="따라가기 재생" hidden>
+      <button id="btn-play-prev" type="button" aria-label="이전 (←)" title="이전 (←)">◀</button>
+      <span id="play-counter" aria-live="polite">1 / 1</span>
+      <button id="btn-play-next" type="button" aria-label="다음 (→)" title="다음 (→)">▶</button>
+      <button id="btn-play-stop" type="button" aria-label="재생 끝내기 (Esc)" title="재생 끝내기 (Esc)">✕</button>
+    </div>
     <p id="empty-hint" class="empty-hint" hidden>빈 곳을 두 번 누르거나 ＋ 자식 버튼으로 새 주제를 만드세요</p>
   </main>
 
@@ -59,6 +73,10 @@
     <span><kbd>L</kbd> 또는 ● 끌기: 화살표</span>
     <span><kbd>D</kbd> 결정</span>
     <span><kbd>C</kbd> 색</span>
+    <span><kbd>A</kbd> 정렬</span>
+    <span><kbd>F</kbd> 접기</span>
+    <span><kbd>N</kbd> 번호</span>
+    <span><kbd>P</kbd> 재생</span>
     <span><kbd>Delete</kbd> 삭제</span>
     <span><kbd>Ctrl</kbd>+<kbd>Z</kbd> 되돌리기</span>
     <span><kbd>방향키</kbd> 이동</span>

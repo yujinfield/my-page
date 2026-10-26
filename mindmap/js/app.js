@@ -12,12 +12,15 @@ import { setupKeyboard } from "./keyboard.js";
 import { setupPalette } from "./palette.js";
 import * as linking from "./linking.js";
 import { applyTheme, toggleTheme } from "./theme.js";
+import * as organize from "./organize.js";
+import * as playback from "./playback.js";
 
 const canvas = document.getElementById("canvas");
 const statusEl = document.getElementById("status");
 const emptyHint = document.getElementById("empty-hint");
 const undoButton = document.getElementById("btn-undo");
 const redoButton = document.getElementById("btn-redo");
+const numbersButton = document.getElementById("btn-numbers");
 
 const state = {
   map: loadMap() || model.createMap(),
@@ -25,6 +28,7 @@ const state = {
   preview: null,      // 화살표를 잇는 중일 때 점선 { from, x, y }
   connectMode: false, // L 키(→ 연결 버튼)로 연결 모드를 켰는지
   connectFrom: null,  // 연결 모드에서 화살표가 시작하는 주제 id
+  play: null,         // 따라가기 재생 중일 때 { order: [주제 id], index }
 };
 
 // ---------- 저장·다시 그리기 ----------
@@ -36,9 +40,11 @@ function scheduleSave() {
   saveTimer = setTimeout(() => saveMap(state.map), 300);
 }
 
-// 데이터가 바뀌면 다시 그리고 저장
+// 데이터가 바뀌면 다시 그리고 저장 (재생 중이었다면 순서가 달라질 수 있으니 재생을 끝냄)
 function update() {
+  playback.stopPlayback();
   render.renderAll(state);
+  numbersButton.setAttribute("aria-pressed", String(Boolean(state.map.showNumbers)));
   emptyHint.hidden = state.map.nodes.length > 0;
   undoButton.disabled = !history.canUndo();
   redoButton.disabled = !history.canRedo();
@@ -101,6 +107,12 @@ function addChild() {
     const center = viewport.centerPoint();
     createNodeAt(center.x - 60, center.y - 22);
     return;
+  }
+  const parent = model.findNode(state.map, parentId);
+  if (parent.collapsed) {
+    // 접힌 주제에 자식을 붙이면 먼저 펼쳐서 자식들 자리를 잼
+    parent.collapsed = false;
+    update();
   }
   const boxes = render.getBoxes(state.map);
   const childBoxes = model.childrenOf(state.map, parentId).map((id) => boxes[id]);
@@ -175,56 +187,6 @@ function deleteSelected() {
   update();
 }
 
-// ---------- 결정 주제·색 ----------
-
-function needNode() {
-  const id = selectedNodeId();
-  if (!id) showStatus("먼저 주제를 고르세요", 2);
-  return id;
-}
-
-// 결정(마름모) ↔ 보통 주제. 처음 결정으로 바꾸면 "예"·"아니오" 갈래를 만들어 줌
-function toggleDecision() {
-  const id = needNode();
-  if (!id) return;
-  const node = model.findNode(state.map, id);
-  history.remember(state.map);
-  if (node.shape === "decision") {
-    node.shape = "topic";
-    update();
-    return;
-  }
-  node.shape = "decision";
-  update(); // 마름모 크기를 재야 갈래 자리를 정할 수 있음
-  const hasFlowOut = state.map.edges.some((e) => e.type === "flow" && e.from === id);
-  if (!hasFlowOut) {
-    const spots = geo.decisionBranchPositions(render.getBoxes(state.map)[id]);
-    for (const [label, pos] of [["예", spots.yes], ["아니오", spots.no]]) {
-      const branch = model.addNode(state.map, pos.x, pos.y);
-      model.addFlow(state.map, id, branch.id).label = label;
-    }
-    update();
-  }
-}
-
-function setColor(color) {
-  const id = selectedNodeId();
-  const node = id ? model.findNode(state.map, id) : null;
-  if (!node || (node.color || null) === color) return;
-  history.remember(state.map);
-  node.color = color;
-  update();
-}
-
-// C 키: 색을 차례로 바꿈 (없음 → 빨강 → … → 보라 → 없음)
-function cycleColor() {
-  const id = needNode();
-  if (!id) return;
-  const choices = [null, ...model.NODE_COLORS];
-  const now = choices.indexOf(model.findNode(state.map, id).color || null);
-  setColor(choices[(now + 1) % choices.length]);
-}
-
 // 방향키로 가까운 주제 고르기
 function moveSelection(key) {
   const boxes = render.getBoxes(state.map);
@@ -245,7 +207,14 @@ onClick("btn-child", addChild);
 onClick("btn-sibling", addSibling);
 onClick("btn-edit", editSelected);
 onClick("btn-connect", () => (state.connectMode ? linking.stopConnectMode() : linking.startConnectMode()));
-onClick("btn-decision", toggleDecision);
+onClick("btn-decision", organize.toggleDecision);
+onClick("btn-layout", organize.autoLayout);
+onClick("btn-fold", () => organize.toggleCollapse());
+onClick("btn-numbers", organize.toggleNumbers);
+onClick("btn-play", () => (state.play ? playback.stopPlayback() : playback.startPlayback()));
+onClick("btn-play-prev", playback.previous);
+onClick("btn-play-next", playback.next);
+onClick("btn-play-stop", playback.stopPlayback);
 onClick("btn-delete", deleteSelected);
 onClick("btn-undo", undo);
 onClick("btn-redo", redo);
@@ -256,9 +225,9 @@ onClick("btn-fit", viewport.fitAll);
 onClick("btn-theme", toggleTheme);
 
 setupPalette(document.getElementById("btn-color"), document.getElementById("color-panel"), {
-  canOpen: () => Boolean(needNode()),
-  currentColor: () => model.findNode(state.map, selectedNodeId())?.color || null,
-  onPick: setColor,
+  canOpen: () => Boolean(organize.needNode()),
+  currentColor: organize.currentColor,
+  onPick: organize.setColor,
 });
 
 // ---------- 시작 ----------
@@ -272,6 +241,11 @@ render.setupRender(
 );
 viewport.setupViewport(canvas, state, document.getElementById("zoom-label"), scheduleSave);
 linking.setupLinking(canvas, state, document.getElementById("btn-connect"), { update, showStatus });
+organize.setupOrganize(state, { update, showStatus });
+playback.setupPlayback(canvas, state, {
+  bar: document.getElementById("play-bar"),
+  counter: document.getElementById("play-counter"),
+}, { showStatus });
 update();
 if (state.map.view) viewport.setView(state.map.view);
 else viewport.fitAll();
@@ -288,8 +262,15 @@ setupKeyboard(canvas, {
   editSelected,
   deleteSelected,
   moveSelection,
-  toggleDecision,
-  cycleColor,
+  toggleDecision: organize.toggleDecision,
+  cycleColor: organize.cycleColor,
+  autoLayout: organize.autoLayout,
+  toggleCollapse: () => organize.toggleCollapse(),
+  toggleNumbers: organize.toggleNumbers,
+  startPlayback: playback.startPlayback,
+  stopPlayback: playback.stopPlayback,
+  nextStep: playback.next,
+  previousStep: playback.previous,
   undo,
   redo,
   zoomBy: viewport.zoomBy,
@@ -318,4 +299,6 @@ setupCanvas(canvas, {
   editNode,
   editEdge,
   createNodeAt,
+  toggleCollapse: organize.toggleCollapse,
+  jumpTo: playback.jumpTo,
 });

@@ -157,6 +157,64 @@
   display: block;
 }
 
+/* 접힌 주제: 숨은 자손 개수 (누르면 펼침) */
+.node-fold {
+  position: absolute;
+  top: 50%;
+  right: -14px;
+  transform: translate(100%, -50%);
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.node-fold:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* 화살표 순서 번호 */
+.node-number {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+}
+
+/* ---------- 따라가기 재생 ---------- */
+
+.canvas.playing .node:not(.play-current):not(.play-done),
+.canvas.playing .edge:not(.play-done),
+.canvas.playing .edge-label:not(.play-done) {
+  opacity: 0.25;
+}
+
+.node.play-current {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.node-decision.play-current {
+  outline: none;
+}
+
+.node-decision.play-current::before {
+  background: var(--accent);
+}
+
 /* ---------- 연결선 ---------- */
 
 .edge-line {
@@ -238,61 +296,4 @@
   cursor: text;
   user-select: text;
   -webkit-user-select: text;
-}
-
-/* ---------- 안내 문구 ---------- */
-
-.status,
-.empty-hint {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: calc(100% - 2 * var(--space-m));
-  padding: var(--space-s) var(--space-m);
-  border-radius: var(--radius-m);
-  font-size: var(--font-size-small);
-  text-align: center;
-  pointer-events: none;
-}
-
-.status {
-  top: var(--space-m);
-  background: var(--accent);
-  color: var(--accent-text);
-}
-
-.empty-hint {
-  top: 50%;
-  background: var(--surface);
-  color: var(--text-soft);
-  box-shadow: var(--shadow);
-}
-
-/* ---------- 주제 색 고르기 창 ---------- */
-
-.color-panel {
-  position: fixed;
-  z-index: 2;
-  display: flex;
-  gap: var(--space-xs);
-  padding: var(--space-s);
-  border-radius: var(--radius-m);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-}
-
-.swatch {
-  width: 32px;
-  height: 32px;
-  border: 2px solid var(--line);
-  border-radius: 50%;
-  background: var(--node-bg, var(--surface));
-  color: var(--text-soft);
-  font-size: var(--font-size-small);
-  cursor: pointer;
-}
-
-.swatch:hover,
-.swatch[aria-pressed="true"] {
-  border-color: var(--accent);
 }

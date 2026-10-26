@@ -22,16 +22,21 @@
 | `index.html` | 도구 막대, 캔버스(`#world` 안에 `<svg>` 연결선 + `#nodes` 주제), 단축키 안내 |
 | `css/base.css` | CSS 변수(색상·간격·폰트), 리셋, 다크 모드 |
 | `css/layout.css` | 도구 막대·캔버스·안내줄 배치, 휴대폰(768px 이하) |
-| `css/canvas.css` | 캔버스 바탕, 주제, 손잡이, 연결선, 화살표 라벨 |
+| `css/canvas.css` | 캔버스 바탕, 주제(색·마름모·접기 표시·번호), 재생 중 흐리게, 연결선, 화살표 라벨 |
+| `css/overlay.css` | 캔버스 위에 떠 있는 것: 안내 문구, 재생 막대, 주제 색 고르기 창 |
 | `js/store.js` | 데이터 계층. `localStorage` 읽기/쓰기는 **이 파일에서만** (형식이 바뀌면 `migrate`에 추가) |
-| `js/model.js` | 주제·연결선 추가/삭제/이동, 부모·자식·자손 찾기 (DOM 사용 안 함) |
+| `js/model.js` | 주제·연결선 추가/삭제/이동, 부모·자식·자손·뿌리 찾기, 접혀서 숨은 주제 (DOM 사용 안 함) |
+| `js/layout.js` | 자동 정렬 자리 계산 (DOM 사용 안 함) |
+| `js/sequence.js` | 화살표를 따라가는 순서 (번호·재생에 씀, DOM 사용 안 함) |
 | `js/geometry.js` | 화면↔캔버스 좌표, 확대, 전체 보기, 새 주제 자리, 연결선 모양, 방향키 이웃 찾기 (DOM 사용 안 함) |
-| `js/render.js` | 주제·연결선·라벨 그리기. 그린 뒤 주제 크기를 재서 `getBoxes`로 알려 줌 |
+| `js/render.js` | 주제·연결선·라벨 그리기. 그린 뒤 주제 크기를 재서 `getBoxes`로 알려 줌 (숨은 주제는 빠짐) |
 | `js/edit.js` | 주제·라벨을 그 자리에서 고치기 (contenteditable, 한글 조합 중 Enter 무시) |
 | `js/canvas.js` | 포인터 조작: 화면 이동, 휠·핀치 확대, 주제 끌기, 손잡이로 화살표 잇기, 두 번 누르기 |
 | `js/history.js` | 실행 취소/다시 실행. 지도를 바꾸기 **직전에** `remember(map)`을 부름 (DOM 사용 안 함) |
 | `js/viewport.js` | 화면 이동·확대 (`setView`, `zoomBy`, `fitAll`, `ensureVisible`) |
 | `js/linking.js` | 화살표 잇기 (연결 모드, 점선 미리보기, 결정 주제의 예/아니오 라벨) |
+| `js/organize.js` | 결정 주제, 색, 자동 정렬, 가지 접기, 순서 번호 켜기 |
+| `js/playback.js` | 화살표 따라가기 재생 (재생 중 데이터가 바뀌면 `update`가 재생을 끝냄) |
 | `js/palette.js` | 주제 색 고르는 작은 창 |
 | `js/theme.js` | 라이트/다크 전환 |
 | `js/keyboard.js` | 키보드 단축키 (편집 중·버튼 초점일 때는 기본 동작 유지) |
@@ -51,9 +56,10 @@
 // localStorage 키: "mindmap-data"
 {
   version: 1,
-  nodes: [{ id: "n_<timestamp>_<n>", text: "...", x: 0, y: 0, shape: "decision", color: "blue" }], // shape·color는 없어도 됨
+  nodes: [{ id: "n_<timestamp>_<n>", text: "...", x: 0, y: 0, shape: "decision", color: "blue", collapsed: false }], // shape·color·collapsed는 없어도 됨
   edges: [{ id: "e_...", from: "n_...", to: "n_...", type: "branch" | "flow", label: "" }],
-  view: { x: 0, y: 0, zoom: 1 } // 마지막 화면 위치
+  view: { x: 0, y: 0, zoom: 1 }, // 마지막 화면 위치
+  showNumbers: false             // 순서 번호 보기 (실행 취소 대상 아님)
 }
 ```
 
@@ -75,6 +81,7 @@
 - [ ] Tab/Enter로 주제 추가, Space로 편집(한글 입력 후 Enter), 새로고침해도 남아 있는가
 - [ ] 손잡이 끌기와 `L`로 화살표가 생기고, 라벨을 달 수 있는가
 - [ ] `D` 결정 주제(예/아니오 갈래), `C`·● 색, `Ctrl+Z`/`Ctrl+Shift+Z`가 동작하는가
+- [ ] `A` 정렬, `F` 접기(+숫자로 펼치기), `N` 번호, `P` 재생(←/→/Esc)이 동작하는가
 - [ ] 화면 끌기·휠·`Ctrl`+휠·전체 보기가 동작하는가
 - [ ] 다크 모드와 휴대폰 폭(375px)에서 깨지지 않는가, 콘솔 에러가 없는가
 

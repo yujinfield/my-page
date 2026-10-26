@@ -14,6 +14,7 @@ body {
   background: var(--surface);
   box-shadow: var(--shadow);
   z-index: 1;
+  overflow-x: auto; /* 화면이 좁으면 버튼을 가로로 밀어서 보기 */
 }
 
 .app-title {
@@ -87,12 +88,24 @@ kbd {
   color: var(--text);
 }
 
-/* 휴대폰: 제목 숨기고 버튼을 가로로 밀어서 보기, 단축키 안내 숨김 */
+/* 버튼이 많아서 노트북 폭에서는 제목을 숨기고 버튼을 두 줄로 */
+@media (max-width: 1280px) {
+  .app-title {
+    display: none;
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+    gap: var(--space-s) var(--space-m);
+  }
+}
+
+/* 휴대폰: 한 줄로 두고 가로로 밀어서 보기, 단축키 안내 숨김 */
 @media (max-width: 768px) {
   .toolbar {
+    flex-wrap: nowrap;
     gap: var(--space-s);
     padding: var(--space-s);
-    overflow-x: auto;
   }
 
   .app-title,

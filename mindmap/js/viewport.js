@@ -59,6 +59,15 @@ export function ensureVisible(id) {
   const right = left + box.w * view.zoom;
   const bottom = top + box.h * view.zoom;
   if (left >= 0 && top >= 0 && right <= width && bottom <= height) return;
+  centerOn(id);
+}
+
+// 주제를 화면 가운데로
+export function centerOn(id) {
+  const box = render.getBoxes(state.map)[id];
+  if (!box) return;
+  const { width, height } = canvasSize();
+  const view = state.map.view;
   const center = geo.centerOf(box);
   setView({ ...view, x: width / 2 - center.x * view.zoom, y: height / 2 - center.y * view.zoom });
 }

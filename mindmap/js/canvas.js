@@ -22,6 +22,7 @@ export function setupCanvas(canvas, api) {
 
   canvas.addEventListener("pointerdown", (event) => {
     if (event.target.isContentEditable) return; // 편집 중인 글자 안에서는 커서만 옮김
+    if (event.target.closest(".play-bar")) return; // 재생 막대 버튼은 그대로 누르게
     if (event.button !== 0 && event.button !== 1) return;
 
     // 다른 곳을 누르면 하던 편집을 마침
@@ -46,6 +47,10 @@ export function setupCanvas(canvas, api) {
     if (handle && nodeEl) {
       drag = { type: "connect", from: nodeEl.dataset.id };
       api.showPreview(drag.from, world);
+    } else if (nodeEl && api.state.play) {
+      api.jumpTo(nodeEl.dataset.id); // 재생 중에는 주제를 눌러 그 단계로
+    } else if (nodeEl && event.target.closest(".node-fold")) {
+      api.toggleCollapse(nodeEl.dataset.id); // "+숫자"를 누르면 펼침
     } else if (nodeEl) {
       const id = nodeEl.dataset.id;
       if (api.state.connectMode) {
@@ -155,7 +160,7 @@ export function setupCanvas(canvas, api) {
 
   // 두 번 누르기: 주제·라벨은 편집, 빈 곳은 새 주제
   canvas.addEventListener("dblclick", (event) => {
-    if (event.target.isContentEditable) return;
+    if (event.target.isContentEditable || api.state.play) return;
     const nodeEl = event.target.closest(".node");
     const edgeEl = event.target.closest("[data-edge-id]");
     if (nodeEl) api.editNode(nodeEl.dataset.id);

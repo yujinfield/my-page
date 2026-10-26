@@ -1,7 +1,8 @@
 // 주제·연결선을 화면에 그림
 
 import * as geo from "./geometry.js";
-import { NODE_COLORS } from "./model.js";
+import { NODE_COLORS, hiddenIds, subtreeOf } from "./model.js";
+import { flowOrder } from "./sequence.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const GRID_SIZE = 24;
@@ -40,10 +41,12 @@ export function setupRender(canvas, world, nodes, edges) {
   edges.append(defs, edgesGroup);
 }
 
-// 각 주제의 자리와 크기 { id: { x, y, w, h } }
+// 보이는 주제의 자리와 크기 { id: { x, y, w, h, shape } } (접혀서 숨은 주제는 빠짐)
 export function getBoxes(map) {
+  const hidden = hiddenIds(map);
   const boxes = {};
   for (const node of map.nodes) {
+    if (hidden.has(node.id)) continue;
     const size = sizes.get(node.id) || { w: 120, h: 44 };
     boxes[node.id] = { x: node.x, y: node.y, w: size.w, h: size.h, shape: node.shape };
   }
@@ -57,17 +60,21 @@ export function renderAll(state) {
   nodeEls.clear();
   labelEls.clear();
 
+  const hidden = hiddenIds(map);
   for (const node of map.nodes) {
+    if (hidden.has(node.id)) continue;
     // 들어오는 선이 하나도 없는 주제는 굵게 (중심 주제)
     const isRoot = !map.edges.some((e) => e.to === node.id);
     const el = createNodeElement(node, isRoot);
+    if (node.collapsed) el.append(foldBadge(subtreeOf(map, node.id).length - 1));
     nodeEls.set(node.id, el);
     nodesLayer.append(el);
   }
   measureSizes();
+  if (map.showNumbers) addNumbers(map);
 
   for (const edge of map.edges) {
-    if (edge.type !== "flow") continue;
+    if (edge.type !== "flow" || hidden.has(edge.from) || hidden.has(edge.to)) continue;
     const label = document.createElement("div");
     label.className = "edge-label";
     label.dataset.edgeId = edge.id;
@@ -77,7 +84,6 @@ export function renderAll(state) {
   }
 
   drawEdges(state);
-  markSelection(state);
 }
 
 // 자리만 바뀌었을 때 (끌기 중) 가볍게 다시 그림
@@ -105,6 +111,22 @@ export function markSelection(state) {
   }
   for (const [id, el] of labelEls) {
     el.classList.toggle("selected", selected?.kind === "edge" && selected.id === id);
+  }
+}
+
+// 따라가기 재생: 지금 주제는 강조, 지나온 주제와 화살표는 그대로, 나머지는 흐리게
+export function markPlayback(state) {
+  const play = state.play;
+  const done = new Set(play ? play.order.slice(0, play.index + 1) : []);
+  const current = play ? play.order[play.index] : null;
+  for (const [id, el] of nodeEls) {
+    el.classList.toggle("play-current", id === current);
+    el.classList.toggle("play-done", done.has(id) && id !== current);
+  }
+  for (const edge of state.map.edges) {
+    const reached = edge.type === "flow" && done.has(edge.from) && done.has(edge.to);
+    edgeEls.get(edge.id)?.classList.toggle("play-done", reached);
+    labelEls.get(edge.id)?.classList.toggle("play-done", reached);
   }
 }
 
@@ -146,6 +168,26 @@ function createNodeElement(node, isRoot) {
 
   el.append(text, handle);
   return el;
+}
+
+// 접힌 주제 오른쪽의 "+숨은 개수" 표시 (누르면 펼침)
+function foldBadge(count) {
+  const badge = document.createElement("span");
+  badge.className = "node-fold";
+  badge.textContent = `+${count}`;
+  badge.title = "눌러서 펼치기";
+  return badge;
+}
+
+// 화살표 순서대로 주제 왼쪽 위에 1, 2, 3… 번호
+function addNumbers(map) {
+  const order = flowOrder(map, getBoxes(map));
+  order.forEach((id, index) => {
+    const number = document.createElement("span");
+    number.className = "node-number";
+    number.textContent = String(index + 1);
+    nodeEls.get(id).append(number);
+  });
 }
 
 function placeAt(el, x, y) {
@@ -198,6 +240,7 @@ function drawEdges(state) {
   }
 
   markSelection(state);
+  markPlayback(state);
 }
 
 function svg(tag, attrs = {}) {
