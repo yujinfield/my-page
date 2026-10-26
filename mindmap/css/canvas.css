@@ -1,0 +1,328 @@
+/* 캔버스, 주제(노드), 연결선, 화살표 라벨 */
+
+.canvas {
+  overflow: hidden;
+  touch-action: none;   /* 손가락 끌기·핀치를 브라우저 대신 직접 처리 */
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+  /* 점 간격과 위치는 화면 이동·확대에 맞춰 render.js에서 바꿈 */
+  background-size: 24px 24px;
+}
+
+.canvas:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--line);
+}
+
+.canvas.connecting {
+  cursor: crosshair;
+}
+
+/* 이 상자 하나를 옮기고 확대해서 끝없는 캔버스를 만듦 */
+.world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+.edges {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.nodes {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* ---------- 주제 ---------- */
+
+.node {
+  position: absolute;
+  width: max-content;
+  max-width: 240px;
+  min-width: 48px;
+  padding: 10px 14px;
+  border-radius: var(--radius-m);
+  background: var(--node-bg, var(--surface));
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+/* 주제 색: --node-bg만 바꾸면 사각형·마름모 모두 색이 바뀜 */
+.color-red { --node-bg: var(--node-red); }
+.color-orange { --node-bg: var(--node-orange); }
+.color-yellow { --node-bg: var(--node-yellow); }
+.color-green { --node-bg: var(--node-green); }
+.color-blue { --node-bg: var(--node-blue); }
+.color-purple { --node-bg: var(--node-purple); }
+
+.node-root {
+  padding: 12px 18px;
+  font-size: var(--font-size-root);
+  font-weight: 700;
+}
+
+.node.selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 결정 주제: 마름모. 바깥 마름모(::before)는 테두리, 안쪽(::after)은 바탕 */
+.node-decision {
+  isolation: isolate;
+  min-width: 120px;
+  padding: 22px 40px;
+  background: none;
+  box-shadow: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
+  text-align: center;
+}
+
+.node-decision::before,
+.node-decision::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.node-decision::before {
+  inset: 0;
+  background: var(--line);
+}
+
+.node-decision::after {
+  inset: 2px 4px;
+  background: var(--node-bg, var(--surface));
+}
+
+.node-decision.selected {
+  outline: none;
+}
+
+.node-decision.selected::before {
+  background: var(--accent);
+}
+
+.node-decision.selected::after {
+  inset: 3px 6px;
+}
+
+.node-text {
+  display: block;
+  min-height: 1.5em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  outline: none;
+}
+
+.node-text:empty::before {
+  content: "빈 주제";
+  color: var(--text-soft);
+}
+
+/* 편집 중: 글자 요소에는 투명한 같은 글자(크기 맞추기용), 그 위에 입력칸을 겹침 */
+.node-text.editing,
+.edge-label.editing {
+  position: relative;
+  color: transparent;
+}
+
+.inline-editor {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.inline-editor::placeholder {
+  color: var(--text-soft);
+}
+
+/* 끌어서 다른 주제에 화살표를 잇는 손잡이 (고른 주제에만 보임) */
+.node-handle {
+  display: none;
+  position: absolute;
+  top: 50%;
+  right: -12px;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: crosshair;
+}
+
+.node.selected .node-handle {
+  display: block;
+}
+
+/* 접힌 주제: 숨은 자손 개수 (누르면 펼침) */
+.node-fold {
+  position: absolute;
+  top: 50%;
+  right: -14px;
+  transform: translate(100%, -50%);
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.node-fold:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* 화살표 순서 번호 */
+.node-number {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+}
+
+/* ---------- 따라가기 재생 ---------- */
+
+.canvas.playing .node:not(.play-current):not(.play-done),
+.canvas.playing .edge:not(.play-done),
+.canvas.playing .edge-label:not(.play-done) {
+  opacity: 0.25;
+}
+
+.node.play-current {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.node-decision.play-current {
+  outline: none;
+}
+
+.node-decision.play-current::before {
+  background: var(--accent);
+}
+
+/* ---------- 연결선 ---------- */
+
+.edge-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.edge-branch .edge-line {
+  stroke: var(--branch);
+}
+
+.edge-flow .edge-line {
+  stroke: var(--accent);
+}
+
+.edge.selected .edge-line {
+  stroke-width: 4;
+}
+
+.edge-branch.selected .edge-line {
+  stroke: var(--text-soft);
+}
+
+/* 가는 선도 누르기 쉽게 투명하고 굵은 선을 겹쳐 둠 */
+.edge-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 16;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.arrow-head {
+  fill: var(--accent);
+}
+
+.edge-preview {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 6 6;
+}
+
+/* ---------- 화살표 라벨 ---------- */
+
+.edge-label {
+  position: absolute;
+  /* 선 가운데 바로 위에 두어 짧은 화살표도 가리지 않게 */
+  transform: translate(-50%, calc(-100% - 2px));
+  width: max-content;
+  max-width: 160px;
+  padding: 2px 8px;
+  border-radius: var(--radius-s);
+  background: var(--bg);
+  color: var(--accent);
+  font-size: var(--font-size-small);
+  white-space: pre-wrap;
+  text-align: center;
+  cursor: pointer;
+  outline: none;
+}
+
+.edge-label:empty:not(.selected):not(.editing) {
+  display: none;
+}
+
+.edge-label:empty::before {
+  content: "라벨: Enter";
+  color: var(--text-soft);
+}
+
+.edge-label.selected,
+.edge-label.editing {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* 아이폰은 16px보다 작은 입력칸을 누르면 화면을 확대하므로 편집 중에는 16px */
+.edge-label.editing {
+  font-size: var(--font-size);
+}
+
+.edge-label .inline-editor {
+  color: var(--accent);
+}

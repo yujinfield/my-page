@@ -1,0 +1,115 @@
+/* 화면 배치: 위 도구 막대, 가운데 캔버스, 아래 단축키 안내, 반응형 */
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  padding: var(--space-s) var(--space-m);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  z-index: 1;
+  overflow-x: auto; /* 화면이 좁으면 버튼을 가로로 밀어서 보기 */
+}
+
+.app-title {
+  font-size: var(--font-size);
+  font-weight: 700;
+  white-space: nowrap;
+  margin-right: auto;
+}
+
+.tool-group {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.tool-group button {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 var(--space-s);
+  border: none;
+  border-radius: var(--radius-s);
+  background: var(--surface-soft);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tool-group button:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.tool-group .icon-button {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.tool-group button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.tool-group button:disabled:hover {
+  background: var(--surface-soft);
+  color: inherit;
+}
+
+.tool-group button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.canvas {
+  position: relative;
+  flex: 1;
+}
+
+.hint-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-m);
+  padding: var(--space-s) var(--space-m);
+  background: var(--surface);
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+}
+
+kbd {
+  font-family: inherit;
+  padding: 0 var(--space-xs);
+  border-radius: 4px;
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+/* 버튼이 많아서 노트북 폭에서는 제목을 숨기고 버튼을 두 줄로 */
+@media (max-width: 1280px) {
+  .app-title {
+    display: none;
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+    gap: var(--space-s) var(--space-m);
+  }
+}
+
+/* 휴대폰: 한 줄로 두고 가로로 밀어서 보기, 단축키 안내 숨김 */
+@media (max-width: 768px) {
+  .toolbar {
+    flex-wrap: nowrap;
+    gap: var(--space-s);
+    padding: var(--space-s);
+  }
+
+  .app-title,
+  .hint-bar {
+    display: none;
+  }
+}

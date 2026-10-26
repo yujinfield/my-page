@@ -1,0 +1,95 @@
+/* 캔버스 위에 떠 있는 것: 안내 문구, 재생 막대, 주제 색 고르기 창 */
+
+/* ---------- 안내 문구 ---------- */
+
+.status,
+.empty-hint {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 2 * var(--space-m));
+  padding: var(--space-s) var(--space-m);
+  border-radius: var(--radius-m);
+  font-size: var(--font-size-small);
+  text-align: center;
+  pointer-events: none;
+}
+
+.status {
+  top: var(--space-m);
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.empty-hint {
+  top: 50%;
+  background: var(--surface);
+  color: var(--text-soft);
+  box-shadow: var(--shadow);
+}
+
+/* ---------- 재생 막대 ---------- */
+
+.play-bar {
+  position: absolute;
+  bottom: var(--space-m);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  padding: var(--space-xs) var(--space-s);
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  cursor: default;
+}
+
+.play-bar button {
+  min-width: 40px;
+  min-height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  cursor: pointer;
+}
+
+.play-bar button:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+#play-counter {
+  min-width: 56px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 주제 색 고르기 창 ---------- */
+
+.color-panel {
+  position: fixed;
+  z-index: 2;
+  display: flex;
+  gap: var(--space-xs);
+  padding: var(--space-s);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.swatch {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--node-bg, var(--surface));
+  color: var(--text-soft);
+  font-size: var(--font-size-small);
+  cursor: pointer;
+}
+
+.swatch:hover,
+.swatch[aria-pressed="true"] {
+  border-color: var(--accent);
+}
