@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 보안: 이 사이트의 파일만 쓰고, 외부로는 아무 데도 연결하지 않음 -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>무한 마인드맵</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/canvas.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="toolbar">
+    <h1 class="app-title">무한 마인드맵</h1>
+
+    <div class="tool-group" role="group" aria-label="주제">
+      <button id="btn-child" type="button" aria-label="자식 주제 추가 (Tab)" title="자식 주제 추가 (Tab)">＋ 자식</button>
+      <button id="btn-sibling" type="button" aria-label="형제 주제 추가 (Enter)" title="형제 주제 추가 (Enter)">＋ 형제</button>
+      <button id="btn-edit" type="button" aria-label="글자 고치기 (Space)" title="글자 고치기 (Space)">편집</button>
+      <button id="btn-connect" type="button" aria-label="화살표 연결 (L)" title="화살표 연결 (L)">→ 연결</button>
+      <button id="btn-delete" type="button" aria-label="고른 것 삭제 (Delete)" title="고른 것 삭제 (Delete)">삭제</button>
+    </div>
+
+    <div class="tool-group" role="group" aria-label="화면">
+      <button id="btn-zoom-out" type="button" aria-label="축소 (-)" title="축소 (-)">−</button>
+      <button id="btn-zoom-reset" type="button" aria-label="100%로 보기 (1)" title="100%로 보기 (1)"><span id="zoom-label">100%</span></button>
+      <button id="btn-zoom-in" type="button" aria-label="확대 (+)" title="확대 (+)">＋</button>
+      <button id="btn-fit" type="button" aria-label="전체 보기 (0)" title="전체 보기 (0)">전체</button>
+      <button id="btn-theme" type="button" aria-label="다크 모드 전환" title="다크 모드 전환">🌓</button>
+    </div>
+  </header>
+
+  <main id="canvas" class="canvas" tabindex="0"
+        aria-label="마인드맵 캔버스. 방향키로 주제 이동, Tab 자식 추가, Enter 형제 추가, Space 편집, Esc 선택 해제">
+    <div id="world" class="world">
+      <svg id="edges" class="edges" aria-hidden="true"></svg>
+      <div id="nodes" class="nodes"></div>
+    </div>
+    <p id="status" class="status" role="status" aria-live="polite" hidden></p>
+    <p id="empty-hint" class="empty-hint" hidden>빈 곳을 두 번 누르거나 ＋ 자식 버튼으로 새 주제를 만드세요</p>
+  </main>
+
+  <footer class="hint-bar">
+    <span><kbd>Tab</kbd> 자식</span>
+    <span><kbd>Enter</kbd> 형제</span>
+    <span><kbd>Space</kbd> 편집</span>
+    <span><kbd>L</kbd> 또는 ● 끌기: 화살표</span>
+    <span><kbd>Delete</kbd> 삭제</span>
+    <span><kbd>방향키</kbd> 이동</span>
+    <span>빈 곳 끌기: 화면 이동</span>
+    <span><kbd>Ctrl</kbd>+휠: 확대</span>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,109 @@
+/* 색상·간격·폰트 변수, 리셋, 다크 모드 */
+
+:root {
+  --bg: #f6f5f2;
+  --surface: #ffffff;
+  --surface-soft: #efede8;
+  --text: #2a2826;
+  --text-soft: #7a756f;
+  --line: #e4e1db;
+
+  --accent: #dd4c4f;
+  --accent-soft: #fbeaea;
+  --accent-text: #ffffff;
+
+  --branch: #b9b4ad;     /* 마인드맵 가지 선 */
+  --grid-dot: #dcd8d1;   /* 캔버스 바탕 점 */
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.06);
+
+  --space-xs: 4px;
+  --space-s: 8px;
+  --space-m: 16px;
+  --space-l: 24px;
+
+  --radius-s: 8px;
+  --radius-m: 12px;
+
+  --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --font-size: 16px;
+  --font-size-small: 14px;
+  --font-size-root: 18px;
+
+  color-scheme: light;
+}
+
+/* 시스템이 다크 모드이고, 직접 라이트로 고르지 않았을 때 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1c1b1a;
+    --surface: #2a2826;
+    --surface-soft: #33312e;
+    --text: #eeebe6;
+    --text-soft: #a8a29b;
+    --line: #3d3b38;
+
+    --accent: #ec6f71;
+    --accent-soft: #3a2a2a;
+    --accent-text: #1c1b1a;
+
+    --branch: #6b665f;
+    --grid-dot: #34322f;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+
+    color-scheme: dark;
+  }
+}
+
+/* 직접 다크 모드를 골랐을 때 */
+:root[data-theme="dark"] {
+  --bg: #1c1b1a;
+  --surface: #2a2826;
+  --surface-soft: #33312e;
+  --text: #eeebe6;
+  --text-soft: #a8a29b;
+  --line: #3d3b38;
+
+  --accent: #ec6f71;
+  --accent-soft: #3a2a2a;
+  --accent-text: #1c1b1a;
+
+  --branch: #6b665f;
+  --grid-dot: #34322f;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--font-size);
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
