@@ -431,6 +431,11 @@ textarea {
   color: var(--accent);
 }
 
+.long-message {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
 .code-box {
   display: block;
   padding: var(--space-s);
