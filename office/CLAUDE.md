@@ -13,7 +13,7 @@
 4. **단순하게** — 짧고 읽기 쉬운 코드, 명확한 이름.
 5. **한국어** — UI 문구, 주석, 커밋 메시지 본문은 한국어. (변수·함수 이름은 영어)
 6. GPT 답, 직원 이름 등 바깥에서 온 글자는 **`textContent`로만** 넣습니다. `innerHTML` 금지.
-7. 바깥 연결은 OpenAI API, Uplika, GitHub Gist(동기화)만 허용합니다 (`index.html`의 CSP `connect-src`). 새 서비스를 붙이면 CSP에도 추가합니다.
+7. 바깥 연결은 OpenAI API, Uplika, GitHub Gist(동기화), Uplika 중계 서버(`*.workers.dev`)만 허용합니다 (`index.html`의 CSP `connect-src`). 새 서비스를 붙이면 CSP에도 추가합니다.
 8. Uplika 도구는 **읽기 전용만** GPT에 넘깁니다 (`uplika.js`의 `READ_ONLY_TOOLS`). 발행·댓글·DM 도구를 넣으려면 대표가 승인하는 단계를 먼저 만듭니다.
 
 ## 코드 구조
@@ -27,7 +27,8 @@
 | `css/panels.css` | 탭, 폼, 지원자 카드, 메신저, 회의록, 알림, 설정 창 |
 | `js/store.js` | 데이터 계층. `localStorage` 읽기/쓰기는 **이 파일에서만** |
 | `js/gpt.js` | GPT 호출 (`askGpt`). 보통은 Chat Completions, 도구를 넘기면 Responses API |
-| `js/uplika.js` | Uplika MCP 연결: 승인(OAuth + PKCE, 앱 자동 등록), 출입증 갱신, GPT에 넘길 도구 설정 |
+| `js/uplika.js` | Uplika MCP 연결: 승인(OAuth + PKCE, 앱 자동 등록), 출입증 갱신, GPT에 넘길 도구 설정. 승인 요청은 중계 서버를 거침 |
+| `worker/uplika-proxy.js` | Cloudflare Workers에 붙여 넣는 중계 서버. Uplika가 브라우저 요청(CORS)을 막아서 승인 요청만 대신 전달 (사이트에서는 안 씀, 배포법은 `worker/README.md`) |
 | `js/employees.js` | 팀 정보, 자리, 외모, 직원별 모델(`settingsFor`), 기억(`[기억]` 줄 떼기·추가), GPT에 보낼 말 만들기 (DOM 사용 안 함) |
 | `js/profile.js` | 대화방의 "직원 설정 · 기억": 직원별 GPT 모델, 기억 보기·추가·지우기 |
 | `js/sync.js` | ☁️ 다른 기기에서도 보기: 연결 코드(토큰 + Gist id), 올리기·받기, 충돌 시 물어보기 |
@@ -56,7 +57,7 @@
   meetings: [{ id, team: "blog" | "insta" | "all", topic, material, lines: [{ speakerId, text, summary }], time }],
   posting: { team, role, details, applicants: [...] } // 마지막 채용 공고
 }
-// "ai-office-settings": { apiKey, model, about, uplikaUrl }
+// "ai-office-settings": { apiKey, model, about, uplikaUrl, uplikaProxy }
 // "ai-office-uplika": { serverUrl, clientId, tokenEndpoint, accessToken, refreshToken, expiresAt }
 // "ai-office-uplika-pending": 승인 화면에 다녀오는 동안 기억할 값 (PKCE verifier, state)
 // "ai-office-sync": { token, gistId, key, salt, remoteSavedAt, dirty } (이 기기에만)

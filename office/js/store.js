@@ -37,9 +37,9 @@ export function saveData(data) {
   safeSet(DATA_KEY, JSON.stringify(data));
 }
 
-// 설정: { apiKey, model, about, uplikaUrl }
+// 설정: { apiKey, model, about, uplikaUrl, uplikaProxy }
 export function loadSettings() {
-  const settings = { apiKey: "", model: DEFAULT_MODEL, about: "", uplikaUrl: "" };
+  const settings = { apiKey: "", model: DEFAULT_MODEL, about: "", uplikaUrl: "", uplikaProxy: "" };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
     return { ...settings, ...saved };

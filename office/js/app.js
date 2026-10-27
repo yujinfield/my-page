@@ -7,7 +7,7 @@ import { initScene, renderScene, say } from "./scene.js";
 import { initHire, renderHire } from "./hire.js";
 import { initMeeting, renderMeeting } from "./meeting.js";
 import { initMessenger, renderMessenger, openChat, unreadCount, isChatVisible } from "./messenger.js";
-import { startConnect, finishConnect, isUplikaConnected, disconnectUplika } from "./uplika.js";
+import { startConnect, finishConnect, isUplikaConnected, disconnectUplika, setUplikaProxy } from "./uplika.js";
 
 const state = {
   data: loadData(),
@@ -48,6 +48,7 @@ function replaceAll(data, settings) {
   if (!fixed) return;
   state.data = fixed;
   state.settings = { ...state.settings, ...settings };
+  setUplikaProxy(state.settings.uplikaProxy);
   saveData(state.data);
   saveSettings(state.settings);
   refreshAll();
@@ -137,6 +138,7 @@ document.getElementById("btn-settings").addEventListener("click", () => {
   settingsForm.elements.model.value = state.settings.model;
   settingsForm.elements.about.value = state.settings.about;
   settingsForm.elements.uplikaUrl.value = state.settings.uplikaUrl;
+  settingsForm.elements.uplikaProxy.value = state.settings.uplikaProxy;
   renderUplikaStatus();
   settingsDialog.showModal();
 });
@@ -147,8 +149,10 @@ function saveSettingsForm() {
     model: settingsForm.elements.model.value.trim() || DEFAULT_MODEL,
     about: settingsForm.elements.about.value.trim(),
     uplikaUrl: settingsForm.elements.uplikaUrl.value.trim(),
+    uplikaProxy: settingsForm.elements.uplikaProxy.value.trim(),
   };
   saveSettings(state.settings);
+  setUplikaProxy(state.settings.uplikaProxy);
   markChanged();
 }
 
@@ -212,6 +216,7 @@ showTab(state.data.employees.length ? "messenger" : "hire");
 renderUnread();
 if (!state.settings.apiKey) notify("⚙︎ 설정에서 OpenAI API 키를 넣으면 직원들이 일을 시작해요.");
 // Uplika 승인 화면에서 돌아왔으면 연결 마무리
+setUplikaProxy(state.settings.uplikaProxy);
 finishConnect()
   .then((message) => {
     if (message) notify(message);
