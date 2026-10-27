@@ -72,6 +72,7 @@ async function sendChat() {
   renderMessenger();
 
   chatStatus.textContent = `${employee.name} 님이 입력 중…`;
+  app.say(employee.id, "…", 60000); // 답이 올 때까지 머리 위에 "…"
   try {
     const messages = chatMessages(employee, app.state.data.messages, app.state.settings.about);
     const answer = await askGpt(settingsFor(app.state.settings, employee), messages);
@@ -82,6 +83,7 @@ async function sendChat() {
     if (!isChatVisible(employee.id)) app.notify(`💬 ${employee.name}: ${reply}`, employee.id);
   } catch (error) {
     chatStatus.textContent = error.message;
+    app.say(employee.id, "앗…");
   }
   app.save();
   app.refreshAll();
@@ -194,7 +196,7 @@ function renderRoom(employee) {
   chatTitle.textContent = `${employee.name} · ${employee.role}`;
   renderProfile(employee);
   taskButton.disabled = employee.status === "working";
-  taskButton.textContent = employee.status === "working" ? "업무 중…" : "업무 지시";
+  taskButton.textContent = employee.status === "working" ? "업무 중…" : "📋 업무 지시";
 
   chatLog.replaceChildren();
   app.state.data.messages
