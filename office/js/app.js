@@ -217,7 +217,11 @@ document.getElementById("btn-theme").addEventListener("click", () => {
 // ---- 시작 ----
 
 applyTheme(loadTheme());
-initScene({ getEmployees: () => state.data.employees, onPick: pickEmployee });
+initScene({
+  getEmployees: () => state.data.employees,
+  onPick: pickEmployee,
+  hasNews: (employee) => state.data.messages.some((message) => message.employeeId === employee.id && message.kind === "report" && !message.read),
+});
 initHire(app);
 initMeeting(app);
 initSheetPanel(app);
