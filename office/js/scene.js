@@ -15,6 +15,7 @@ const speeches = new Map(); // 직원 id → { text, until }
 const buttons = new Map();  // 직원 id → 버튼
 let getEmployees = () => [];
 let onPick = () => {};
+let hasNews = () => false; // 안 읽은 완료 보고가 있는 직원인지
 let frame = 0;
 
 // 자리 번호(0~3) → 사람을 그릴 위치
@@ -32,6 +33,7 @@ function percent(value, total) {
 export function initScene(options) {
   getEmployees = options.getEmployees;
   onPick = options.onPick;
+  hasNews = options.hasNews;
   canvas.width = SCENE_WIDTH;
   canvas.height = SCENE_HEIGHT;
 
@@ -53,15 +55,20 @@ export function initScene(options) {
 function tick() {
   frame += 1;
   const now = Date.now();
-  let expired = false;
   speeches.forEach((speech, id) => {
-    if (speech.until < now) {
-      speeches.delete(id);
-      expired = true;
-    }
+    if (speech.until < now) speeches.delete(id);
   });
   draw();
-  if (expired) renderOverlay();
+  renderOverlay(); // 말풍선이 끝났거나, 보고를 읽어서 "!"가 사라졌을 수 있음
+}
+
+// 머리 위에 띄울 것: 일하는 중이면 "Work!", 아니면 하던 말, 안 읽은 완료 보고가 있으면 "!"
+function bubbleFor(employee) {
+  if (employee.status === "working") return { text: "Work!", kind: "work" };
+  const speech = speeches.get(employee.id);
+  if (speech) return { text: speech.text, kind: "" };
+  if (hasNews(employee)) return { text: "!", kind: "alert" };
+  return { text: "", kind: "" };
 }
 
 // 직원 머리 위에 말풍선을 잠깐 띄움
@@ -120,13 +127,14 @@ function renderOverlay() {
     button.style.height = percent(PERSON_HEIGHT + 4, SCENE_HEIGHT);
     // 화면 양 끝 자리는 말풍선이 잘리지 않게 안쪽으로 붙임
     button.dataset.edge = x < SCENE_WIDTH / 4 ? "left" : x > (SCENE_WIDTH * 3) / 4 ? "right" : "";
-    button.setAttribute("aria-label", `${employee.name} (${TEAMS[employee.team].name}) 메신저 열기`);
+    const { text, kind } = bubbleFor(employee);
+    const state = kind === "work" ? ", 일하는 중" : kind === "alert" ? ", 새 완료 보고 있음" : "";
+    button.setAttribute("aria-label", `${employee.name} (${TEAMS[employee.team].name})${state} 메신저 열기`);
     button.querySelector(".name-tag").textContent = employee.name;
 
     const bubble = button.querySelector(".bubble");
-    const speech = speeches.get(employee.id);
-    const text = speech ? speech.text : employee.status === "working" ? "Work!" : "";
-    bubble.textContent = text;
+    if (bubble.textContent !== text) bubble.textContent = text;
+    bubble.dataset.kind = kind;
     bubble.hidden = !text;
   });
 }

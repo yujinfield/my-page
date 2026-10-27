@@ -114,6 +114,37 @@
   right: 7px;
 }
 
+/* 일하는 중 */
+.bubble[data-kind="work"] {
+  color: var(--work-text);
+}
+
+/* 완료 보고가 왔어요: 빨간 "!"가 통통 튐 */
+.bubble[data-kind="alert"] {
+  min-width: 2em;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: clamp(12px, 1.8vw, 18px);
+  text-align: center;
+  animation: bounce 0.9s ease-in-out infinite;
+}
+
+.bubble[data-kind="alert"]::after {
+  border-top-color: var(--accent);
+}
+
+@keyframes bounce {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble[data-kind="alert"] {
+    animation: none;
+  }
+}
+
 @media (max-width: 768px) {
   .bubble {
     max-width: 140px;
