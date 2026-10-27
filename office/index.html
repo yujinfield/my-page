@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- 보안: 이 사이트의 파일만 쓰고, 바깥으로는 OpenAI API와 Uplika에만 연결 -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://api.openai.com https://uplika.com https://*.uplika.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <!-- 보안: 이 사이트의 파일만 쓰고, 바깥으로는 OpenAI API, Uplika, GitHub Gist(동기화)에만 연결 -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://api.openai.com https://uplika.com https://*.uplika.com https://api.github.com https://gist.githubusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>AI 사무실</title>
   <link rel="stylesheet" href="css/base.css">
@@ -17,6 +17,7 @@
   <header class="topbar">
     <h1 class="app-title">AI 사무실</h1>
     <div class="topbar-buttons">
+      <span id="sync-status" class="sync-status" aria-live="polite"></span>
       <button id="btn-theme" class="icon-button" type="button" aria-label="라이트/다크 모드 전환" title="라이트/다크 모드">◐</button>
       <button id="btn-settings" class="icon-button" type="button" aria-label="설정 (API 키)" title="설정">⚙︎</button>
     </div>
@@ -46,6 +47,30 @@
             <h2 id="chat-title" class="chat-title"></h2>
             <button id="chat-fire" class="text-button" type="button" aria-label="이 직원 퇴사 처리">퇴사</button>
           </div>
+          <details class="profile">
+            <summary id="chat-profile-summary">직원 설정 · 기억</summary>
+            <div class="profile-body">
+              <label class="field">GPT 모델 (비워 두면 설정의 기본 모델)
+                <input id="chat-model" type="text" list="model-options" autocomplete="off">
+              </label>
+              <datalist id="model-options">
+                <option value="gpt-4.1-mini"></option>
+                <option value="gpt-4.1"></option>
+                <option value="gpt-4o-mini"></option>
+                <option value="gpt-4o"></option>
+                <option value="gpt-5-mini"></option>
+                <option value="gpt-5"></option>
+              </datalist>
+              <h3 class="small-title">🧠 기억</h3>
+              <p id="memory-empty" class="muted small">아직 기억한 게 없어요. 대화나 업무 중에 중요한 걸 알려 주면 스스로 기억해요.</p>
+              <ul id="memory-list" class="memory-list"></ul>
+              <form id="memory-form" class="memory-form">
+                <label class="visually-hidden" for="memory-text">직접 기억시키기</label>
+                <input id="memory-text" name="text" type="text" autocomplete="off">
+                <button type="submit">추가</button>
+              </form>
+            </div>
+          </details>
           <ul id="chat-log" class="chat-log" aria-live="polite"></ul>
           <p id="chat-status" class="status" aria-live="polite"></p>
           <form id="chat-form" class="chat-form">
@@ -148,6 +173,39 @@
           <button id="btn-uplika-disconnect" type="button">연결 끊기</button>
           <button id="btn-uplika-connect" type="button">Uplika 연결</button>
         </div>
+      </fieldset>
+      <fieldset class="connect-box">
+        <legend>☁️ 다른 기기에서도 보기</legend>
+        <div id="sync-setup" class="stack-form">
+          <label>비밀번호 (4자 이상, 데이터를 잠가요)
+            <input id="sync-password" type="password" autocomplete="off">
+          </label>
+          <label>연결 코드 (다른 기기에서 이미 만들었으면)
+            <input id="sync-code" type="text" autocomplete="off" placeholder="처음이면 비워 두기">
+          </label>
+          <label>GitHub 토큰 (처음 만들 때만, gist 권한)
+            <input id="sync-token" type="password" autocomplete="off" placeholder="ghp_…">
+          </label>
+          <p class="muted small">
+            <a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=AI%20office" target="_blank" rel="noopener">GitHub 토큰 만들기 (gist만 체크)</a>
+            · 처음 한 기기에서 토큰과 비밀번호로 "처음 만들기"를 누르면 연결 코드가 생겨요. 다른 기기에서는 연결 코드와 비밀번호로 "연결하기"를 눌러요.
+          </p>
+          <div class="row-buttons">
+            <button id="sync-connect" type="button">연결하기</button>
+            <button id="sync-create" type="button">처음 만들기</button>
+          </div>
+        </div>
+        <div id="sync-connected" class="stack-form" hidden>
+          <p class="small">연결됨 · 연결 코드</p>
+          <code id="sync-code-text" class="code-box"></code>
+          <p class="muted small">연결 코드에는 GitHub 토큰이 들어 있어요. 남에게 보여 주지 마세요. 직원·대화·회의·설정(API 키 포함)이 비밀번호로 잠긴 채 함께 옮겨 가요. Uplika 연결만 기기마다 따로 눌러 주세요.</p>
+          <div class="row-buttons">
+            <button id="sync-disconnect" type="button">연결 끊기</button>
+            <button id="sync-copy" type="button">코드 복사</button>
+            <button id="sync-now" type="button">지금 동기화</button>
+          </div>
+        </div>
+        <p id="sync-message" class="status" aria-live="polite"></p>
       </fieldset>
       <div class="row-buttons">
         <button type="submit" value="cancel" formnovalidate>취소</button>

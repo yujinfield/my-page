@@ -6,14 +6,28 @@
 const CHAT_URL = "https://api.openai.com/v1/chat/completions";
 const RESPONSES_URL = "https://api.openai.com/v1/responses";
 
+// 지금 GPT 답을 기다리는 중인지 (동기화가 데이터를 바꾸지 않게)
+let running = 0;
+export function isGptRunning() {
+  return running > 0;
+}
+
 // messages: [{ role: "system" | "user" | "assistant", content: "..." }]
 // json: true면 답을 JSON 글자로 받음
 // tools: GPT가 쓸 수 있는 도구 목록 (없으면 null)
-export async function askGpt(settings, messages, { json = false, tools = null } = {}) {
+export async function askGpt(settings, messages, options = {}) {
   if (!settings.apiKey) {
     throw new Error("오른쪽 위 ⚙︎ 설정에서 OpenAI API 키를 먼저 넣어 주세요.");
   }
+  running += 1;
+  try {
+    return await ask(settings, messages, options);
+  } finally {
+    running -= 1;
+  }
+}
 
+async function ask(settings, messages, { json = false, tools = null }) {
   if (tools && tools.length) {
     const data = await post(RESPONSES_URL, settings.apiKey, { model: settings.model, input: messages, tools });
     return outputText(data);

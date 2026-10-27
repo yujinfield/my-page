@@ -88,7 +88,45 @@ function personaPrompt(employee, about, lookup = false) {
     "사용자를 '대표님'이라고 부르고, 한국어로 실제 직원처럼 자연스럽게 말합니다.",
     "실제 조회수·팔로워 수처럼 모르는 정보는 지어내지 말고, 필요하면 대표님께 자료를 달라고 합니다.",
     lookup ? LOOKUP_RULE : "",
+    memoryText(employee),
   ].filter(Boolean).join("\n");
+}
+
+// 직원마다 다른 GPT 모델을 쓸 수 있음 (비워 두면 설정의 기본 모델)
+export function settingsFor(settings, employee) {
+  return employee.model ? { ...settings, model: employee.model } : settings;
+}
+
+// ---- 기억 ----
+
+export const MAX_MEMORIES = 30;
+
+// 답 끝에 "[기억] 내용"을 적게 해서 기억할 것을 골라냄
+const MEMORY_RULE = "대표님이 알려 준 정보·취향·결정 중 앞으로도 기억해 둘 만한 것이 있으면, 답 맨 끝에 '[기억] 내용' 형식으로 한 줄씩 적으세요. 이미 기억하는 것이나 사소한 것은 적지 않습니다.";
+
+function memoryText(employee) {
+  const memories = employee.memory || [];
+  if (memories.length === 0) return "";
+  return `기억하고 있는 것:\n${memories.map((memory) => `- ${memory.text}`).join("\n")}`;
+}
+
+// 답에서 "[기억] …" 줄을 떼어 냄 → { text: 보여 줄 답, memories: ["…"] }
+export function extractMemories(reply) {
+  const memories = [];
+  const lines = reply.split("\n").filter((line) => {
+    const match = line.match(/^\s*\[기억\]\s*(.+)$/);
+    if (match) memories.push(match[1].trim());
+    return !match;
+  });
+  return { text: lines.join("\n").trim(), memories };
+}
+
+// 기억 하나 추가 (오래된 것부터 지워서 MAX_MEMORIES개까지만)
+export function addMemory(employee, text) {
+  if (!employee.memory) employee.memory = [];
+  if (employee.memory.some((memory) => memory.text === text)) return;
+  employee.memory.push({ text, time: Date.now() });
+  if (employee.memory.length > MAX_MEMORIES) employee.memory.shift();
 }
 
 // ---- 메신저 ----
@@ -107,7 +145,7 @@ function historyMessages(messages, employeeId, count) {
 
 export function chatMessages(employee, messages, about) {
   return [
-    { role: "system", content: `${personaPrompt(employee, about)}\n\n지금은 사내 메신저입니다. 짧게 1~3문장으로 답하세요.` },
+    { role: "system", content: `${personaPrompt(employee, about)}\n\n지금은 사내 메신저입니다. 짧게 1~3문장으로 답하세요.\n${MEMORY_RULE}` },
     ...historyMessages(messages, employee.id, 20),
   ];
 }
@@ -116,6 +154,7 @@ export function taskMessages(employee, messages, task, about, lookup = false) {
   const instructions = [
     "대표님이 업무를 지시했습니다. 결과물을 직접 완성해서 보고하세요.",
     "첫 줄에 한 문장으로 무엇을 했는지 쓰고, 그 아래에 결과물(글 초안, 목록, 아이디어 등)을 씁니다.",
+    MEMORY_RULE,
   ].join("\n");
   return [
     { role: "system", content: `${personaPrompt(employee, about, lookup)}\n\n${instructions}` },

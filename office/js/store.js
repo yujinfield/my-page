@@ -27,8 +27,8 @@ export function loadData() {
   return emptyData();
 }
 
-// 저장 형식이 바뀌면 여기서 옛 데이터를 새 형식으로 바꿉니다.
-function migrate(data) {
+// 저장 형식이 바뀌면 여기서 옛 데이터를 새 형식으로 바꿉니다. (동기화로 받은 데이터에도 씀)
+export function migrate(data) {
   if (!data || !Array.isArray(data.employees)) return null;
   return { ...emptyData(), ...data, version: VERSION };
 }
@@ -90,6 +90,17 @@ export function loadUplikaPending() {
 
 export function saveUplikaPending(pending) {
   saveJson(UPLIKA_PENDING_KEY, pending);
+}
+
+// ☁️ 동기화 설정 (이 기기에만): { token, gistId, key, salt, remoteSavedAt, dirty }
+const SYNC_KEY = "ai-office-sync";
+
+export function loadSync() {
+  return loadJson(SYNC_KEY);
+}
+
+export function saveSync(sync) {
+  saveJson(SYNC_KEY, sync);
 }
 
 export function loadTheme() {

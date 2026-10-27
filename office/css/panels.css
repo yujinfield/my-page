@@ -290,6 +290,72 @@ textarea {
   justify-content: flex-end;
 }
 
+/* 직원 설정 · 기억 */
+.profile {
+  border-radius: var(--radius-m);
+  background: var(--surface-soft);
+}
+
+.profile summary {
+  padding: var(--space-s) var(--space-m);
+  font-size: var(--font-size-small);
+  color: var(--text-soft);
+  cursor: pointer;
+}
+
+.profile-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  padding: 0 var(--space-m) var(--space-m);
+}
+
+.profile input {
+  background: var(--surface);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font-size: var(--font-size-small);
+  color: var(--text-soft);
+}
+
+.small-title {
+  font-size: var(--font-size-small);
+}
+
+.memory-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  max-height: 180px;
+  overflow-y: auto;
+  font-size: var(--font-size-small);
+}
+
+.memory-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+}
+
+.memory-list span {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.memory-form {
+  display: flex;
+  gap: var(--space-s);
+}
+
+.memory-form button {
+  flex: none;
+  white-space: nowrap;
+}
+
 /* ---- 회의실 ---- */
 
 .meeting-room {
@@ -361,8 +427,24 @@ textarea {
   background: var(--surface);
 }
 
+.connect-box a {
+  color: var(--accent);
+}
+
+.code-box {
+  display: block;
+  padding: var(--space-s);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
 .dialog {
   width: min(440px, calc(100vw - 2 * var(--space-m)));
+  max-height: calc(100vh - 2 * var(--space-m));
+  overflow-y: auto;
   padding: var(--space-l);
   border: 0;
   border-radius: var(--radius-m);

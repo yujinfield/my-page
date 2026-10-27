@@ -1,7 +1,8 @@
 // 사내 메신저: 직원과 대화하고, 업무를 지시하면 끝난 뒤 완료 보고가 옴
 
 import { askGpt } from "./gpt.js";
-import { TEAMS, chatMessages, taskMessages } from "./employees.js";
+import { TEAMS, chatMessages, taskMessages, settingsFor, extractMemories, addMemory } from "./employees.js";
+import { initProfile, renderProfile } from "./profile.js";
 import { makeAvatar } from "./sprites.js";
 import { uplikaTools } from "./uplika.js";
 
@@ -35,6 +36,7 @@ export function initMessenger(appApi) {
       sendChat();
     }
   });
+  initProfile(app);
   resumeTasks();
   renderMessenger();
 }
@@ -71,11 +73,12 @@ async function sendChat() {
   chatStatus.textContent = `${employee.name} 님이 입력 중…`;
   try {
     const messages = chatMessages(employee, app.state.data.messages, app.state.settings.about);
-    const reply = await askGpt(app.state.settings, messages);
+    const answer = await askGpt(settingsFor(app.state.settings, employee), messages);
+    chatStatus.textContent = "";
+    const reply = remember(employee, answer);
     app.addMessage(employee.id, "employee", reply, "chat");
     app.say(employee.id, reply);
     if (!isChatVisible(employee.id)) app.notify(`💬 ${employee.name}: ${reply}`, employee.id);
-    chatStatus.textContent = "";
   } catch (error) {
     chatStatus.textContent = error.message;
   }
@@ -109,7 +112,7 @@ async function runTask(employee, task) {
     const history = app.state.data.messages.filter((message) => message !== task);
     const tools = await uplikaTools();
     const messages = taskMessages(employee, history, task.text, app.state.settings.about, Boolean(tools));
-    reply = await askGpt(app.state.settings, messages, { tools });
+    reply = remember(employee, await askGpt(settingsFor(app.state.settings, employee), messages, { tools }));
   } catch (error) {
     reply = `죄송해요 대표님, 일을 끝내지 못했어요. (${error.message})`;
     kind = "chat";
@@ -124,6 +127,14 @@ async function runTask(employee, task) {
   app.refreshAll();
   app.say(employee.id, kind === "report" ? "다 했어요!" : "앗…");
   if (!isChatVisible(employee.id)) app.notify(`📨 ${employee.name}: ${kind === "report" ? "업무 완료 보고가 왔어요" : "업무 중 문제가 생겼어요"}`, employee.id);
+}
+
+// 답 끝의 "[기억] …" 줄을 직원 기억에 넣고, 나머지 답을 돌려줌
+function remember(employee, reply) {
+  const { text, memories } = extractMemories(reply);
+  memories.forEach((memory) => addMemory(employee, memory));
+  if (memories.length && openId === employee.id) chatStatus.textContent = `🧠 기억했어요: ${memories.join(", ")}`;
+  return text || reply;
 }
 
 // 새로고침 등으로 끊긴 업무를 다시 시작
@@ -221,6 +232,7 @@ function renderList(employees) {
 
 function renderRoom(employee) {
   chatTitle.textContent = `${employee.name} · ${employee.role}`;
+  renderProfile(employee);
   taskButton.disabled = employee.status === "working";
   taskButton.textContent = employee.status === "working" ? "업무 중…" : "업무 지시";
 
