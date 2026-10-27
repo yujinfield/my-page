@@ -27,7 +27,7 @@
 | `css/panels.css` | 탭, 폼, 지원자 카드, 메신저, 회의록, 알림, 설정 창 |
 | `js/store.js` | 데이터 계층. `localStorage` 읽기/쓰기는 **이 파일에서만** |
 | `js/gpt.js` | GPT 호출 (`askGpt`). 보통은 Chat Completions, 도구를 넘기면 Responses API |
-| `js/uplika.js` | Uplika MCP 연결: 승인(OAuth + PKCE, 앱 자동 등록), 출입증 갱신, GPT에 넘길 도구 설정. 승인 요청은 중계 서버를 거침 |
+| `js/uplika.js` | Uplika MCP 연결: 승인(OAuth + PKCE, 앱 자동 등록), 출입증 갱신, GPT에 넘길 도구 설정. 승인 요청은 사무실 서버를 거침 |
 | `worker/office-server.js` | Cloudflare Workers에 붙여 넣는 사무실 서버 (사이트에서는 안 씀, 배포법은 `worker/README.md`). 업무 지시를 D1에 저장하고 GPT로 처리(크론 1분마다 재시도, 최대 3번), Uplika 승인 중계(`?url=`). 비밀 변수 `OPENAI_API_KEY`·`OFFICE_TOKEN`, D1 바인딩 `DB` |
 | `js/server.js` | 사무실 서버와 주고받기: 연결 확인, 업무 맡기기, 결과 받기, 받은 업무 지우기 (DOM 사용 안 함) |
 | `js/tasks.js` | 업무 처리: 서버를 설정했으면 서버에 맡기고 8초마다 결과 확인, 아니면 브라우저에서 바로 처리. 완료 보고·실패 메시지, 끊긴 업무 이어 하기 |
