@@ -1,4 +1,4 @@
-// 데이터 계층. localStorage 읽기/쓰기는 이 파일에서만 합니다.
+// 데이터 계층. localStorage·IndexedDB 읽기/쓰기는 이 파일에서만 합니다.
 
 const DATA_KEY = "ai-office-data";
 const BACKUP_KEY = "ai-office-data-broken";
@@ -37,9 +37,9 @@ export function saveData(data) {
   safeSet(DATA_KEY, JSON.stringify(data));
 }
 
-// 설정: { apiKey, model, about, uplikaUrl, serverUrl, serverToken, dataSheets: [{ id, name, url, tabs }] }
+// 설정: { apiKey, model, imageModel, about, uplikaUrl, serverUrl, serverToken, dataSheets: [{ id, name, url, tabs }] }
 export function loadSettings() {
-  const settings = { apiKey: "", model: DEFAULT_MODEL, about: "", uplikaUrl: "", serverUrl: "", serverToken: "", dataSheets: [] };
+  const settings = { apiKey: "", model: DEFAULT_MODEL, imageModel: "gpt-image-1", about: "", uplikaUrl: "", serverUrl: "", serverToken: "", dataSheets: [] };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
     // 예전 "중계 서버 주소"(uplikaProxy)는 사무실 서버 주소로 옮김
@@ -130,4 +130,44 @@ let idCount = 0;
 export function newId(prefix) {
   idCount += 1;
   return `${prefix}_${Date.now()}_${idCount}`;
+}
+
+// ---- 이미지 (IndexedDB) ----
+// 이미지는 커서 localStorage에 못 넣고 IndexedDB에 둡니다. 이 기기에만 있고 동기화되지 않습니다.
+
+const IMAGE_DB = "ai-office-images";
+const IMAGE_STORE = "images";
+
+function openImageDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(IMAGE_DB, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore(IMAGE_STORE);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// id: 업무 지시 메시지 id, base64: webp 이미지 글자
+export async function saveImage(id, base64) {
+  const db = await openImageDb();
+  await new Promise((resolve, reject) => {
+    const request = db.transaction(IMAGE_STORE, "readwrite").objectStore(IMAGE_STORE).put(base64, id);
+    request.onsuccess = resolve;
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// 없으면 null
+export async function loadImage(id) {
+  try {
+    const db = await openImageDb();
+    return await new Promise((resolve, reject) => {
+      const request = db.transaction(IMAGE_STORE).objectStore(IMAGE_STORE).get(id);
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
+  } catch (error) {
+    console.warn("이미지를 불러오지 못했습니다.", error);
+    return null;
+  }
 }

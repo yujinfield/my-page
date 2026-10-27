@@ -42,3 +42,8 @@ export async function fetchJobs(settings, ids) {
 export function ackJob(settings, id) {
   return call(settings, `/jobs/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
+
+// 승인한 완료 보고를 네이버 블로그에 임시 저장: { mcpUrl, accessToken, title, content } → { blog }
+export function saveNaverDraft(settings, draft) {
+  return call(settings, "/uplika/draft", { method: "POST", body: JSON.stringify(draft) });
+}

@@ -266,6 +266,48 @@ textarea {
   background: var(--accent-soft);
 }
 
+.report-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+  margin-top: var(--space-s);
+}
+
+.report-image {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+}
+
+.report-image img {
+  width: 100%;
+  max-width: 360px;
+  border-radius: var(--radius-s);
+}
+
+.report-image a,
+.draft-box .text-button {
+  align-self: flex-start;
+  padding: 0;
+  color: var(--accent);
+  font-size: var(--font-size-small);
+}
+
+.draft-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.draft-form input {
+  background: var(--surface);
+}
+
+.draft-form .primary {
+  align-self: flex-start;
+}
+
 .message.report {
   max-width: 100%;
   border-left: 3px solid var(--accent);
