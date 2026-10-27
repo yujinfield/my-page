@@ -1,11 +1,10 @@
 // 사내 메신저: 직원과 대화하고, 업무를 지시하면 끝난 뒤 완료 보고가 옴
 
 import { askGpt } from "./gpt.js";
-import { TEAMS, chatMessages, taskMessages, settingsFor, extractMemories, addMemory } from "./employees.js";
+import { TEAMS, chatMessages, settingsFor, extractMemories, addMemory } from "./employees.js";
 import { initProfile, renderProfile } from "./profile.js";
+import { initTasks, runTask } from "./tasks.js";
 import { makeAvatar } from "./sprites.js";
-import { uplikaTools } from "./uplika.js";
-import { sheetsText } from "./sheets.js";
 import { chosenChatSheet, sheetName } from "./sheet-panel.js";
 
 const chatList = document.getElementById("chat-list");
@@ -39,7 +38,7 @@ export function initMessenger(appApi) {
     }
   });
   initProfile(app);
-  resumeTasks();
+  initTasks(app, { remember, isChatVisible });
   renderMessenger();
 }
 
@@ -105,61 +104,12 @@ function sendTask() {
   runTask(employee, task);
 }
 
-async function runTask(employee, task) {
-  employee.status = "working";
-  app.save();
-  app.refreshAll();
-
-  let reply;
-  let kind = "report";
-  try {
-    const history = app.state.data.messages.filter((message) => message !== task);
-    const tools = await uplikaTools();
-    // 데이터 시트를 골랐으면 최신 내용을 업무 내용 뒤에 붙여서 넘김
-    let taskText = task.text;
-    if (task.sheetId) {
-      const sheet = await sheetsText(app.state.settings.dataSheets || [], [task.sheetId]);
-      taskText += `\n\n참고 데이터 시트:\n${sheet}`;
-    }
-    const messages = taskMessages(employee, history, taskText, app.state.settings.about, Boolean(tools));
-    reply = remember(employee, await askGpt(settingsFor(app.state.settings, employee), messages, { tools }));
-  } catch (error) {
-    reply = `죄송해요 대표님, 일을 끝내지 못했어요. (${error.message})`;
-    kind = "chat";
-  }
-
-  task.done = true;
-  employee.status = "idle";
-  // 일하는 사이에 퇴사했으면 보고하지 않음
-  if (!findEmployee(employee.id)) return;
-  app.addMessage(employee.id, "employee", reply, kind);
-  app.save();
-  app.refreshAll();
-  app.say(employee.id, kind === "report" ? "다 했어요!" : "앗…");
-  if (!isChatVisible(employee.id)) app.notify(`📨 ${employee.name}: ${kind === "report" ? "업무 완료 보고가 왔어요" : "업무 중 문제가 생겼어요"}`, employee.id);
-}
-
 // 답 끝의 "[기억] …" 줄을 직원 기억에 넣고, 나머지 답을 돌려줌
 function remember(employee, reply) {
   const { text, memories } = extractMemories(reply);
   memories.forEach((memory) => addMemory(employee, memory));
   if (memories.length && openId === employee.id) chatStatus.textContent = `🧠 기억했어요: ${memories.join(", ")}`;
   return text || reply;
-}
-
-// 새로고침 등으로 끊긴 업무를 다시 시작
-function resumeTasks() {
-  app.state.data.messages
-    .filter((message) => message.kind === "task" && message.done === false)
-    .forEach((task) => {
-      const employee = findEmployee(task.employeeId);
-      if (employee) runTask(employee, task);
-      else task.done = true;
-    });
-  app.state.data.employees.forEach((employee) => {
-    const hasTask = app.state.data.messages.some((message) => message.employeeId === employee.id && message.kind === "task" && message.done === false);
-    if (!hasTask) employee.status = "idle";
-  });
 }
 
 function fireEmployee() {

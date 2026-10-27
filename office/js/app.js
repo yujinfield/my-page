@@ -8,6 +8,7 @@ import { initHire, renderHire } from "./hire.js";
 import { initMeeting, renderMeeting } from "./meeting.js";
 import { initMessenger, renderMessenger, openChat, unreadCount, isChatVisible } from "./messenger.js";
 import { initSheetPanel, renderSheetPanel } from "./sheet-panel.js";
+import { serverReady, pingServer } from "./server.js";
 import { startConnect, finishConnect, isUplikaConnected, disconnectUplika, setUplikaProxy } from "./uplika.js";
 
 const state = {
@@ -56,7 +57,7 @@ function replaceAll(data, settings) {
   if (!fixed) return;
   state.data = fixed;
   state.settings = { ...state.settings, ...settings };
-  setUplikaProxy(state.settings.uplikaProxy);
+  setUplikaProxy(state.settings.serverUrl);
   saveData(state.data);
   saveSettings(state.settings);
   refreshAll();
@@ -147,7 +148,9 @@ document.getElementById("btn-settings").addEventListener("click", () => {
   settingsForm.elements.model.value = state.settings.model;
   settingsForm.elements.about.value = state.settings.about;
   settingsForm.elements.uplikaUrl.value = state.settings.uplikaUrl;
-  settingsForm.elements.uplikaProxy.value = state.settings.uplikaProxy;
+  settingsForm.elements.serverUrl.value = state.settings.serverUrl;
+  settingsForm.elements.serverToken.value = state.settings.serverToken;
+  serverStatus.textContent = "";
   renderUplikaStatus();
   settingsDialog.showModal();
 });
@@ -159,16 +162,39 @@ function saveSettingsForm() {
     model: settingsForm.elements.model.value.trim() || DEFAULT_MODEL,
     about: settingsForm.elements.about.value.trim(),
     uplikaUrl: settingsForm.elements.uplikaUrl.value.trim(),
-    uplikaProxy: settingsForm.elements.uplikaProxy.value.trim(),
+    serverUrl: settingsForm.elements.serverUrl.value.trim(),
+    serverToken: settingsForm.elements.serverToken.value.trim(),
   };
   saveSettings(state.settings);
-  setUplikaProxy(state.settings.uplikaProxy);
+  setUplikaProxy(state.settings.serverUrl);
   markChanged();
 }
 
 settingsForm.addEventListener("submit", (event) => {
   if (event.submitter && event.submitter.value === "cancel") return;
   saveSettingsForm();
+});
+
+// ---- 사무실 서버 ----
+
+const serverStatus = document.getElementById("server-status");
+
+document.getElementById("btn-server-ping").addEventListener("click", async () => {
+  saveSettingsForm();
+  if (!serverReady(state.settings)) {
+    serverStatus.textContent = "서버 주소와 비밀번호를 넣어 주세요.";
+    return;
+  }
+  serverStatus.textContent = "확인하는 중…";
+  try {
+    const result = await pingServer(state.settings);
+    const missing = [!result.openai && "OPENAI_API_KEY", !result.db && "D1 데이터베이스(DB)"].filter(Boolean);
+    serverStatus.textContent = missing.length
+      ? `서버는 연결됐는데 Cloudflare 설정이 빠졌어요: ${missing.join(", ")}`
+      : "✅ 연결됐어요. 이제 업무 지시는 서버가 처리해서 창을 닫아도 계속돼요.";
+  } catch (error) {
+    serverStatus.textContent = error.message;
+  }
 });
 
 // ---- Uplika 연결 ----
@@ -231,7 +257,7 @@ showTab(state.data.employees.length ? "messenger" : "hire");
 renderUnread();
 if (!state.settings.apiKey) notify("⚙︎ 설정에서 OpenAI API 키를 넣으면 직원들이 일을 시작해요.");
 // Uplika 승인 화면에서 돌아왔으면 연결 마무리
-setUplikaProxy(state.settings.uplikaProxy);
+setUplikaProxy(state.settings.serverUrl);
 finishConnect()
   .then((message) => {
     if (message) notify(message);

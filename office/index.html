@@ -171,12 +171,23 @@
         <textarea name="about" rows="3" placeholder="예: 서울 동네 카페 리뷰 블로그, 인스타는 카페 사진 위주"></textarea>
       </label>
       <fieldset class="connect-box">
+        <legend>🖥️ 사무실 서버 (창을 닫아도 일하기)</legend>
+        <p class="muted small">Cloudflare에 올린 서버가 업무 지시를 대신 처리해요. Uplika 승인 중계도 이 서버가 해요. 만드는 법: office/worker/README.md</p>
+        <label>서버 주소
+          <input name="serverUrl" type="url" autocomplete="off" placeholder="https://office-server.○○○.workers.dev">
+        </label>
+        <label>서버 비밀번호 (Cloudflare에 넣은 OFFICE_TOKEN)
+          <input name="serverToken" type="password" autocomplete="off">
+        </label>
+        <p id="server-status" class="muted small long-message" aria-live="polite"></p>
+        <div class="row-buttons">
+          <button id="btn-server-ping" type="button">연결 확인</button>
+        </div>
+      </fieldset>
+      <fieldset class="connect-box">
         <legend>Uplika 연결 (직원이 내 계정을 조회)</legend>
         <label>Uplika 서버 주소 (Uplika 화면의 "주소만 추가"로 복사)
           <input name="uplikaUrl" type="url" autocomplete="off" placeholder="https://api.uplika.com/mcp">
-        </label>
-        <label>중계 서버 주소 (Cloudflare Workers, office/worker/README.md 참고)
-          <input name="uplikaProxy" type="url" autocomplete="off" placeholder="https://uplika-proxy.○○○.workers.dev">
         </label>
         <p id="uplika-status" class="muted small long-message" aria-live="polite"></p>
         <div class="row-buttons">
