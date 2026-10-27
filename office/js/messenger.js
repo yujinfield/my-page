@@ -5,6 +5,8 @@ import { TEAMS, chatMessages, taskMessages, settingsFor, extractMemories, addMem
 import { initProfile, renderProfile } from "./profile.js";
 import { makeAvatar } from "./sprites.js";
 import { uplikaTools } from "./uplika.js";
+import { sheetsText } from "./sheets.js";
+import { chosenChatSheet, sheetName } from "./sheet-panel.js";
 
 const chatList = document.getElementById("chat-list");
 const chatRoom = document.getElementById("chat-room");
@@ -89,6 +91,7 @@ async function sendChat() {
 function sendTask() {
   const employee = findEmployee(openId);
   if (!employee || employee.status === "working") return;
+  const sheetId = chosenChatSheet(); // 입력 칸을 비우면(reset) 고른 시트도 풀리므로 먼저 읽음
   const text = readText();
   if (!text) {
     chatStatus.textContent = "아래 칸에 시킬 일을 먼저 적어 주세요.";
@@ -96,6 +99,7 @@ function sendTask() {
   }
   const task = app.addMessage(employee.id, "me", text, "task");
   task.done = false;
+  if (sheetId) task.sheetId = sheetId;
   app.addMessage(employee.id, "employee", "네, 대표님! 바로 시작하겠습니다.", "chat");
   app.save();
   runTask(employee, task);
@@ -111,7 +115,13 @@ async function runTask(employee, task) {
   try {
     const history = app.state.data.messages.filter((message) => message !== task);
     const tools = await uplikaTools();
-    const messages = taskMessages(employee, history, task.text, app.state.settings.about, Boolean(tools));
+    // 데이터 시트를 골랐으면 최신 내용을 업무 내용 뒤에 붙여서 넘김
+    let taskText = task.text;
+    if (task.sheetId) {
+      const sheet = await sheetsText(app.state.settings.dataSheets || [], [task.sheetId]);
+      taskText += `\n\n참고 데이터 시트:\n${sheet}`;
+    }
+    const messages = taskMessages(employee, history, taskText, app.state.settings.about, Boolean(tools));
     reply = remember(employee, await askGpt(settingsFor(app.state.settings, employee), messages, { tools }));
   } catch (error) {
     reply = `죄송해요 대표님, 일을 끝내지 못했어요. (${error.message})`;
@@ -246,6 +256,7 @@ function renderRoom(employee) {
         const label = document.createElement("span");
         label.className = "message-label";
         label.textContent = message.kind === "task" ? "📋 업무 지시" : "✅ 완료 보고";
+        if (message.sheetId) label.textContent += ` · 📊 ${sheetName(message.sheetId)}`;
         item.append(label);
       }
       const text = document.createElement("p");

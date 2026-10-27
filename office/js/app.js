@@ -7,6 +7,7 @@ import { initScene, renderScene, say } from "./scene.js";
 import { initHire, renderHire } from "./hire.js";
 import { initMeeting, renderMeeting } from "./meeting.js";
 import { initMessenger, renderMessenger, openChat, unreadCount, isChatVisible } from "./messenger.js";
+import { initSheetPanel, renderSheetPanel } from "./sheet-panel.js";
 import { startConnect, finishConnect, isUplikaConnected, disconnectUplika, setUplikaProxy } from "./uplika.js";
 
 const state = {
@@ -30,7 +31,14 @@ const app = {
   refreshAll,
   isBusy,
   replaceAll,
+  saveSettings: saveSettingsNow,
 };
+
+// 설정을 바꾼 뒤 저장 (설정 창 밖에서 바꿀 때)
+function saveSettingsNow() {
+  saveSettings(state.settings);
+  markChanged();
+}
 
 function save() {
   saveData(state.data);
@@ -65,6 +73,7 @@ function refreshAll() {
   renderHire();
   renderMeeting();
   renderMessenger();
+  renderSheetPanel();
   renderUnread();
 }
 
@@ -145,6 +154,7 @@ document.getElementById("btn-settings").addEventListener("click", () => {
 
 function saveSettingsForm() {
   state.settings = {
+    ...state.settings,
     apiKey: settingsForm.elements.apiKey.value.trim(),
     model: settingsForm.elements.model.value.trim() || DEFAULT_MODEL,
     about: settingsForm.elements.about.value.trim(),
@@ -210,6 +220,7 @@ applyTheme(loadTheme());
 initScene({ getEmployees: () => state.data.employees, onPick: pickEmployee });
 initHire(app);
 initMeeting(app);
+initSheetPanel(app);
 initMessenger(app);
 initSync(app);
 showTab(state.data.employees.length ? "messenger" : "hire");

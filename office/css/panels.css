@@ -346,6 +346,33 @@ textarea {
   overflow-wrap: anywhere;
 }
 
+.sheet-choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: var(--font-size-small);
+  color: var(--text-soft);
+}
+
+.sheet-choices legend {
+  padding: 0;
+  margin-bottom: var(--space-xs);
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--text);
+}
+
+.check input {
+  width: auto;
+}
+
 .memory-form {
   display: flex;
   gap: var(--space-s);
