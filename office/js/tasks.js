@@ -2,8 +2,9 @@
 // - 사무실 서버를 설정했으면 서버가 처리하고(창을 닫아도 계속), 사이트는 결과를 받아 옴
 // - 설정 안 했으면 이 브라우저에서 바로 처리 (창을 닫으면 멈췄다가 다시 열 때 처음부터)
 
-import { askGpt } from "./gpt.js";
-import { taskMessages, settingsFor } from "./employees.js";
+import { askGpt, makeImage } from "./gpt.js";
+import { taskMessages, settingsFor, imagePrompt, DEFAULT_IMAGE_MODEL } from "./employees.js";
+import { saveImage } from "./store.js";
 import { uplikaTools } from "./uplika.js";
 import { sheetsText } from "./sheets.js";
 import { serverReady, submitJob, fetchJobs, ackJob } from "./server.js";
@@ -48,7 +49,23 @@ async function buildJob(employee, task) {
     model: settingsFor(app.state.settings, employee).model,
     messages: taskMessages(employee, history, taskText, app.state.settings.about, Boolean(tools)),
     tools,
+    // 이미지도 맡겼으면: 글 결과가 나온 뒤 이 지시문(+ 결과)으로 이미지를 만듦
+    image: task.withImage
+      ? { model: app.state.settings.imageModel || DEFAULT_IMAGE_MODEL, prompt: imagePrompt(employee, task.text) }
+      : null,
   };
+}
+
+// 이미지를 이 기기에 저장하고 id를 돌려줌. 실패하면 null
+async function keepImage(task, base64) {
+  if (!base64) return null;
+  try {
+    await saveImage(task.id, base64);
+    return task.id;
+  } catch (error) {
+    console.warn("이미지를 저장하지 못했습니다.", error);
+    return null;
+  }
 }
 
 export async function runTask(employee, task) {
@@ -66,14 +83,25 @@ export async function runTask(employee, task) {
       return; // 결과는 pollServerTasks가 받아 옴
     }
     const settings = { ...app.state.settings, model: job.model };
-    finishTask(task, await askGpt(settings, job.messages, { tools: job.tools }), true);
+    let result = await askGpt(settings, job.messages, { tools: job.tools });
+    let imageId = null;
+    if (job.image) {
+      // 이미지가 실패해도 글 결과는 보고함
+      try {
+        const prompt = `${job.image.prompt}\n\n참고한 업무 결과:\n${result.slice(0, 1500)}`;
+        imageId = await keepImage(task, await makeImage(app.state.settings, { model: job.image.model, prompt }));
+      } catch (error) {
+        result += `\n\n(이미지는 만들지 못했어요: ${error.message})`;
+      }
+    }
+    finishTask(task, result, true, imageId);
   } catch (error) {
     finishTask(task, error.message, false);
   }
 }
 
 // 업무를 끝내고 완료 보고(또는 실패 메시지)를 남김. 이미 끝낸 업무면 아무것도 안 함
-function finishTask(task, text, success) {
+function finishTask(task, text, success, imageId = null) {
   if (task.done) return;
   task.done = true;
   const employee = findEmployee(task.employeeId);
@@ -85,7 +113,8 @@ function finishTask(task, text, success) {
   if (!stillWorking) employee.status = "idle";
 
   const reply = success ? hooks.remember(employee, text) : `죄송해요 대표님, 일을 끝내지 못했어요. (${text})`;
-  app.addMessage(employee.id, "employee", reply, success ? "report" : "chat");
+  const message = app.addMessage(employee.id, "employee", reply, success ? "report" : "chat");
+  if (imageId) message.imageId = imageId;
   app.save();
   app.refreshAll();
   app.say(employee.id, success ? "다 했어요!" : "앗…");
@@ -110,7 +139,7 @@ export async function pollServerTasks() {
     for (const task of waiting) {
       const job = jobs.find((item) => item.id === task.id);
       if (job && job.status === "done") {
-        finishTask(task, job.result, true);
+        finishTask(task, job.result, true, await keepImage(task, job.image));
         await ackJob(app.state.settings, task.id);
       } else if (job && job.status === "failed") {
         finishTask(task, job.error || "서버에서 실패했어요.", false);

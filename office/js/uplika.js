@@ -233,3 +233,10 @@ export async function uplikaTools() {
     allowed_tools: READ_ONLY_TOOLS,
   }];
 }
+
+// 승인 버튼으로 사무실 서버가 Uplika를 직접 부를 때 쓰는 주소와 출입증. 연결 안 했으면 null
+export async function uplikaCredentials() {
+  const tools = await uplikaTools();
+  if (!tools) return null;
+  return { mcpUrl: tools[0].server_url, accessToken: tools[0].authorization };
+}

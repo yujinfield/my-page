@@ -74,7 +74,11 @@ export function parseApplicants(text) {
 // ---- 직원 성격 ----
 
 // Uplika가 연결돼 있을 때 덧붙이는 말
-const LOOKUP_RULE = "Uplika 도구로 대표님의 실제 블로그·인스타 데이터(인사이트, 게시물, 네이버 노출·키워드)를 조회할 수 있습니다. 필요하면 먼저 조회하고, 숫자는 조회한 것만 씁니다.";
+const LOOKUP_RULE = [
+  "Uplika 도구로 대표님의 실제 블로그·인스타 데이터(인사이트, 게시물, 네이버 노출·키워드)를 조회할 수 있습니다. 필요하면 먼저 조회하고, 숫자는 조회한 것만 씁니다.",
+  "Uplika 작업공간이 하나뿐인 것은 정상입니다. 작업공간을 문제 삼지 않습니다.",
+  "도구가 실패하면 원인을 지어내지 말고, 받은 오류 내용을 그대로 대표님께 전합니다.",
+].join("\n");
 
 function personaPrompt(employee, about, lookup = false) {
   const team = TEAMS[employee.team];
@@ -87,6 +91,8 @@ function personaPrompt(employee, about, lookup = false) {
     about ? `대표님의 블로그·인스타 소개: ${about}` : "",
     "사용자를 '대표님'이라고 부르고, 한국어로 실제 직원처럼 자연스럽게 말합니다.",
     "실제 조회수·팔로워 수처럼 모르는 정보는 지어내지 말고, 필요하면 대표님께 자료를 달라고 합니다.",
+    // 직원은 조회만 할 수 있음. 발행·저장은 대표님이 완료 보고의 승인 버튼으로 함
+    "당신은 글을 발행하거나 네이버에 임시 저장하거나 댓글·DM을 보낼 수 없습니다. 그런 일을 맡으면 결과물(제목과 본문)을 완성해서 보고하고, '보고서 아래 승인 버튼을 누르시면 네이버에 임시 저장됩니다'라고 안내합니다. 할 수 없는 일을 하겠다고 약속하지 않습니다.",
     lookup ? LOOKUP_RULE : "",
     memoryText(employee),
   ].filter(Boolean).join("\n");
@@ -200,4 +206,18 @@ export function summaryMessages(employee, meeting, employees, about, lookup = fa
     { role: "system", content: `${personaPrompt(employee, about, lookup)}\n\n${rule}` },
     { role: "user", content: meetingInfo(meeting, employees) },
   ];
+}
+
+// ---- 이미지 ----
+
+export const DEFAULT_IMAGE_MODEL = "gpt-image-1";
+
+// 업무에 어울리는 이미지를 그려 달라는 지시문 (서버는 뒤에 업무 결과를 덧붙임)
+export function imagePrompt(employee, task) {
+  const team = TEAMS[employee.team];
+  return [
+    `${team.name}에서 쓸 이미지를 만들어 주세요. 블로그 대표 사진이나 인스타그램 피드에 어울리게, 사진처럼 자연스럽고 밝은 느낌으로 만듭니다.`,
+    "이미지 안에 글자나 로고는 넣지 않습니다.",
+    `업무: ${task}`,
+  ].join("\n");
 }

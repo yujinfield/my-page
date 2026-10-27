@@ -4,6 +4,7 @@ import { askGpt } from "./gpt.js";
 import { TEAMS, chatMessages, settingsFor, extractMemories, addMemory } from "./employees.js";
 import { initProfile, renderProfile } from "./profile.js";
 import { initTasks, runTask } from "./tasks.js";
+import { initReportActions, reportActions } from "./report-actions.js";
 import { makeAvatar } from "./sprites.js";
 import { chosenChatSheet, sheetName } from "./sheet-panel.js";
 
@@ -38,6 +39,7 @@ export function initMessenger(appApi) {
     }
   });
   initProfile(app);
+  initReportActions(app);
   initTasks(app, { remember, isChatVisible });
   renderMessenger();
 }
@@ -72,6 +74,7 @@ async function sendChat() {
   renderMessenger();
 
   chatStatus.textContent = `${employee.name} 님이 입력 중…`;
+  app.say(employee.id, "…", 60000); // 답이 올 때까지 머리 위에 "…"
   try {
     const messages = chatMessages(employee, app.state.data.messages, app.state.settings.about);
     const answer = await askGpt(settingsFor(app.state.settings, employee), messages);
@@ -82,6 +85,7 @@ async function sendChat() {
     if (!isChatVisible(employee.id)) app.notify(`💬 ${employee.name}: ${reply}`, employee.id);
   } catch (error) {
     chatStatus.textContent = error.message;
+    app.say(employee.id, "앗…");
   }
   app.save();
   app.refreshAll();
@@ -90,7 +94,9 @@ async function sendChat() {
 function sendTask() {
   const employee = findEmployee(openId);
   if (!employee || employee.status === "working") return;
-  const sheetId = chosenChatSheet(); // 입력 칸을 비우면(reset) 고른 시트도 풀리므로 먼저 읽음
+  // 입력 칸을 비우면(reset) 고른 시트·이미지 체크도 풀리므로 먼저 읽음
+  const sheetId = chosenChatSheet();
+  const withImage = chatForm.elements.withImage.checked;
   const text = readText();
   if (!text) {
     chatStatus.textContent = "아래 칸에 시킬 일을 먼저 적어 주세요.";
@@ -99,6 +105,7 @@ function sendTask() {
   const task = app.addMessage(employee.id, "me", text, "task");
   task.done = false;
   if (sheetId) task.sheetId = sheetId;
+  if (withImage) task.withImage = true;
   app.addMessage(employee.id, "employee", "네, 대표님! 바로 시작하겠습니다.", "chat");
   app.save();
   runTask(employee, task);
@@ -194,7 +201,7 @@ function renderRoom(employee) {
   chatTitle.textContent = `${employee.name} · ${employee.role}`;
   renderProfile(employee);
   taskButton.disabled = employee.status === "working";
-  taskButton.textContent = employee.status === "working" ? "업무 중…" : "업무 지시";
+  taskButton.textContent = employee.status === "working" ? "업무 중…" : "📋 업무 지시";
 
   chatLog.replaceChildren();
   app.state.data.messages
@@ -212,6 +219,7 @@ function renderRoom(employee) {
       const text = document.createElement("p");
       text.textContent = message.text;
       item.append(text);
+      if (message.kind === "report") item.append(reportActions(message));
       chatLog.append(item);
     });
   chatLog.scrollTop = chatLog.scrollHeight;

@@ -5,6 +5,7 @@
 
 const CHAT_URL = "https://api.openai.com/v1/chat/completions";
 const RESPONSES_URL = "https://api.openai.com/v1/responses";
+const IMAGES_URL = "https://api.openai.com/v1/images/generations";
 
 // 지금 GPT 답을 기다리는 중인지 (동기화가 데이터를 바꾸지 않게)
 let running = 0;
@@ -76,4 +77,18 @@ function outputText(data) {
     });
   });
   return texts.join("\n").trim() || "(답이 비어 있어요)";
+}
+
+// 이미지 만들기 → base64 글자 (webp). 문서: https://platform.openai.com/docs/api-reference/images
+export async function makeImage(settings, { model, prompt }) {
+  if (!settings.apiKey) throw new Error("설정에서 OpenAI API 키를 먼저 넣어 주세요.");
+  running += 1;
+  try {
+    const data = await post(IMAGES_URL, settings.apiKey, {
+      model, prompt, size: "1024x1024", quality: "medium", output_format: "webp", output_compression: 80,
+    });
+    return data.data[0].b64_json;
+  } finally {
+    running -= 1;
+  }
 }

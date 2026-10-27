@@ -146,6 +146,7 @@ function pickEmployee(employeeId) {
 document.getElementById("btn-settings").addEventListener("click", () => {
   settingsForm.elements.apiKey.value = state.settings.apiKey;
   settingsForm.elements.model.value = state.settings.model;
+  settingsForm.elements.imageModel.value = state.settings.imageModel;
   settingsForm.elements.about.value = state.settings.about;
   settingsForm.elements.uplikaUrl.value = state.settings.uplikaUrl;
   settingsForm.elements.serverUrl.value = state.settings.serverUrl;
@@ -160,6 +161,7 @@ function saveSettingsForm() {
     ...state.settings,
     apiKey: settingsForm.elements.apiKey.value.trim(),
     model: settingsForm.elements.model.value.trim() || DEFAULT_MODEL,
+    imageModel: settingsForm.elements.imageModel.value.trim() || "gpt-image-1",
     about: settingsForm.elements.about.value.trim(),
     uplikaUrl: settingsForm.elements.uplikaUrl.value.trim(),
     serverUrl: settingsForm.elements.serverUrl.value.trim(),

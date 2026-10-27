@@ -4,7 +4,9 @@
 // 1. 업무 처리: 사이트가 맡긴 업무를 저장하고 GPT에 물어 결과를 저장합니다. 사이트 창을 닫아도 계속됩니다.
 //    - 업무를 받으면 바로 시작하고, 1분마다 도는 크론이 남은 업무·멈춘 업무를 다시 처리합니다. (최대 3번 시도)
 //    - 사이트는 결과를 받아 간 뒤 지웁니다. 7일이 지난 업무도 지웁니다.
+//    - 업무에 이미지를 함께 맡기면 글 결과가 나온 뒤 이미지도 만들어 저장합니다.
 // 2. Uplika 승인 중계 (?url=): Uplika가 다른 사이트의 브라우저 요청을 막아서 승인 요청만 대신 전달합니다.
+// 3. 네이버 임시 저장 (/uplika/draft): 대표님이 완료 보고의 승인 버튼을 눌렀을 때만, Uplika로 네이버 블로그에 임시 저장합니다.
 //
 // Cloudflare 설정 (자세한 순서는 README.md)
 // - 비밀 변수 OPENAI_API_KEY: OpenAI API 키
@@ -56,6 +58,12 @@ async function ensureTable(env) {
     started_at INTEGER,
     finished_at INTEGER
   )`).run();
+  // 이미지 칸은 나중에 생김: 예전에 만든 표에도 추가 (이미 있으면 오류가 나므로 무시)
+  try {
+    await env.DB.prepare("ALTER TABLE jobs ADD COLUMN image TEXT").run();
+  } catch (error) {
+    // 이미 있음
+  }
   tableReady = true;
 }
 
@@ -85,6 +93,18 @@ async function askGpt(env, { model, messages, tools }) {
   return texts.join("\n").trim() || "(답이 비어 있어요)";
 }
 
+// 이미지 만들기 → base64 글자 (webp)
+async function makeImage(env, { model, prompt }) {
+  const response = await fetch("https://api.openai.com/v1/images/generations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.OPENAI_API_KEY}` },
+    body: JSON.stringify({ model, prompt, size: "1024x1024", quality: "medium", output_format: "webp", output_compression: 80 }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(`이미지 요청 실패 (${response.status}) ${data.error?.message || ""}`.trim());
+  return data.data[0].b64_json;
+}
+
 // ---- 업무 처리 ----
 
 // 업무 하나를 처리. 다른 곳(크론 등)에서 이미 처리 중이면 건너뜀
@@ -97,9 +117,19 @@ async function runJob(env, id) {
 
   const row = await env.DB.prepare("SELECT payload, attempts FROM jobs WHERE id = ?").bind(id).first();
   try {
-    const result = await askGpt(env, JSON.parse(row.payload));
-    await env.DB.prepare("UPDATE jobs SET status = 'done', result = ?, error = NULL, finished_at = ? WHERE id = ?")
-      .bind(result, Date.now(), id).run();
+    const payload = JSON.parse(row.payload);
+    let result = await askGpt(env, payload);
+    let image = null;
+    if (payload.image) {
+      // 이미지가 실패해도 글 결과는 남김
+      try {
+        image = await makeImage(env, { model: payload.image.model, prompt: `${payload.image.prompt}\n\n참고한 업무 결과:\n${result.slice(0, 1500)}` });
+      } catch (error) {
+        result += `\n\n(이미지는 만들지 못했어요: ${error.message})`;
+      }
+    }
+    await env.DB.prepare("UPDATE jobs SET status = 'done', result = ?, image = ?, error = NULL, finished_at = ? WHERE id = ?")
+      .bind(result, image, Date.now(), id).run();
   } catch (error) {
     // 3번까지는 크론이 다시 시도, 그 뒤에는 실패로 남김
     const status = row.attempts >= MAX_ATTEMPTS ? "failed" : "pending";
@@ -129,7 +159,7 @@ async function handleJobs(request, env, ctx, url, origin) {
     if (!job || typeof job.id !== "string" || !job.model || !Array.isArray(job.messages)) {
       return json(400, { error: "업무 형식이 올바르지 않아요." }, origin);
     }
-    const payload = JSON.stringify({ model: job.model, messages: job.messages, tools: job.tools || null });
+    const payload = JSON.stringify({ model: job.model, messages: job.messages, tools: job.tools || null, image: job.image || null });
     await env.DB.prepare("INSERT OR IGNORE INTO jobs (id, status, payload, created_at) VALUES (?, 'pending', ?, ?)")
       .bind(job.id, payload, Date.now()).run();
     ctx.waitUntil(runJob(env, job.id)); // 바로 시작 (중간에 끊기면 크론이 이어서 함)
@@ -141,7 +171,7 @@ async function handleJobs(request, env, ctx, url, origin) {
     const ids = (url.searchParams.get("ids") || "").split(",").filter(Boolean).slice(0, MAX_IDS);
     if (ids.length === 0) return json(200, { jobs: [] }, origin);
     const marks = ids.map(() => "?").join(",");
-    const { results } = await env.DB.prepare(`SELECT id, status, result, error FROM jobs WHERE id IN (${marks})`)
+    const { results } = await env.DB.prepare(`SELECT id, status, result, error, image FROM jobs WHERE id IN (${marks})`)
       .bind(...ids).all();
     return json(200, { jobs: results }, origin);
   }
@@ -154,6 +184,85 @@ async function handleJobs(request, env, ctx, url, origin) {
   }
 
   return json(404, { error: "없는 주소예요." }, origin);
+}
+
+// ---- Uplika 도구 직접 부르기 (MCP) ----
+// 대표님이 승인 버튼을 눌렀을 때만 씁니다. GPT를 거치지 않으므로 보고 내용이 그대로 들어갑니다.
+
+const MCP_VERSION = "2025-06-18";
+
+async function mcpPost(mcpUrl, token, sessionId, message) {
+  const headers = {
+    "Content-Type": "application/json",
+    Accept: "application/json, text/event-stream",
+    Authorization: `Bearer ${token}`,
+    "MCP-Protocol-Version": MCP_VERSION,
+  };
+  if (sessionId) headers["Mcp-Session-Id"] = sessionId;
+  const response = await fetch(mcpUrl, { method: "POST", headers, body: JSON.stringify(message) });
+  if (!response.ok) {
+    const detail = (await response.text()).slice(0, 200);
+    if (response.status === 401) throw new Error("Uplika 연결이 끝났어요. 설정에서 Uplika를 다시 연결해 주세요.");
+    throw new Error(`Uplika 응답 오류 (${response.status}) ${detail}`.trim());
+  }
+  return response;
+}
+
+// JSON이나 SSE(data: …) 답에서 id가 맞는 메시지를 꺼냄
+async function readRpc(response, id) {
+  const text = await response.text();
+  const isStream = (response.headers.get("Content-Type") || "").includes("text/event-stream");
+  const pieces = isStream
+    ? text.split("\n").filter((line) => line.startsWith("data:")).map((line) => line.slice(5).trim())
+    : [text];
+  for (const piece of pieces) {
+    try {
+      const message = JSON.parse(piece);
+      if (message.id === id) return message;
+    } catch (error) {
+      // 다음 조각
+    }
+  }
+  throw new Error("Uplika 답을 읽지 못했어요.");
+}
+
+// 도구 하나 부르기 → 글자 결과
+async function callUplikaTool(mcpUrl, token, name, args) {
+  const init = await mcpPost(mcpUrl, token, null, {
+    jsonrpc: "2.0", id: 1, method: "initialize",
+    params: { protocolVersion: MCP_VERSION, capabilities: {}, clientInfo: { name: "ai-office", version: "1" } },
+  });
+  const sessionId = init.headers.get("Mcp-Session-Id");
+  const ready = await readRpc(init, 1);
+  if (ready.error) throw new Error(ready.error.message);
+  await mcpPost(mcpUrl, token, sessionId, { jsonrpc: "2.0", method: "notifications/initialized" });
+
+  const response = await mcpPost(mcpUrl, token, sessionId, { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name, arguments: args } });
+  const message = await readRpc(response, 2);
+  if (message.error) throw new Error(message.error.message);
+  const text = (message.result?.content || []).filter((part) => part.type === "text").map((part) => part.text).join("\n");
+  if (message.result?.isError) throw new Error(text || "Uplika 도구 오류");
+  return text;
+}
+
+// 네이버 블로그 임시 저장: { mcpUrl, accessToken, title, content }
+async function saveNaverDraft(request, origin) {
+  const body = await request.json().catch(() => null);
+  if (!body || !body.mcpUrl || !body.accessToken || !body.title || !body.content) {
+    return json(400, { error: "제목과 본문, Uplika 연결이 필요해요." }, origin);
+  }
+  if (!isUplika(new URL(body.mcpUrl).hostname)) return json(403, { error: "Uplika 주소만 돼요." }, origin);
+
+  const accounts = JSON.parse(await callUplikaTool(body.mcpUrl, body.accessToken, "list_accounts", {}));
+  const blog = (accounts.data || []).find((account) => account.platform === "naver_blog" && account.status === "active");
+  if (!blog) return json(400, { error: "Uplika에 연결된 네이버 블로그가 없어요." }, origin);
+
+  const result = await callUplikaTool(body.mcpUrl, body.accessToken, "publish", {
+    accountIds: [blog.id],
+    content: body.content,
+    options: { naver_blog: { title: body.title.slice(0, 100), draftOnly: true, layout: "as-is" } },
+  });
+  return json(200, { ok: true, blog: blog.displayName || blog.handle, result: result.slice(0, 500) }, origin);
 }
 
 // ---- Uplika 승인 중계 ----
@@ -207,6 +316,13 @@ export default {
     // 연결 확인: 설정이 다 됐는지 알려 줌
     if (url.pathname === "/ping") {
       return json(200, { ok: true, openai: Boolean(env.OPENAI_API_KEY), db: Boolean(env.DB) }, origin);
+    }
+    if (request.method === "POST" && url.pathname === "/uplika/draft") {
+      try {
+        return await saveNaverDraft(request, origin);
+      } catch (error) {
+        return json(502, { error: error.message }, origin);
+      }
     }
     if (!env.DB) return json(500, { error: "D1 데이터베이스(DB)가 연결되지 않았어요." }, origin);
     return handleJobs(request, env, ctx, url, origin);

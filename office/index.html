@@ -75,14 +75,18 @@
           <p id="chat-status" class="status" aria-live="polite"></p>
           <form id="chat-form" class="chat-form">
             <label class="visually-hidden" for="chat-text">메시지</label>
-            <textarea id="chat-text" name="text" rows="2" placeholder="메시지 또는 시킬 일 (Enter 보내기, Shift+Enter 줄바꿈)"></textarea>
+            <textarea id="chat-text" name="text" rows="2" placeholder="대화할 말 또는 맡길 일 (Enter 보내기, Shift+Enter 줄바꿈)"></textarea>
+            <label class="check">
+              <input name="withImage" type="checkbox"> 🖼️ 업무 지시할 때 이미지도 만들기 (이미지 요금이 따로 들어요)
+            </label>
             <label id="chat-sheet-label" class="field" hidden>📊 업무에 줄 데이터 시트
               <select id="chat-sheet"></select>
             </label>
             <div class="chat-buttons">
-              <button id="chat-task" type="button">업무 지시</button>
-              <button type="submit" class="primary">보내기</button>
+              <button id="chat-task" type="button" title="결과물(초안·목록·기획안)을 만들어 완료 보고로 받아요">📋 업무 지시</button>
+              <button type="submit" class="primary" title="짧게 대화해요">💬 보내기</button>
             </div>
+            <p class="muted small">💬 보내기: 짧게 대화해요 · 📋 업무 지시: 일을 맡기면 결과물을 완료 보고로 받아요 (사무실 서버를 연결하면 창을 닫아도 계속돼요)</p>
           </form>
         </div>
       </div>
@@ -166,6 +170,9 @@
       <p class="muted small">키는 이 브라우저에만 저장되고 OpenAI에만 보내져요. 공용 컴퓨터에서는 넣지 마세요.</p>
       <label>모델 이름
         <input name="model" type="text" autocomplete="off">
+      </label>
+      <label>이미지 모델 (업무 지시에서 이미지를 만들 때)
+        <input name="imageModel" type="text" autocomplete="off" placeholder="gpt-image-1">
       </label>
       <label>내 블로그·인스타 소개 (직원들이 참고해요)
         <textarea name="about" rows="3" placeholder="예: 서울 동네 카페 리뷰 블로그, 인스타는 카페 사진 위주"></textarea>
