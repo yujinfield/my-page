@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- 보안: 이 사이트의 파일만 쓰고, 바깥으로는 OpenAI API, Uplika, GitHub Gist(동기화)에만 연결 -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://api.openai.com https://uplika.com https://*.uplika.com https://api.github.com https://gist.githubusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <!-- 보안: 이 사이트의 파일만 쓰고, 바깥으로는 OpenAI API, Uplika, GitHub Gist(동기화), Uplika 중계 서버(workers.dev)에만 연결 -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://api.openai.com https://uplika.com https://*.uplika.com https://api.github.com https://gist.githubusercontent.com https://*.workers.dev; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>AI 사무실</title>
   <link rel="stylesheet" href="css/base.css">
@@ -166,7 +166,10 @@
       <fieldset class="connect-box">
         <legend>Uplika 연결 (직원이 내 계정을 조회)</legend>
         <label>Uplika 서버 주소 (Uplika 화면의 "주소만 추가"로 복사)
-          <input name="uplikaUrl" type="url" autocomplete="off" placeholder="https://...">
+          <input name="uplikaUrl" type="url" autocomplete="off" placeholder="https://api.uplika.com/mcp">
+        </label>
+        <label>중계 서버 주소 (Cloudflare Workers, office/worker/README.md 참고)
+          <input name="uplikaProxy" type="url" autocomplete="off" placeholder="https://uplika-proxy.○○○.workers.dev">
         </label>
         <p id="uplika-status" class="muted small long-message" aria-live="polite"></p>
         <div class="row-buttons">
