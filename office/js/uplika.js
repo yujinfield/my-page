@@ -27,24 +27,37 @@ function redirectUri() {
   return location.origin + location.pathname;
 }
 
+// 이 사이트의 보안 설정(index.html의 CSP connect-src)이 그 주소를 허락하는지
+function cspAllows(url) {
+  const meta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+  const rule = meta.content.split(";").map((part) => part.trim()).find((part) => part.startsWith("connect-src"));
+  const sources = rule ? rule.split(/\s+/).slice(1) : [];
+  const { origin, host } = new URL(url);
+  return sources.some((source) => source === origin
+    || (source.startsWith("https://*.") && host.endsWith(source.slice("https://*".length))));
+}
+
 async function getJson(url, options) {
+  const host = new URL(url).host;
+  if (!cspAllows(url)) throw new Error(`사이트 보안 설정(CSP)에 ${host}가 없어서 막았어요.`);
   let response;
   try {
     response = await fetch(url, options);
   } catch (error) {
-    throw new Error(`${new URL(url).host}에 연결하지 못했어요. Uplika가 다른 사이트에서의 연결을 막았을 수 있어요.`);
+    throw new Error(`${host}에 연결하지 못했어요. Uplika가 다른 사이트에서 오는 요청을 받지 않거나 인터넷 문제예요.`);
   }
-  if (!response.ok) throw new Error(`Uplika 응답 오류 (${response.status}, ${new URL(url).pathname})`);
+  if (!response.ok) throw new Error(`Uplika 응답 오류 (${response.status}, ${host}${new URL(url).pathname})`);
   return response.json();
 }
 
-// 주소 여러 개를 차례로 시도해서 처음 성공한 JSON을 돌려줌
-async function firstJson(urls) {
+// 주소 여러 개를 차례로 시도해서 처음 성공한 JSON을 돌려줌. 실패 이유는 failures에 모음
+async function firstJson(urls, failures) {
   for (const url of urls) {
     try {
       return await getJson(url);
     } catch (error) {
-      // 다음 주소 시도
+      const { host, pathname } = new URL(url);
+      failures.push(`· ${host}${pathname}\n  → ${error.message}`);
     }
   }
   return null;
@@ -52,21 +65,22 @@ async function firstJson(urls) {
 
 // MCP 서버 주소에서 승인 서버 정보를 찾음
 async function discover(serverUrl) {
+  const failures = [];
   const server = new URL(serverUrl);
   const path = server.pathname === "/" ? "" : server.pathname;
   const resource = await firstJson([
     `${server.origin}/.well-known/oauth-protected-resource${path}`,
     `${server.origin}/.well-known/oauth-protected-resource`,
-  ]);
+  ], failures);
 
   const issuer = new URL(resource?.authorization_servers?.[0] ?? server.origin);
   const issuerPath = issuer.pathname === "/" ? "" : issuer.pathname;
   const meta = await firstJson([
     `${issuer.origin}/.well-known/oauth-authorization-server${issuerPath}`,
     `${issuer.origin}/.well-known/openid-configuration${issuerPath}`,
-  ]);
+  ], failures);
   if (!meta) {
-    throw new Error("Uplika 승인 정보를 찾지 못했어요. 서버 주소가 맞는지 확인해 주세요. 맞는데도 이러면 Uplika가 다른 사이트에서의 연결을 막은 거예요.");
+    throw new Error(`Uplika 승인 정보를 찾지 못했어요. 시도한 주소:\n${failures.join("\n")}`);
   }
   return { meta, scopes: resource?.scopes_supported ?? meta.scopes_supported ?? [] };
 }
