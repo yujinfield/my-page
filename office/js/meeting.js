@@ -4,6 +4,8 @@ import { askGpt } from "./gpt.js";
 import { TEAMS, meetingMessages, summaryMessages, settingsFor, addMemory } from "./employees.js";
 import { newId } from "./store.js";
 import { uplikaTools } from "./uplika.js";
+import { sheetsText } from "./sheets.js";
+import { chosenMeetingSheets } from "./sheet-panel.js";
 
 const form = document.getElementById("meeting-form");
 const status = document.getElementById("meeting-status");
@@ -48,6 +50,7 @@ async function startMeeting(event) {
     topic: form.elements.topic.value.trim(),
     material: form.elements.material.value.trim(),
     lines: [],
+    sheetIds: chosenMeetingSheets(),
     time: Date.now(),
   };
   if (!meeting.topic) return;
@@ -78,13 +81,22 @@ async function continueMeeting(event) {
   await runRound(meeting);
 }
 
+// 고른 데이터 시트의 최신 내용을 참고 자료에 덧붙인 회의 (회의록 lines는 원래 회의와 같이 씀)
+async function withSheets(meeting) {
+  if (!meeting.sheetIds || meeting.sheetIds.length === 0) return meeting;
+  status.textContent = "📊 데이터 시트를 읽는 중…";
+  const text = await sheetsText(app.state.settings.dataSheets || [], meeting.sheetIds);
+  return { ...meeting, material: [meeting.material, text].filter(Boolean).join("\n\n") };
+}
+
 async function runRound(meeting) {
   await withBusy(async () => {
+    const view = await withSheets(meeting);
     for (const employee of participants(meeting)) {
       status.textContent = `${employee.name} 님이 말하는 중…`;
       app.say(employee.id, "음…", 60000);
       const tools = await uplikaTools();
-      const messages = meetingMessages(employee, meeting, app.state.data.employees, app.state.settings.about, Boolean(tools));
+      const messages = meetingMessages(employee, view, app.state.data.employees, app.state.settings.about, Boolean(tools));
       const text = await askGpt(settingsFor(app.state.settings, employee), messages, { tools });
       addLine(meeting, employee, text, false);
     }
@@ -97,9 +109,10 @@ async function summarize() {
   const leader = participants(meeting)[0];
   if (!leader) return;
   await withBusy(async () => {
+    const view = await withSheets(meeting);
     status.textContent = `${leader.name} 님이 회의를 정리하는 중…`;
     const tools = await uplikaTools();
-    const messages = summaryMessages(leader, meeting, app.state.data.employees, app.state.settings.about, Boolean(tools));
+    const messages = summaryMessages(leader, view, app.state.data.employees, app.state.settings.about, Boolean(tools));
     const text = await askGpt(settingsFor(app.state.settings, leader), messages, { tools });
     // 참석한 직원 모두 회의 결론을 기억
     const note = `회의 "${meeting.topic}" 정리: ${text.replace(/\s+/g, " ")}`;

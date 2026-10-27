@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- 보안: 이 사이트의 파일만 쓰고, 바깥으로는 OpenAI API, Uplika, GitHub Gist(동기화), Uplika 중계 서버(workers.dev)에만 연결 -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://api.openai.com https://uplika.com https://*.uplika.com https://api.github.com https://gist.githubusercontent.com https://*.workers.dev; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <!-- 보안: 이 사이트의 파일만 쓰고, 바깥으로는 OpenAI API, Uplika, GitHub Gist(동기화), Uplika 중계 서버(workers.dev), 구글 시트(데이터 시트)에만 연결 -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://api.openai.com https://uplika.com https://*.uplika.com https://api.github.com https://gist.githubusercontent.com https://*.workers.dev https://docs.google.com https://*.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>AI 사무실</title>
   <link rel="stylesheet" href="css/base.css">
@@ -76,6 +76,9 @@
           <form id="chat-form" class="chat-form">
             <label class="visually-hidden" for="chat-text">메시지</label>
             <textarea id="chat-text" name="text" rows="2" placeholder="메시지 또는 시킬 일 (Enter 보내기, Shift+Enter 줄바꿈)"></textarea>
+            <label id="chat-sheet-label" class="field" hidden>📊 업무에 줄 데이터 시트
+              <select id="chat-sheet"></select>
+            </label>
             <div class="chat-buttons">
               <button id="chat-task" type="button">업무 지시</button>
               <button type="submit" class="primary">보내기</button>
@@ -123,6 +126,10 @@
           <label>참고 자료 (최근 글, 캡션, 통계 등을 붙여 넣기)
             <textarea name="material" rows="4"></textarea>
           </label>
+          <fieldset id="meeting-sheets" class="sheet-choices" hidden>
+            <legend>📊 참고할 데이터 시트 (회의 때 최신 내용을 읽어요)</legend>
+            <div id="meeting-sheet-list"></div>
+          </fieldset>
           <button type="submit" class="primary">회의 시작</button>
           <p id="meeting-status" class="status" aria-live="polite"></p>
         </form>
@@ -175,6 +182,24 @@
         <div class="row-buttons">
           <button id="btn-uplika-disconnect" type="button">연결 끊기</button>
           <button id="btn-uplika-connect" type="button">Uplika 연결</button>
+        </div>
+      </fieldset>
+      <fieldset class="connect-box">
+        <legend>📊 데이터 시트 (직원이 읽는 구글 시트)</legend>
+        <ul id="sheet-list" class="memory-list"></ul>
+        <label>이름
+          <input id="sheet-name" type="text" autocomplete="off" placeholder="예: 여행 커넥트">
+        </label>
+        <label>시트 주소 (공유: "링크가 있는 모든 사용자")
+          <input id="sheet-url" type="url" autocomplete="off" placeholder="https://docs.google.com/spreadsheets/d/…">
+        </label>
+        <label>읽을 탭 이름 (쉼표로 구분)
+          <input id="sheet-tabs" type="text" autocomplete="off" placeholder="예: 상품 데이터, 국가별 결론, 기준표">
+        </label>
+        <p id="sheet-status" class="status long-message" aria-live="polite"></p>
+        <div class="row-buttons">
+          <button id="sheet-test" type="button">읽어 보기</button>
+          <button id="sheet-add" type="button">추가</button>
         </div>
       </fieldset>
       <fieldset class="connect-box">
