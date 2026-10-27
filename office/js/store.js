@@ -27,8 +27,8 @@ export function loadData() {
   return emptyData();
 }
 
-// 저장 형식이 바뀌면 여기서 옛 데이터를 새 형식으로 바꿉니다.
-function migrate(data) {
+// 저장 형식이 바뀌면 여기서 옛 데이터를 새 형식으로 바꿉니다. (동기화로 받은 데이터에도 씀)
+export function migrate(data) {
   if (!data || !Array.isArray(data.employees)) return null;
   return { ...emptyData(), ...data, version: VERSION };
 }
@@ -37,9 +37,9 @@ export function saveData(data) {
   safeSet(DATA_KEY, JSON.stringify(data));
 }
 
-// 설정: { apiKey, model, about }
+// 설정: { apiKey, model, about, uplikaUrl }
 export function loadSettings() {
-  const settings = { apiKey: "", model: DEFAULT_MODEL, about: "" };
+  const settings = { apiKey: "", model: DEFAULT_MODEL, about: "", uplikaUrl: "" };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
     return { ...settings, ...saved };
@@ -50,6 +50,57 @@ export function loadSettings() {
 
 export function saveSettings(settings) {
   safeSet(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+// Uplika 연결 출입증과, 승인 화면에 다녀오는 동안 기억할 값
+const UPLIKA_KEY = "ai-office-uplika";
+const UPLIKA_PENDING_KEY = "ai-office-uplika-pending";
+
+function loadJson(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || "null");
+  } catch (error) {
+    return null;
+  }
+}
+
+function saveJson(key, value) {
+  if (value) {
+    safeSet(key, JSON.stringify(value));
+    return;
+  }
+  try {
+    localStorage.removeItem(key);
+  } catch (error) {
+    console.warn("지우지 못했습니다.", error);
+  }
+}
+
+export function loadUplikaAuth() {
+  return loadJson(UPLIKA_KEY);
+}
+
+export function saveUplikaAuth(auth) {
+  saveJson(UPLIKA_KEY, auth);
+}
+
+export function loadUplikaPending() {
+  return loadJson(UPLIKA_PENDING_KEY);
+}
+
+export function saveUplikaPending(pending) {
+  saveJson(UPLIKA_PENDING_KEY, pending);
+}
+
+// ☁️ 동기화 설정 (이 기기에만): { token, gistId, key, salt, remoteSavedAt, dirty }
+const SYNC_KEY = "ai-office-sync";
+
+export function loadSync() {
+  return loadJson(SYNC_KEY);
+}
+
+export function saveSync(sync) {
+  saveJson(SYNC_KEY, sync);
 }
 
 export function loadTheme() {

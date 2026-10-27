@@ -1,10 +1,13 @@
 // 진입점. 상태(state)를 들고 사무실 화면·채용·회의·메신저를 연결합니다.
 
-import { loadData, saveData, loadSettings, saveSettings, loadTheme, saveTheme, newId, DEFAULT_MODEL } from "./store.js";
+import { loadData, saveData, loadSettings, saveSettings, loadTheme, saveTheme, newId, migrate, DEFAULT_MODEL } from "./store.js";
+import { isGptRunning } from "./gpt.js";
+import { initSync, markChanged } from "./sync.js";
 import { initScene, renderScene, say } from "./scene.js";
 import { initHire, renderHire } from "./hire.js";
 import { initMeeting, renderMeeting } from "./meeting.js";
 import { initMessenger, renderMessenger, openChat, unreadCount, isChatVisible } from "./messenger.js";
+import { startConnect, finishConnect, isUplikaConnected, disconnectUplika } from "./uplika.js";
 
 const state = {
   data: loadData(),
@@ -20,12 +23,35 @@ const settingsForm = document.getElementById("settings-form");
 // 다른 파일에서 쓰는 기능 모음
 const app = {
   state,
-  save: () => saveData(state.data),
+  save,
   say,
   notify,
   addMessage,
   refreshAll,
+  isBusy,
+  replaceAll,
 };
+
+function save() {
+  saveData(state.data);
+  markChanged();
+}
+
+// 직원이 일하거나 GPT 답을 기다리는 중인지 (이때는 동기화로 데이터를 바꾸지 않음)
+function isBusy() {
+  return isGptRunning() || state.data.employees.some((employee) => employee.status === "working");
+}
+
+// 동기화로 받은 내용으로 통째로 바꿈
+function replaceAll(data, settings) {
+  const fixed = migrate(data);
+  if (!fixed) return;
+  state.data = fixed;
+  state.settings = { ...state.settings, ...settings };
+  saveData(state.data);
+  saveSettings(state.settings);
+  refreshAll();
+}
 
 function addMessage(employeeId, from, text, kind) {
   const message = { id: newId("msg"), employeeId, from, text, kind, time: Date.now(), read: from === "me" || isChatVisible(employeeId) };
@@ -110,17 +136,54 @@ document.getElementById("btn-settings").addEventListener("click", () => {
   settingsForm.elements.apiKey.value = state.settings.apiKey;
   settingsForm.elements.model.value = state.settings.model;
   settingsForm.elements.about.value = state.settings.about;
+  settingsForm.elements.uplikaUrl.value = state.settings.uplikaUrl;
+  renderUplikaStatus();
   settingsDialog.showModal();
 });
 
-settingsForm.addEventListener("submit", (event) => {
-  if (event.submitter && event.submitter.value === "cancel") return;
+function saveSettingsForm() {
   state.settings = {
     apiKey: settingsForm.elements.apiKey.value.trim(),
     model: settingsForm.elements.model.value.trim() || DEFAULT_MODEL,
     about: settingsForm.elements.about.value.trim(),
+    uplikaUrl: settingsForm.elements.uplikaUrl.value.trim(),
   };
   saveSettings(state.settings);
+  markChanged();
+}
+
+settingsForm.addEventListener("submit", (event) => {
+  if (event.submitter && event.submitter.value === "cancel") return;
+  saveSettingsForm();
+});
+
+// ---- Uplika 연결 ----
+
+const uplikaStatus = document.getElementById("uplika-status");
+
+function renderUplikaStatus() {
+  const connected = isUplikaConnected();
+  uplikaStatus.textContent = connected ? "✅ 연결됨: 회의와 업무 때 직원들이 조회해요. (발행은 못 해요)" : "연결 안 됨";
+  document.getElementById("btn-uplika-disconnect").hidden = !connected;
+}
+
+document.getElementById("btn-uplika-connect").addEventListener("click", async () => {
+  if (!settingsForm.elements.uplikaUrl.value.trim()) {
+    uplikaStatus.textContent = "서버 주소를 먼저 넣어 주세요.";
+    return;
+  }
+  saveSettingsForm();
+  uplikaStatus.textContent = "Uplika 승인 화면으로 이동하는 중…";
+  try {
+    await startConnect(state.settings.uplikaUrl);
+  } catch (error) {
+    uplikaStatus.textContent = error.message;
+  }
+});
+
+document.getElementById("btn-uplika-disconnect").addEventListener("click", () => {
+  disconnectUplika();
+  renderUplikaStatus();
 });
 
 // ---- 테마 ----
@@ -144,6 +207,13 @@ initScene({ getEmployees: () => state.data.employees, onPick: pickEmployee });
 initHire(app);
 initMeeting(app);
 initMessenger(app);
+initSync(app);
 showTab(state.data.employees.length ? "messenger" : "hire");
 renderUnread();
 if (!state.settings.apiKey) notify("⚙︎ 설정에서 OpenAI API 키를 넣으면 직원들이 일을 시작해요.");
+// Uplika 승인 화면에서 돌아왔으면 연결 마무리
+finishConnect()
+  .then((message) => {
+    if (message) notify(message);
+  })
+  .catch((error) => notify(error.message));

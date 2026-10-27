@@ -1,8 +1,9 @@
 // 회의실: 안건과 자료를 주면 직원들이 돌아가며 토론하고, 마지막에 정리
 
 import { askGpt } from "./gpt.js";
-import { TEAMS, meetingMessages, summaryMessages } from "./employees.js";
+import { TEAMS, meetingMessages, summaryMessages, settingsFor, addMemory } from "./employees.js";
 import { newId } from "./store.js";
+import { uplikaTools } from "./uplika.js";
 
 const form = document.getElementById("meeting-form");
 const status = document.getElementById("meeting-status");
@@ -82,8 +83,9 @@ async function runRound(meeting) {
     for (const employee of participants(meeting)) {
       status.textContent = `${employee.name} 님이 말하는 중…`;
       app.say(employee.id, "음…", 60000);
-      const messages = meetingMessages(employee, meeting, app.state.data.employees, app.state.settings.about);
-      const text = await askGpt(app.state.settings, messages);
+      const tools = await uplikaTools();
+      const messages = meetingMessages(employee, meeting, app.state.data.employees, app.state.settings.about, Boolean(tools));
+      const text = await askGpt(settingsFor(app.state.settings, employee), messages, { tools });
       addLine(meeting, employee, text, false);
     }
   });
@@ -96,8 +98,12 @@ async function summarize() {
   if (!leader) return;
   await withBusy(async () => {
     status.textContent = `${leader.name} 님이 회의를 정리하는 중…`;
-    const messages = summaryMessages(leader, meeting, app.state.data.employees, app.state.settings.about);
-    const text = await askGpt(app.state.settings, messages);
+    const tools = await uplikaTools();
+    const messages = summaryMessages(leader, meeting, app.state.data.employees, app.state.settings.about, Boolean(tools));
+    const text = await askGpt(settingsFor(app.state.settings, leader), messages, { tools });
+    // 참석한 직원 모두 회의 결론을 기억
+    const note = `회의 "${meeting.topic}" 정리: ${text.replace(/\s+/g, " ")}`;
+    participants(meeting).forEach((employee) => addMemory(employee, note.slice(0, 200)));
     addLine(meeting, leader, text, true);
   });
 }
