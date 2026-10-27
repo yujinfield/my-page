@@ -37,11 +37,14 @@ export function saveData(data) {
   safeSet(DATA_KEY, JSON.stringify(data));
 }
 
-// 설정: { apiKey, model, about, uplikaUrl, uplikaProxy, dataSheets: [{ id, name, url, tabs }] }
+// 설정: { apiKey, model, about, uplikaUrl, serverUrl, serverToken, dataSheets: [{ id, name, url, tabs }] }
 export function loadSettings() {
-  const settings = { apiKey: "", model: DEFAULT_MODEL, about: "", uplikaUrl: "", uplikaProxy: "", dataSheets: [] };
+  const settings = { apiKey: "", model: DEFAULT_MODEL, about: "", uplikaUrl: "", serverUrl: "", serverToken: "", dataSheets: [] };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+    // 예전 "중계 서버 주소"(uplikaProxy)는 사무실 서버 주소로 옮김
+    if (saved.uplikaProxy && !saved.serverUrl) saved.serverUrl = saved.uplikaProxy;
+    delete saved.uplikaProxy;
     return { ...settings, ...saved };
   } catch (error) {
     return settings;

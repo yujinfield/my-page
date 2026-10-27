@@ -37,7 +37,7 @@ function cspAllows(url) {
     || (source.startsWith("https://*.") && host.endsWith(source.slice("https://*".length))));
 }
 
-// 중계 서버 주소 (Uplika가 브라우저 요청을 막아서 승인 요청은 중계 서버를 거침). 비어 있으면 직접 요청
+// 사무실 서버 주소 (Uplika가 브라우저 요청을 막아서 승인 요청은 사무실 서버를 거침). 비어 있으면 직접 요청
 let proxyUrl = "";
 
 export function setUplikaProxy(url) {
@@ -53,8 +53,8 @@ async function getJson(url, options) {
   try {
     response = await fetch(requestUrl, options);
   } catch (error) {
-    if (proxyUrl) throw new Error(`중계 서버(${requestHost})에 연결하지 못했어요. 중계 서버 주소와 배포 상태를 확인해 주세요.`);
-    throw new Error(`${host}에 연결하지 못했어요. Uplika가 다른 사이트에서 오는 요청을 받지 않거나 인터넷 문제예요. 설정에 중계 서버 주소를 넣어 주세요.`);
+    if (proxyUrl) throw new Error(`사무실 서버(${requestHost})에 연결하지 못했어요. 서버 주소와 배포 상태를 확인해 주세요.`);
+    throw new Error(`${host}에 연결하지 못했어요. Uplika가 다른 사이트에서 오는 요청을 받지 않거나 인터넷 문제예요. 설정에 사무실 서버 주소를 넣어 주세요.`);
   }
   if (!response.ok) {
     const detail = (await response.text()).slice(0, 120);
